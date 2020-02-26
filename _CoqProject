@@ -1,0 +1,7 @@
+-R . intuitionism
+seq.v
+bcp.v
+spr.v
+fan.v
+tau.v
+bar.v
