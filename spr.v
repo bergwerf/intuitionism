@@ -17,6 +17,10 @@ Lemma unfold_inspr (X : spread) α :
   α : X -> forall m, σ X ⟨α;m⟩ = true.
 Proof. auto. Qed.
 
+Lemma intro_inspr (X : spread) α :
+  (forall m, σ X ⟨α;m⟩ = true) -> α : X.
+Proof. auto. Qed.
+
 (* The Baire space is a spread. *)
 Definition Nσ (s : fseq) := true.
 

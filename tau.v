@@ -21,19 +21,6 @@ Fixpoint τσ (s : fseq) :=
 Lemma τσ_nil : τσ [] = true.
 Proof. auto. Qed.
 
-Ltac bool_to_Prop :=
-  match goal with
-  | [H : _ && _ = true |- _] =>
-    let P := fresh H in (apply andb_prop in H as [P H])
-  | [H : _ <=? _ = true |- _] =>
-    apply leb_le in H
-  | |- (_ && _ = true) =>
-    apply andb_true_intro; split
-  | |- (_ <=? _ = true) =>
-    apply leb_le
-  | _ => idtac
-  end.
-
 Lemma τσ_cons s : τσ s = true <-> exists n, τσ (n :: s) = true.
 Proof.
 split; intros. destruct s.
@@ -50,4 +37,20 @@ simpl in H0; destruct s; repeat bool_to_Prop; omega.
 Qed.
 
 Definition τ := Fan (Spr τσ τσ_nil τσ_cons) τσ_fan.
+
+(* Alternative membership criteria *)
+Definition τP α := forall n, lower <= α n <= lower + range /\ α n <= α (S n).
+
+Lemma intro_τP α n :
+  α : τP -> τσ ⟨α;n⟩ = true.
+Proof.
+intros H; induction n; simpl; auto.
+destruct ⟨α;n⟩ eqn:E; repeat bool_to_Prop; auto; try apply H.
+destruct n; simpl in *; inversion_clear E. apply H.
+Qed.
+
 End Tau.
+
+Definition τ1 := τ 0 1.
+Definition τ2 := τ 0 2.
+Definition τ3 := τ 0 3.

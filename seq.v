@@ -57,12 +57,20 @@ Notation "α '#' β" := (apart α β)(at level 50, format "α '#' β").
 Notation "'⟨' α ';' n '⟩'" := (get n α)(at level 0, format "'⟨' α ';' n '⟩'").
 Notation "s '⊏' α" := (starts s α)(at level 50).
 
+(* Shortcuts for proofs about sequences *)
+Section Shortcuts.
+
 Lemma app_split (a b x y : fseq) : a = b -> x = y -> a ++ x = b ++ y.
 Proof. intros; subst; auto. Qed.
 
 Lemma cons_split h1 h2 (t1 t2 : fseq) :
   h1 = h2 -> t1 = t2 -> h1 :: t1 = h2 :: t2.
 Proof. intros; subst; auto. Qed.
+
+End Shortcuts.
+
+(* Facts about the coincedence relation *)
+Section Coincedence.
 
 (* A sequence coincides with itself. *)
 Lemma con_id n α : con n α α.
@@ -96,6 +104,11 @@ revert α β; induction n; simpl; intros; split; auto.
   + subst; inversion_clear H; auto.
   + apply IHn; try omega; inversion_clear H; auto.
 Qed.
+
+End Coincedence.
+
+(* Facts about delete and fill *)
+Section DeleteFill.
 
 (* Delete 0 elements. *)
 Lemma del0 α : del 0 α = α.
@@ -143,6 +156,31 @@ revert α. induction n, m; simpl; intros; auto.
     rewrite R, del_app_S, <-IHn; auto.
 Qed.
 
+End DeleteFill.
+
+(* Facts about properties of sequence elements *)
+Section SeqProp.
+
+Variable P : nat -> Prop.
+
+Lemma cseq_prop c :
+  P c -> forall n, P ((c..) n).
+Proof. unfold cseq; intros; auto. Qed.
+
+Lemma prepend_prop n α β :
+  (forall i, P (α i))
+  -> (forall i, P (β i))
+  -> (forall i, P (prepend n α β i)).
+Proof.
+intros Hα Hβ i; unfold prepend, replace, fill.
+destruct (i <? n); auto.
+Qed.
+
+End SeqProp.
+
+(* Facts about get (finite start sequence) *)
+Section GetStart.
+
 (* Different length parts are never equal. *)
 Lemma get_neq n m α β :
   n <> m -> ⟨α;n⟩ <> ⟨β;m⟩.
@@ -151,7 +189,7 @@ revert m; induction n; intros; simpl.
 - destruct m; try omega; simpl. apply nil_cons.
 - destruct m; simpl; intros P; inversion P.
   apply IHn in H2; auto.
-Qed. 
+Qed.
 
 (* Get finite part of a partially constant sequence. *)
 Lemma get_cseq_eq_cfseq c n α :
@@ -164,6 +202,20 @@ induction n; simpl; split; auto.
 - intros H i Hi; inversion H; subst. destruct (eq_dec i n).
   subst; auto. apply IHn in H2; apply H2; omega.
 Qed.
+
+Corollary get_cseq c n :
+  ⟨c..;n⟩ = cfseq c n.
+Proof.
+apply get_cseq_eq_cfseq. apply con_id.
+Qed.
+
+Lemma get_S_cons α m n s :
+  ⟨α;S m⟩ = n :: s -> α m = n.
+Proof.
+destruct m; simpl; intros; inversion H; auto.
+Qed.
+
+End GetStart.
 
 (* A prepended sequence coincides with itself. *)
 Lemma con_prepend n α β :
