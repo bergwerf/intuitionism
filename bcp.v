@@ -65,6 +65,6 @@ destruct (BCP _ R (0..)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
 - pose (β := (prepend m (0..) (1..))).
   assert(Hβ: con m (0..) β). apply con_prepend.
   apply H in Hβ as [[n0 _]|[_ A]]; try omega.
-  assert(Hβ1: β (m + 1) <> 0). unfold β, cseq; rewrite prepend_unshift; omega.
+  assert(Hβ1: β (m + 1) <> 0). unfold β, cseq; rewrite prepend_access; omega.
   auto.
 Qed.

@@ -13,6 +13,7 @@ Export Coq.Lists.List.
 Notation "'seq'" := (nat -> nat).
 
 (* Finite sequence *)
+(* For technical reasons the head represents the last element. *)
 Notation "'fseq'" := (list nat).
 
 (* Infinite constant sequence *)
@@ -50,13 +51,13 @@ Fixpoint starts s (α : seq) :=
 Fixpoint get n (α : seq) : fseq :=
   match n with
   | 0 => []
-  | S m => (α 0) :: (get m (del 1 α))
+  | S m => α m :: (get m α)
   end.
 
-Notation "α '#' β" := (apart α β) (at level 50, format "α '#' β").
-Notation "α '@' n" := (get n α) (at level 30, format "α '@' n").
-Notation "s '⊏' α" := (starts s α) (at level 70).
-Notation "c '..'" := (cseq c) (at level 10, format "c '..'").
+Notation "c '..'" := (cseq c)(at level 10, format "c '..'").
+Notation "α '#' β" := (apart α β)(at level 50, format "α '#' β").
+Notation "'⟨' α ';' n '⟩'" := (get n α)(at level 0, format "'⟨' α ';' n '⟩'").
+Notation "s '⊏' α" := (starts s α)(at level 50).
 
 Lemma app_split (a b x y : fseq) : a = b -> x = y -> a ++ x = b ++ y.
 Proof. intros; subst; auto. Qed.
@@ -83,15 +84,15 @@ Qed.
 
 (* α and β coincide iff their first n elements are the same. *)
 Lemma con_eq_get n α β :
-  con n α β <-> α@n = β@n.
+  con n α β <-> ⟨α;n⟩ = ⟨β;n⟩.
 Proof.
-split; revert α β.
-- induction n; simpl; auto; intros.
-  erewrite H, IHn; auto; try omega; apply con_del; auto.
-- induction n; simpl; intros. intros i Hi; omega.
-  rewrite <-add_1_r, add_comm; apply con_del; split; intros i Hi.
-  + assert(I: i = 0). omega. subst; inversion_clear H; auto.
-  + apply IHn; inversion_clear H; auto.
+revert α β; induction n; simpl; intros; split; auto.
+- intros _ i Hi; omega.
+- intros H; rewrite H; auto. rewrite (proj1 (IHn α β)); auto.
+  intros i Hi; apply H; auto.
+- intros H i Hi. destruct (eq_dec i n).
+  + subst; inversion_clear H; auto.
+  + apply IHn; try omega; inversion_clear H; auto.
 Qed.
 
 (* Delete 0 elements. *)
@@ -116,25 +117,40 @@ unfold del; apply functional_extensionality.
 intros; rewrite add_assoc; auto.
 Qed.
 
+(* Append element back to deletion. *)
+Lemma del_app_S n m α :
+  ⟨del (S n) α;m⟩ ++ [α n] = ⟨del n α;S m⟩.
+Proof.
+induction m; simpl; auto.
+rewrite IHm; simpl; unfold del.
+assert(R: m + S n = S m + n). omega.
+rewrite R; auto.
+Qed.
+
 (* Deletion and append *)
 Lemma del_app_distr n m α :
-  α@(n + m) = α@n ++ (del n α)@m.
+  ⟨α;n + m⟩ = ⟨del n α;m⟩ ++ ⟨α;n⟩.
 Proof.
 revert α. induction n, m; simpl; intros; auto.
-- rewrite del0; auto.
-- rewrite add_0_r, app_nil_r; auto.
-- rewrite IHn; simpl; rewrite <-(add_1_r n), ?del_add_distr; auto.
+- rewrite del0, app_nil_r; auto.
+- rewrite add_0_r; auto.
+- assert(Split: forall x y (v w : fseq), x = y -> v = w -> x :: v = y :: w).
+  { intros; subst; auto. } apply Split.
+  + unfold del. assert(R: n + S m = m + S n). omega. auto.
+  + assert(R: forall x (v w : fseq), v ++ x :: w = (v ++ [x]) ++ w).
+    { intros; induction v; simpl; auto. }
+    rewrite R, del_app_S, <-IHn; auto.
 Qed.
 
 (* Different length parts are never equal. *)
 Lemma get_neq n m α β :
-  n <> m -> α@n <> β@m.
+  n <> m -> ⟨α;n⟩ <> ⟨β;m⟩.
 Proof.
 Admitted.
 
 (* Get finite part of a partially constant sequence. *)
 Lemma get_cseq_eq_cfseq c n α :
-  (con n α (cseq c)) <-> α@n = cfseq c n.
+  (con n α (c..)) <-> ⟨α;n⟩ = cfseq c n.
 Proof.
 Admitted.
 
@@ -147,8 +163,8 @@ apply ltb_lt in Hi; rewrite Hi; auto.
 Qed.
 
 (* Access elements after prepend *)
-Lemma prepend_unshift n m α β :
-  (prepend n α β) (n + m) = β m.
+Lemma prepend_access n m α β :
+  prepend n α β (n + m) = β m.
 Proof.
 unfold prepend, replace, fill.
 assert(R1: n + m <? n = false). apply ltb_ge; omega.
