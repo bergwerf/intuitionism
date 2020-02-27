@@ -1,4 +1,5 @@
 -R . intuitionism
+lib.v
 seq.v
 bcp.v
 spr.v

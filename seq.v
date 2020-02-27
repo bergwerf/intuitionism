@@ -1,13 +1,6 @@
 (* Finite and infinite sequences *)
 
-Require Import Coq.Init.Nat.
-Require Import Coq.Bool.Bool.
-Require Import Coq.Lists.List.
-Require Import Coq.Logic.FunctionalExtensionality.
-Require Import Omega.
-Import Nat.
-Import ListNotations.
-Export Coq.Lists.List.
+From intuitionism Require Import lib.
 
 (* Infinite sequence *)
 Notation "'seq'" := (nat -> nat).

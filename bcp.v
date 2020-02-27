@@ -1,6 +1,6 @@
 (* Brouwer's Continuity Principle (BCP) and related notions. *)
 
-From intuitionism Require Import seq.
+From intuitionism Require Import lib seq.
 
 Require Import Coq.Arith.PeanoNat.
 Require Import Coq.Logic.ConstructiveEpsilon.
@@ -8,14 +8,10 @@ Require Import Omega.
 Import Nat.
 
 (* Brouwers Continuity Principle *)
-Definition BCP :=
+Axiom BCP :
   forall (R : seq -> nat -> Prop),
   (forall α, exists n, R α n) ->
   (forall α, exists m n, forall β, con m α β -> R β n).
-
-Module Brouwer.
-Axiom BCP : BCP.
-End Brouwer.
 
 (* Limited Principle of Omniscience *)
 Definition LPO := forall (α : seq), (exists n, α n <> 0) \/ (forall n, α n = 0).
@@ -51,9 +47,9 @@ destruct (LPO α).
 Qed.
 
 Theorem bcp_nlpo :
-  BCP -> ~LPO.
+  (* BCP -> *) ~LPO.
 Proof.
-intros BCP LPO.
+intros LPO.
 assert(R: forall α : seq, exists i,
   (i = 0 /\ exists n, α n <> 0) \/
   (i > 0 /\ forall n, α n = 0)).

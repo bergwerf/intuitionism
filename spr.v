@@ -1,14 +1,6 @@
 (* Finitary spreads *)
 
-From intuitionism Require Import seq bcp.
-Import Brouwer.
-
-Require Import Coq.Bool.Bool.
-Require Import Coq.Arith.PeanoNat.
-Require Import Coq.Logic.ConstructiveEpsilon.
-Require Import Coq.Logic.FunctionalExtensionality.
-Import ListNotations.
-Import Nat.
+From intuitionism Require Import lib seq bcp.
 
 (* Spread: a subset of the entire Baire space *)
 Record spread := Spr {
@@ -25,9 +17,7 @@ Lemma unfold_inspr (X : spread) α :
   α : X -> forall m, σ X ⟨α;m⟩ = true.
 Proof. auto. Qed.
 
-(* Baire space as a spread. *)
-Section Baire.
-
+(* The Baire space is a spread. *)
 Definition Nσ (s : fseq) := true.
 
 Lemma Nσ_nil : Nσ [] = true.
@@ -36,14 +26,11 @@ Proof. auto. Qed.
 Lemma Nσ_cons s : Nσ s = true <-> exists n, Nσ (n :: s) = true.
 Proof. split; intros; auto. exists 0; auto. Qed.
 
-Definition N := Spr Nσ Nσ_nil Nσ_cons.
+Definition Baire := Spr Nσ Nσ_nil Nσ_cons.
 
-End Baire.
-
-(* Function to retract the the Baire space onto a spread. *)
+(* Function to retract the the Baire space onto any spread. *)
 Module Retract.
 Section Retract.
-
 Notation "'σπ1'" := proj1_sig.
 Notation "'σπ2'" := proj2_sig.
 Arguments exist {_ _}.
@@ -128,16 +115,3 @@ assert(HT: forall α, exists n, T α n).
 intros; destruct (BCP T HT α) as [m [n P]]. exists m; exists n; intros.
 apply P in H1; unfold T, rσ in H1; rewrite Retract.r_id in H1; auto.
 Qed.
-
-
-
-
-
-
-
-
-
-
-
-
-
