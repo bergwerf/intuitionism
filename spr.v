@@ -4,20 +4,26 @@ From intuitionism Require Import seq bcp.
 Import Brouwer.
 
 Require Import Coq.Bool.Bool.
+Require Import Coq.Arith.PeanoNat.
 Require Import Coq.Logic.ConstructiveEpsilon.
+Require Import Coq.Logic.FunctionalExtensionality.
 Import ListNotations.
+Import Nat.
 
 (* Spread: a subset of the entire Baire space *)
 Record spread := Spr {
-  σ :> fseq -> bool;
+  σ : fseq -> bool;
   σ_nil : σ [] = true;
   σ_cons : forall s, σ s = true <-> exists n, σ (n :: s) = true;
 }.
 
 (* Spread membership *)
-Definition elementof (σ : fseq -> bool) α := forall m, σ ⟨α;m⟩ = true.
+Definition inspr X : seqset := fun α => forall m, σ X ⟨α;m⟩ = true.
+Coercion inspr : spread >-> seqset.
 
-Notation "α 'of' σ" := (elementof σ α)(at level 50).
+Lemma unfold_inspr (X : spread) α :
+  α : X -> forall m, σ X ⟨α;m⟩ = true.
+Proof. auto. Qed.
 
 (* Baire space as a spread. *)
 Section Baire.
@@ -35,45 +41,93 @@ Definition N := Spr Nσ Nσ_nil Nσ_cons.
 End Baire.
 
 (* Function to retract the the Baire space onto a spread. *)
+Module Retract.
 Section Retract.
 
+Notation "'σπ1'" := proj1_sig.
+Notation "'σπ2'" := proj2_sig.
 Arguments exist {_ _}.
-Variable S : spread.
 
-(* S is decidable *)
-Lemma S_dec s n : {S (n :: s) = true} + {~S (n :: s) = true}.
+Variable X : spread.
+
+(* X is decidable *)
+Lemma X_dec s n : {σ X (n :: s) = true} + {~σ X (n :: s) = true}.
 Proof. apply bool_dec. Qed.
 
 (* Retract any finite sequence onto the spread. *)
-Fixpoint ρ (s : fseq) : {t | S t = true} :=
+Fixpoint ρ (s : fseq) : {t | σ X t = true} :=
   match s with
-  | [] => exist [] (σ_nil S)
+  | [] => exist [] (σ_nil X)
   | n :: t =>
-    let ρt := proj1_sig (ρ t) in
-    let ρtP := proj2_sig (ρ t) in
-    match S_dec ρt n with
+    let ρt := σπ1 (ρ t) in
+    let ρtP := σπ2 (ρ t) in
+    match X_dec ρt n with
     | left accept => exist (n :: ρt) accept
     | right _ =>
-      let ext := proj1 (σ_cons S ρt) ρtP in
-      let min := epsilon_smallest _ (S_dec ρt) ext in
-      exist (proj1_sig min :: ρt) (proj1 (proj2_sig min))
+      let ex := proj1 (σ_cons X ρt) ρtP in
+      let n0 := epsilon_smallest _ (X_dec ρt) ex in
+      exist (σπ1 n0 :: ρt) (proj1 (σπ2 n0))
     end
   end.
 
 (* Retract function *)
-Definition r α n := hd 0 (proj1_sig (ρ ⟨α;n⟩)).
+Definition r α n := hd 0 (σπ1 (ρ ⟨α;n+1⟩)).
 
+(* r is the same as ρ *)
+Lemma r_eq_ρ α n :
+  ⟨r α;n⟩ = σπ1 (ρ ⟨α;n⟩).
+Proof.
+induction n; simpl; auto.
+destruct (ρ ⟨α;n⟩) as [ρt Hρ] eqn:Rρ; simpl in *.
+destruct (X_dec ρt (α n)) eqn:RX; simpl;
+rewrite IHn; apply cons_split; auto;
+unfold r; rewrite add_1_r; simpl;
+rewrite Rρ; simpl; rewrite RX; auto.
+Qed.
+
+(* ρ does not alter sequences in X. *)
+Lemma ρ_id α n :
+  α : X -> σπ1 (ρ ⟨α;n⟩) = ⟨α;n⟩.
+Proof.
+intros; induction n; simpl; auto.
+destruct (ρ ⟨α;n⟩); simpl in *; subst.
+destruct (X_dec ⟨α;n⟩ (α n)); simpl; auto.
+exfalso; apply unfold_inspr with (m:=S n) in H; auto.
+Qed.
+
+(* r does not alter sequences in X. *)
 Lemma r_id α :
-  α of S -> r α = α.
+  α : X -> r α = α.
 Proof.
-Admitted.
+intros; apply functional_extensionality; intros n.
+unfold r; rewrite ρ_id; auto. rewrite add_1_r; simpl; auto.
+Qed.
 
-Lemma retract_image α :
-  (r α) of S.
+(* The image of r is in X. *)
+Lemma r_image α :
+  (r α) : X.
 Proof.
-Admitted.
+intros m; rewrite r_eq_ρ.
+destruct (ρ ⟨α;m⟩) as [ρt Hρ]; auto.
+Qed.
 
 End Retract.
+End Retract.
+
+(* BCP generalizes to spreads *)
+Theorem BCPext (X : spread) (R : seq -> nat -> Prop) :
+  (forall α, α : X -> exists n, R α n) ->
+  (forall α, α : X -> exists m n, forall β, β : X -> con m α β -> R β n).
+Proof.
+intros Rall.
+pose(rσ := (Retract.r X)).
+pose(T := (fun α n => R (rσ α) n)).
+assert(HT: forall α, exists n, T α n).
+{ intros; pose (Hα := Retract.r_image X α); apply Rall in Hα.
+  destruct Hα as [n Hn]; exists n; auto. }
+intros; destruct (BCP T HT α) as [m [n P]]. exists m; exists n; intros.
+apply P in H1; unfold T, rσ in H1; rewrite Retract.r_id in H1; auto.
+Qed.
 
 
 

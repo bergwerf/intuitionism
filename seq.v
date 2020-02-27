@@ -54,12 +54,21 @@ Fixpoint get n (α : seq) : fseq :=
   | S m => α m :: (get m α)
   end.
 
+(* Like ensembles but not polymorphic to enable coercion *)
+Definition seqset := seq -> Prop.
+Definition In (X : seqset) α := X α.
+
+Notation "α ':' X" := (In X α)(at level 50).
 Notation "c '..'" := (cseq c)(at level 10, format "c '..'").
 Notation "α '#' β" := (apart α β)(at level 50, format "α '#' β").
 Notation "'⟨' α ';' n '⟩'" := (get n α)(at level 0, format "'⟨' α ';' n '⟩'").
 Notation "s '⊏' α" := (starts s α)(at level 50).
 
 Lemma app_split (a b x y : fseq) : a = b -> x = y -> a ++ x = b ++ y.
+Proof. intros; subst; auto. Qed.
+
+Lemma cons_split h1 h2 (t1 t2 : fseq) :
+  h1 = h2 -> t1 = t2 -> h1 :: t1 = h2 :: t2.
 Proof. intros; subst; auto. Qed.
 
 (* A sequence coincides with itself. *)
@@ -134,11 +143,10 @@ Proof.
 revert α. induction n, m; simpl; intros; auto.
 - rewrite del0, app_nil_r; auto.
 - rewrite add_0_r; auto.
-- assert(Split: forall x y (v w : fseq), x = y -> v = w -> x :: v = y :: w).
-  { intros; subst; auto. } apply Split.
+- apply cons_split.
   + unfold del. assert(R: n + S m = m + S n). omega. auto.
   + assert(R: forall x (v w : fseq), v ++ x :: w = (v ++ [x]) ++ w).
-    { intros; induction v; simpl; auto. }
+    { intros; induction v; simpl; auto. rewrite IHv; auto. }
     rewrite R, del_app_S, <-IHn; auto.
 Qed.
 
@@ -146,13 +154,23 @@ Qed.
 Lemma get_neq n m α β :
   n <> m -> ⟨α;n⟩ <> ⟨β;m⟩.
 Proof.
-Admitted.
+revert m; induction n; intros; simpl.
+- destruct m; try omega; simpl. apply nil_cons.
+- destruct m; simpl; intros P; inversion P.
+  apply IHn in H2; auto.
+Qed. 
 
 (* Get finite part of a partially constant sequence. *)
 Lemma get_cseq_eq_cfseq c n α :
   (con n α (c..)) <-> ⟨α;n⟩ = cfseq c n.
 Proof.
-Admitted.
+induction n; simpl; split; auto.
+- intros _ i Hi; omega.
+- rewrite <-add_1_r; intros H1; apply con_leq in H1 as H2.
+  apply cons_split. apply H1; omega. apply IHn; auto.
+- intros H i Hi; inversion H; subst. destruct (eq_dec i n).
+  subst; auto. apply IHn in H2; apply H2; omega.
+Qed.
 
 (* A prepended sequence coincides with itself. *)
 Lemma con_prepend n α β :
