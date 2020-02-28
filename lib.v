@@ -9,6 +9,9 @@ Require Export Omega.
 Export Nat.
 Export ListNotations.
 
+Arguments In {_}.
+Arguments Forall {_}.
+
 Ltac bool_to_Prop :=
   match goal with
   | [H : _ && _ = true |- _] =>

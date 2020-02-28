@@ -51,8 +51,8 @@ Notation "c '..'" := (cseq c)(at level 10, format "c '..'").
 Notation "'⟨' α ';' n '⟩'" := (get n α)(at level 0, format "'⟨' α ';' n '⟩'").
 Notation "s '⊏' α" := (starts s α)(at level 50).
 
-(* Apartness properties *)
-Section Apartness.
+(* Set of all infinite and finite sequences *)
+Section SeqSet.
 
 Lemma seq_apart_neq α β :
   seq_apart α β -> α <> β.
@@ -62,7 +62,10 @@ Lemma seq_apart_sym α β :
   seq_apart α β -> seq_apart β α.
 Proof. intros [n H]; exists n; auto. Qed.
 
-End Apartness.
+Definition Seq := CSet seq full_set seq_apart seq_apart_neq seq_apart_sym.
+Definition FSeq := CSet fseq full_set neq_apart neq_apart_neq neq_apart_sym.
+
+End SeqSet.
 
 (* Shortcuts for proofs about sequences *)
 Section Shortcuts.
@@ -108,8 +111,8 @@ revert α β; induction n; simpl; intros; split; auto.
 - intros H; rewrite H; auto. rewrite (proj1 (IHn α β)); auto.
   intros i Hi; apply H; auto.
 - intros H i Hi. destruct (eq_dec i n).
-  + subst; inversion_clear H; auto.
-  + apply IHn; try omega; inversion_clear H; auto.
+  + subst; injection H; auto.
+  + apply IHn; try omega. injection H; auto.
 Qed.
 
 End Coincedence.

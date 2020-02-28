@@ -9,13 +9,13 @@ Theorem lpo_f_surj :
 Proof.
 intros LPO; intros β Hβ; destruct (LPO β).
 - pose (n := epsilon_smallest _ (neq0_dec β) H); destruct n as [n [Hn1 Hn2]].
-  exists (S n); split. apply I. simpl; apply functional_extensionality.
-  intros i; unfold prepend, replace, fill, cseq.
+  exists (S n); split. apply I. simpl; extensionality i.
+  unfold prepend, replace, fill, cseq.
   destruct (i <? n) eqn:E; bool_to_Prop. apply Hn2 in E; omega.
   eapply τ_mono in Hβ as Hmono; apply member_τP in Hβ.
   assert(P1: β n <= 1). apply Hβ. assert(P2: β i <= 1). apply Hβ.
   assert(P3: β n = 1). omega. assert(P4: β n <= β i). apply Hmono.
   omega. omega.
 - exists 0; split. apply I. simpl.
-  apply functional_extensionality; intros n; auto.
+  extensionality n; auto.
 Qed.

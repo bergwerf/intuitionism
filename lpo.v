@@ -10,11 +10,8 @@ Definition LLPO := forall (α : seq),
   (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Even k) \/
   (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
 
-Lemma neq0_dec (α : seq) n :
-  {α n <> 0} + {~(α n <> 0)}.
-Proof.
-intros; destruct (eq_dec (α n) 0). right; omega. left; omega.
-Qed.
+Lemma neq0_dec (α : seq) n : {α n <> 0} + {~(α n <> 0)}.
+Proof. intros; destruct (eq_dec (α n) 0). right; omega. left; omega. Qed.
 
 Theorem lpo_llpo :
   LPO -> LLPO.
