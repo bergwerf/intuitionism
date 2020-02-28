@@ -1,6 +1,6 @@
 (* Finitary spreads *)
 
-From intuitionism Require Import lib seq bcp spr.
+From intuitionism Require Import lib set seq bcp spr.
 
 (* Fan: a spread with a finite number of extensions *)
 Record fan := Fan {

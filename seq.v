@@ -1,6 +1,6 @@
 (* Finite and infinite sequences *)
 
-From intuitionism Require Import lib.
+From intuitionism Require Import lib set.
 
 (* Infinite sequence *)
 Notation "'seq'" := (nat -> nat).
@@ -19,7 +19,7 @@ Definition cfseq (c n : nat) := repeat c n.
 Definition con n (α β : seq) := forall i, i < n -> α i = β i.
 
 (* Apartness relation. *)
-Definition apart (α β : seq) := exists n, α n <> β n.
+Definition seq_apart (α β : seq) := exists n, α n <> β n.
 
 (* Delete first n elements. *)
 Definition del n (α : seq) i := α (i + n).
@@ -47,15 +47,22 @@ Fixpoint get n (α : seq) : fseq :=
   | S m => α m :: (get m α)
   end.
 
-(* Like ensembles but not polymorphic to enable coercion *)
-Definition seqset := seq -> Prop.
-Definition In (X : seqset) α := X α.
-
-Notation "α ':' X" := (In X α)(at level 50).
 Notation "c '..'" := (cseq c)(at level 10, format "c '..'").
-Notation "α '#' β" := (apart α β)(at level 50, format "α '#' β").
 Notation "'⟨' α ';' n '⟩'" := (get n α)(at level 0, format "'⟨' α ';' n '⟩'").
 Notation "s '⊏' α" := (starts s α)(at level 50).
+
+(* Apartness properties *)
+Section Apartness.
+
+Lemma seq_apart_neq α β :
+  seq_apart α β -> α <> β.
+Proof. intros [n H] P; subst; apply H; auto. Qed.
+
+Lemma seq_apart_sym α β :
+  seq_apart α β -> seq_apart β α.
+Proof. intros [n H]; exists n; auto. Qed.
+
+End Apartness.
 
 (* Shortcuts for proofs about sequences *)
 Section Shortcuts.
@@ -225,12 +232,27 @@ intros i Hi; unfold prepend, replace, fill.
 apply ltb_lt in Hi; rewrite Hi; auto.
 Qed.
 
-(* Access elements after prepend *)
-Lemma prepend_access n m α β :
+(* Access left sequence of prepend. *)
+Lemma prepend_access_l n m α β :
+  prepend (n + S m) α β n = α n.
+Proof.
+unfold prepend, replace, fill.
+assert(R1: n <? n + S m = true). bool_to_Prop; omega.
+rewrite R1; auto.
+Qed.
+
+(* Access right sequence of prepend. *)
+Lemma prepend_access_r n m α β :
   prepend n α β (n + m) = β m.
 Proof.
 unfold prepend, replace, fill.
-assert(R1: n + m <? n = false). apply ltb_ge; omega.
+assert(R1: n + m <? n = false). bool_to_Prop; omega.
 assert(R2: n + m - n = m). omega.
 rewrite R1, R2; auto.
+Qed.
+
+Corollary prepend_access_r0 n α β :
+  prepend n α β n = β 0.
+Proof.
+rewrite <-(add_0_r n) at 2. apply prepend_access_r.
 Qed.

@@ -1,6 +1,6 @@
 (* Finitary spreads *)
 
-From intuitionism Require Import lib seq bcp.
+From intuitionism Require Import lib set seq bcp.
 
 (* Spread: a subset of the entire Baire space *)
 Record spread := Spr {
@@ -9,9 +9,16 @@ Record spread := Spr {
   σ_cons : forall s, σ s = true <-> exists n, σ (n :: s) = true;
 }.
 
+(* Coerce spreads to CSet *)
+Section SprCSet.
+
 (* Spread membership *)
-Definition inspr X : seqset := fun α => forall m, σ X ⟨α;m⟩ = true.
-Coercion inspr : spread >-> seqset.
+Definition spread_member X α := forall m, σ X ⟨α;m⟩ = true.
+
+Definition spread_cset (X : spread) :=
+  CSet seq (spread_member X) seq_apart seq_apart_neq seq_apart_sym.
+
+Coercion spread_cset : spread >-> cset.
 
 Lemma unfold_inspr (X : spread) α :
   α : X -> forall m, σ X ⟨α;m⟩ = true.
@@ -21,7 +28,11 @@ Lemma intro_inspr (X : spread) α :
   (forall m, σ X ⟨α;m⟩ = true) -> α : X.
 Proof. auto. Qed.
 
+End SprCSet.
+
 (* The Baire space is a spread. *)
+Section BaireSpace.
+
 Definition Nσ (s : fseq) := true.
 
 Lemma Nσ_nil : Nσ [] = true.
@@ -31,6 +42,8 @@ Lemma Nσ_cons s : Nσ s = true <-> exists n, Nσ (n :: s) = true.
 Proof. split; intros; auto. exists 0; auto. Qed.
 
 Definition Baire := Spr Nσ Nσ_nil Nσ_cons.
+
+End BaireSpace.
 
 (* Function to retract the the Baire space onto any spread. *)
 Module Retract.

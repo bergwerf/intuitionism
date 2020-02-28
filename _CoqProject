@@ -1,9 +1,12 @@
 -R . intuitionism
 lib.v
+set.v
 seq.v
+lpo.v
 bcp.v
 spr.v
 fan.v
 tau.v
 bar.v
-fun.v
+func.v
+classic.v
