@@ -107,7 +107,7 @@ End Retract.
 (* BCP generalizes to spreads *)
 Theorem BCPext (X : spread) (R : seq -> nat -> Prop) :
   (forall α, α : X -> exists n, R α n) ->
-  (forall α, α : X -> exists m n, forall β, β : X -> con m α β -> R β n).
+  (forall α, α : X -> exists m n, forall β, β : X -> eqn m α β -> R β n).
 Proof.
 intros Rall.
 pose(rσ := (Retract.r X)).

@@ -11,7 +11,7 @@ Import Nat.
 Axiom BCP :
   forall (R : seq -> nat -> Prop),
   (forall α, exists n, R α n) ->
-  (forall α, exists m n, forall β, con m α β -> R β n).
+  (forall α, exists m n, forall β, eqn m α β -> R β n).
 
 (* We find that intuitionistic logic is *not* a subset of classical logic. *)
 Theorem not_lpo :
@@ -23,11 +23,11 @@ assert(P: forall α : seq, exists i,
   (i > 0 /\ forall n, α n = 0)).
 { intros; destruct (LPO α). exists 0; left; auto. exists 1; right; auto. }
 destruct (BCP _ P (0..ω)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
-- assert(Hα : con m (0..ω) (0..ω)). apply con_id.
+- assert(Hα : eqn m (0..ω) (0..ω)). apply eqn_id.
   apply H in Hα as [[_ [i E]]|[n1 _]]; try omega.
   apply E; auto.
 - pose (β := (prepend m (0..ω) (1..ω))).
-  assert(Hβ: con m (0..ω) β). apply con_prepend.
+  assert(Hβ: eqn m (0..ω) β). apply eqn_prepend.
   apply H in Hβ as [[n0 _]|[_ A]]; try omega.
   assert(Hβ1: β (m + 1) <> 0). unfold β, cseq; rewrite prepend_access_r; omega.
   auto.

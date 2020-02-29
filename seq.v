@@ -16,7 +16,7 @@ Definition cseq (c i : nat) := c.
 Definition cfseq (c n : nat) := repeat c n.
 
 (* The first n elements of α and β coincide. *)
-Definition con n (α β : seq) := forall i, i < n -> α i = β i.
+Definition eqn n (α β : seq) := forall i, i < n -> α i = β i.
 
 (* Apartness relation. *)
 Definition seq_apart (α β : seq) := exists n, α n <> β n.
@@ -64,10 +64,10 @@ Fixpoint compare (n : nat) (α β : seq) :=
 (* Alternative notation *)
 Definition range n m := iota n (1 + m - n).
 
-Notation "c '..ω'" := (cseq c)(at level 10, format "c '..ω'").
-Notation "n '..' m" := (range n m)(at level 10, format "n '..' m").
-Notation "'⟨' α ';' n '⟩'" := (get n α)(at level 0, format "'⟨' α ';' n '⟩'").
-Notation "s '⊏' α" := (starts s α)(at level 50).
+Notation "c '..ω'" := (cseq c) (at level 10, format "c '..ω'").
+Notation "n '..' m" := (range n m) (at level 10, format "n '..' m").
+Notation "'⟨' α ';' n '⟩'" := (get n α) (at level 0, format "'⟨' α ';' n '⟩'").
+Notation "s '⊏' α" := (starts s α) (at level 50).
 
 (* Set of all infinite and finite sequences *)
 Section SeqSet.
@@ -112,19 +112,19 @@ End Shortcuts.
 Section Coincedence.
 
 (* A sequence coincides with itself. *)
-Lemma con_id n α : con n α α.
+Lemma eqn_id n α : eqn n α α.
 Proof. intros i; auto. Qed.
 
 (* A smaller part of a coincedence also coincides. *)
-Lemma con_leq n m α β : con (n + m) α β -> con n α β.
+Lemma eqn_leq n m α β : eqn (n + m) α β -> eqn n α β.
 Proof. intros H i Hi; apply H; omega. Qed.
 
 (* Delete part of a coincedence. *)
-Lemma con_del n m α β :
-  con (n + m) α β <-> con n α β /\ con m (del n α) (del n β).
+Lemma eqn_del n m α β :
+  eqn (n + m) α β <-> eqn n α β /\ eqn m (del n α) (del n β).
 Proof.
 split; unfold del; simpl.
-- intros H; split. eapply con_leq; apply H.
+- intros H; split. eapply eqn_leq; apply H.
   intros i Hi; apply H; omega.
 - intros [H1 H2] i Hi. assert(C: i < n \/ i >= n). omega.
   destruct C. apply H1; auto. replace i with ((i - n) + n) by omega.
@@ -132,8 +132,8 @@ split; unfold del; simpl.
 Qed.
 
 (* α and β coincide iff their first n elements are the same. *)
-Lemma con_eq_get n α β :
-  con n α β <-> ⟨α;n⟩ = ⟨β;n⟩.
+Lemma eqn_eq_get n α β :
+  eqn n α β <-> ⟨α;n⟩ = ⟨β;n⟩.
 Proof.
 revert α β; induction n; simpl; intros; split; auto.
 - intros _ i Hi; omega.
@@ -154,7 +154,7 @@ Qed.
 
 (* Comparison implies coincedence. *)
 Lemma compare_con n α β :
-  con (compare n α β) α β.
+  eqn (compare n α β) α β.
 Proof.
 remember (compare n α β) as k.
 revert Heqk; revert n α β. induction k; intros n α β Hk i Hi. omega.
@@ -251,11 +251,11 @@ Qed.
 
 (* Get finite part of a partially constant sequence. *)
 Lemma get_cseq_eq_cfseq c n α :
-  (con n α (c..ω)) <-> ⟨α;n⟩ = cfseq c n.
+  (eqn n α (c..ω)) <-> ⟨α;n⟩ = cfseq c n.
 Proof.
 induction n; simpl; split; auto.
 - intros _ i Hi; omega.
-- rewrite <-add_1_r; intros H1; apply con_leq in H1 as H2.
+- rewrite <-add_1_r; intros H1; apply eqn_leq in H1 as H2.
   apply cons_split. apply H1; omega. apply IHn; auto.
 - intros H i Hi; inversion H; subst. destruct (eq_dec i n).
   subst; auto. apply IHn in H2; apply H2; omega.
@@ -264,7 +264,7 @@ Qed.
 Corollary get_cseq c n :
   ⟨c..ω;n⟩ = cfseq c n.
 Proof.
-apply get_cseq_eq_cfseq. apply con_id.
+apply get_cseq_eq_cfseq. apply eqn_id.
 Qed.
 
 Lemma get_S_cons α m n s :
@@ -279,8 +279,8 @@ End GetStart.
 Section Prepend.
 
 (* A prepended sequence coincides with itself. *)
-Lemma con_prepend n α β :
-  con n α (prepend n α β).
+Lemma eqn_prepend n α β :
+  eqn n α (prepend n α β).
 Proof.
 intros i Hi; unfold prepend, replace, fill.
 apply ltb_lt in Hi; rewrite Hi; auto.

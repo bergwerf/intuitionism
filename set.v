@@ -22,8 +22,8 @@ Record cset := CSet {
 }.
 
 Arguments apart {_}.
-Notation "α ':' X" := (member X α)(at level 50).
-Notation "α '#' β" := (apart α β)(at level 50, format "α '#' β").
+Notation "α ':' X" := (member X α) (at level 50).
+Notation "α '#' β" := (apart α β) (at level 50, format "α '#' β").
 
 (* The second half of apart_neq is at least always not not true. *)
 Theorem neq_nnapart S (x y : dom S) : x <> y -> ~~x#y.
