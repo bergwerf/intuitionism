@@ -1,14 +1,28 @@
 (* Functions *)
 
-From intuitionism Require Import lib set seq bcp spr fan tau.
+From intuitionism Require Import lib set seq bcp spr fan.
 
-(* Strong definition of injective function on sequences. *)
+(* Classic injective function. *)
+Definition weak_injective A B (f : dom A -> dom B) :=
+  forall a α, a : A -> α : A -> f a = f α -> a = α.
+
+(* Strong injective function. *)
 Definition injective A B (f : dom A -> dom B) :=
   forall a α, a : A -> α : A -> a#α -> f a # f α.
 
-(* Surjective function on sequences. *)
+(* Surjective function. *)
 Definition surjective A B (f : dom A -> dom B) :=
   forall β, β : B -> exists α, α : A /\ f α = β.
+
+Definition bijective A B f := injective A B f /\ surjective A B f.
+
+(* Strong injective implies weak injective. *)
+Theorem injective_to_weak A B f :
+  injective A B f -> weak_injective A B f.
+Proof.
+intros H a α Ha Hα Hf. apply apart_spec; intros P.
+apply H in P; auto. apply apart_spec in P; auto.
+Qed.
 
 (* The set of all sequences is not denumerable. *)
 Theorem seqs_uncountable :
@@ -23,70 +37,20 @@ unfold γ in Hf. omega.
 Qed.
 
 (* The set of all finite sequences is denumerable. *)
-Theorem fseqs_countable :
-  exists f, surjective Nat FSeq f.
+Theorem fseq_eq_nat :
+  exists f, bijective Nat FSeq f.
 Proof.
-(* Use prime factorization, nested Cantor pairing, binary encoding.. *)
+(* The classic approach is to use prime factorization, but I think it is easier
+to prove something using binary encoding and decoding. *)
 Admitted.
 
 (*
-Classical surjection is different from intuitionistic surjection.
-See classic.v for a proof that f is surjective under LPO.
+There exists an injection from the Baire space (natural number sequences) to the
+Cantor space (binary sequences). With the Fan Theorem we can later prove that a
+bijection is not possible.
 *)
-Module NotSurj.
-
-Definition f n :=
-  match n with
-  | 0 => 0..
-  | S m => prepend m (0..) (1..)
-  end.
-
-Lemma f_image n :
-  f n : τ1.
+Theorem cantor_eq_seq :
+  exists f, injective Seq Cantor f.
 Proof.
-apply intro_inspr; intros; apply intro_τP. unfold f; destruct n.
-- intros n; unfold cseq; omega.
-- intros i. split. split; apply prepend_prop; intros; unfold cseq; omega.
-  unfold prepend, replace, fill, cseq.
-  destruct (i <? n) eqn:E1; destruct (S i <? n) eqn:E2;
-  repeat bool_to_Prop; omega.
-Qed.
-
-(* f is injective. *)
-Theorem f_inj :
-  injective Nat τ1 f.
-Proof.
-intros n m _ _; simpl; unfold neq_apart; intros H.
-assert(C: n < m \/ m < n). omega. destruct C, n, m; try omega; simpl.
-- exists m. rewrite <-(add_0_r m) at 3; rewrite prepend_access_r.
-  unfold cseq; omega.
-- exists n. apply le_exists_sub in H0 as [k [Hk _]].
-  replace m with (n + S k) by omega. rewrite prepend_access_l.
-  rewrite <-(add_0_r n) at 2; rewrite prepend_access_r. unfold cseq; omega.
-- exists n. rewrite <-(add_0_r n) at 2; rewrite prepend_access_r.
-  unfold cseq; omega.
-- exists m. apply le_exists_sub in H0 as [k [Hk _]].
-  replace n with (m + S k) by omega. rewrite prepend_access_l.
-  rewrite <-(add_0_r m) at 3; rewrite prepend_access_r. unfold cseq; omega.
-Qed.
-
-(* f is not surjective. *)
-Theorem f_not_surj :
-  ~surjective Nat τ1 f.
-Proof.
-assert(P0: 0.. : τ1). apply member_τP; intros n; unfold cseq; omega.
-intros H; destruct (BCPext τ1 _ H (0..) P0) as [m [n Q]].
-assert(P1: f (S (m + n)) : τ1). apply f_image. apply Q in P1 as [_ P1].
-revert P1; destruct n; simpl; intros P1.
-- apply equal_f with (x:=m) in P1; revert P1.
-  rewrite add_0_r; rewrite prepend_access_r0.
-  unfold cseq; intros; omega.
-- apply equal_f with (x:=n) in P1; revert P1. rewrite prepend_access_r0.
-  replace (m + S n) with (n + S m) by omega. rewrite prepend_access_l.
-  unfold cseq; intros; omega.
-- intros i Hi; unfold f. unfold prepend, replace, fill.
-  assert(R: i <? m + n = true). bool_to_Prop; omega. rewrite R.
-  omega.
-Qed.
-
-End NotSurj.
+(* This function is trickier. *)
+Admitted.

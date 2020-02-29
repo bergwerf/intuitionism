@@ -47,23 +47,52 @@ Fixpoint get n (α : seq) : fseq :=
   | S m => α m :: (get m α)
   end.
 
-Notation "c '..'" := (cseq c)(at level 10, format "c '..'").
+(* Increasing sequence from n .. n + k *)
+Fixpoint iota (n k : nat) : fseq :=
+  match k with
+  | 0 => []
+  | S l => n :: (iota (S n) l)
+  end.
+
+(* Check, up to n, how many elements of α and β coincide. *)
+Fixpoint compare (n : nat) (α β : seq) :=
+  match n with
+  | 0 => 0
+  | S m => if α 0 =? β 0 then S (compare m (del 1 α) (del 1 β)) else 0
+  end.
+
+(* Alternative notation *)
+Definition range n m := iota n (1 + m - n).
+
+Notation "c '..ω'" := (cseq c)(at level 10, format "c '..ω'").
+Notation "n '..' m" := (range n m)(at level 10, format "n '..' m").
 Notation "'⟨' α ';' n '⟩'" := (get n α)(at level 0, format "'⟨' α ';' n '⟩'").
 Notation "s '⊏' α" := (starts s α)(at level 50).
 
 (* Set of all infinite and finite sequences *)
 Section SeqSet.
 
-Lemma seq_apart_neq α β :
-  seq_apart α β -> α <> β.
+Lemma seq_apart_spec α β :
+  ~seq_apart α β <-> α = β.
+Proof.
+unfold seq_apart; split; intros.
+- extensionality n. destruct (eq_nat_dec (α n) (β n)); auto.
+  exfalso; apply H; exists n; auto.
+- intros [n P]; subst; auto.
+Qed.
+
+Lemma seq_apart_neq α β : seq_apart α β -> α <> β.
 Proof. intros [n H] P; subst; apply H; auto. Qed.
 
-Lemma seq_apart_sym α β :
-  seq_apart α β -> seq_apart β α.
+Lemma seq_apart_sym α β : seq_apart α β -> seq_apart β α.
 Proof. intros [n H]; exists n; auto. Qed.
 
-Definition Seq := CSet seq full_set seq_apart seq_apart_neq seq_apart_sym.
-Definition FSeq := CSet fseq full_set neq_apart neq_apart_neq neq_apart_sym.
+Definition Seq := CSet seq full_set seq_apart
+  seq_apart_spec seq_apart_neq seq_apart_sym.
+
+Definition FSeq := CSet fseq full_set (dec_apart fseq)
+  (dec_apart_spec fseq (list_eq_dec eq_nat_dec)) (dec_apart_neq fseq)
+  (dec_apart_sym fseq).
 
 End SeqSet.
 
@@ -98,8 +127,8 @@ split; unfold del; simpl.
 - intros H; split. eapply con_leq; apply H.
   intros i Hi; apply H; omega.
 - intros [H1 H2] i Hi. assert(C: i < n \/ i >= n). omega.
-  destruct C. apply H1; auto. assert(R: i = (i - n) + n). omega.
-  rewrite R; apply H2; omega.
+  destruct C. apply H1; auto. replace i with ((i - n) + n) by omega.
+  apply H2; omega.
 Qed.
 
 (* α and β coincide iff their first n elements are the same. *)
@@ -113,6 +142,26 @@ revert α β; induction n; simpl; intros; split; auto.
 - intros H i Hi. destruct (eq_dec i n).
   + subst; injection H; auto.
   + apply IHn; try omega. injection H; auto.
+Qed.
+
+(* Comparison returns at most its input. *)
+Lemma compare_leq n α β :
+  compare n α β <= n.
+Proof.
+revert α β; induction n; simpl; intros; auto.
+destruct (α 0 =? β 0); try omega. apply (succ_le_mono _ n). auto.
+Qed.
+
+(* Comparison implies coincedence. *)
+Lemma compare_con n α β :
+  con (compare n α β) α β.
+Proof.
+remember (compare n α β) as k.
+revert Heqk; revert n α β. induction k; intros n α β Hk i Hi. omega.
+revert Hk. destruct n; simpl. discriminate. intros.
+destruct (α 0 =? β 0) eqn:E; bool_to_Prop; try discriminate.
+injection Hk; intros. apply IHk in H. destruct (eq_nat_dec i 0); subst; auto.
+replace i with ((i - 1) + 1) by omega. apply H; omega.
 Qed.
 
 End Coincedence.
@@ -148,8 +197,7 @@ Lemma del_app_S n m α :
 Proof.
 induction m; simpl; auto.
 rewrite IHm; simpl; unfold del.
-assert(R: m + S n = S m + n). omega.
-rewrite R; auto.
+replace (m + S n) with (S m + n) by omega; auto.
 Qed.
 
 (* Deletion and append *)
@@ -160,7 +208,7 @@ revert α. induction n, m; simpl; intros; auto.
 - rewrite del0, app_nil_r; auto.
 - rewrite add_0_r; auto.
 - apply cons_split.
-  + unfold del. assert(R: n + S m = m + S n). omega. auto.
+  + unfold del. replace (n + S m) with (m + S n) by omega. auto.
   + assert(R: forall x (v w : fseq), v ++ x :: w = (v ++ [x]) ++ w).
     { intros; induction v; simpl; auto. rewrite IHv; auto. }
     rewrite R, del_app_S, <-IHn; auto.
@@ -174,7 +222,7 @@ Section SeqProp.
 Variable P : nat -> Prop.
 
 Lemma cseq_prop c :
-  P c -> forall n, P ((c..) n).
+  P c -> forall n, P (c..ω n).
 Proof. unfold cseq; intros; auto. Qed.
 
 Lemma prepend_prop n α β :
@@ -203,7 +251,7 @@ Qed.
 
 (* Get finite part of a partially constant sequence. *)
 Lemma get_cseq_eq_cfseq c n α :
-  (con n α (c..)) <-> ⟨α;n⟩ = cfseq c n.
+  (con n α (c..ω)) <-> ⟨α;n⟩ = cfseq c n.
 Proof.
 induction n; simpl; split; auto.
 - intros _ i Hi; omega.
@@ -214,7 +262,7 @@ induction n; simpl; split; auto.
 Qed.
 
 Corollary get_cseq c n :
-  ⟨c..;n⟩ = cfseq c n.
+  ⟨c..ω;n⟩ = cfseq c n.
 Proof.
 apply get_cseq_eq_cfseq. apply con_id.
 Qed.
@@ -227,6 +275,9 @@ Qed.
 
 End GetStart.
 
+(* Facts about prepend *)
+Section Prepend.
+
 (* A prepended sequence coincides with itself. *)
 Lemma con_prepend n α β :
   con n α (prepend n α β).
@@ -235,13 +286,21 @@ intros i Hi; unfold prepend, replace, fill.
 apply ltb_lt in Hi; rewrite Hi; auto.
 Qed.
 
+(* Prepend zero elements. *)
+Lemma prepend_zero α β :
+  prepend 0 α β = β.
+Proof.
+extensionality n. unfold prepend, replace, fill.
+replace (n <? 0) with false by bool_omega.
+rewrite sub_0_r; auto.
+Qed.
+
 (* Access left sequence of prepend. *)
 Lemma prepend_access_l n m α β :
   prepend (n + S m) α β n = α n.
 Proof.
 unfold prepend, replace, fill.
-assert(R1: n <? n + S m = true). bool_to_Prop; omega.
-rewrite R1; auto.
+replace (n <? n + S m) with true by bool_omega; auto.
 Qed.
 
 (* Access right sequence of prepend. *)
@@ -249,9 +308,9 @@ Lemma prepend_access_r n m α β :
   prepend n α β (n + m) = β m.
 Proof.
 unfold prepend, replace, fill.
-assert(R1: n + m <? n = false). bool_to_Prop; omega.
-assert(R2: n + m - n = m). omega.
-rewrite R1, R2; auto.
+replace (n + m <? n) with false by bool_omega.
+replace (n + m - n) with m by omega.
+auto.
 Qed.
 
 Corollary prepend_access_r0 n α β :
@@ -259,3 +318,32 @@ Corollary prepend_access_r0 n α β :
 Proof.
 rewrite <-(add_0_r n) at 2. apply prepend_access_r.
 Qed.
+
+End Prepend.
+
+(* Facts about iota and range *)
+Section IotaRange.
+
+Lemma iota_cons n k :
+  iota n (S k) = n :: iota (S n) k.
+Proof. auto. Qed.
+
+Lemma iota_add_app_r n k l :
+  iota n (k + l) = iota n k ++ iota (n + k) l.
+Proof.
+revert n l; induction k; intros; simpl.
+- rewrite add_0_r; auto.
+- rewrite IHk. replace (S n + k) with (n + S k) by omega; auto.
+Qed.
+
+Lemma range_add_app_r n m k :
+  n <= m -> n..(m + S k) = n..m ++ (S m)..(m + S k).
+Proof.
+unfold range; intros H.
+replace (1 + (m + S k) - n) with (1 + m - n + S k) by omega.
+rewrite iota_add_app_r; apply app_split; auto.
+replace (n + (1 + m - n)) with (S m) by omega.
+replace (1 + (m + S k) - S m) with (S k) by omega; auto.
+Qed.
+
+End IotaRange.

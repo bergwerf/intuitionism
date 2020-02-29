@@ -16,29 +16,48 @@ Record cset := CSet {
   dom :> Type;
   member : dom -> Prop;
   apart : dom -> dom -> Prop;
+  apart_spec : forall x y, ~apart x y <-> x = y;
   apart_neq : forall x y, apart x y -> x <> y;
   apart_sym : forall x y, apart x y -> apart y x;
 }.
-
-Definition full_set {T} (x : T) := True.
 
 Arguments apart {_}.
 Notation "α ':' X" := (member X α)(at level 50).
 Notation "α '#' β" := (apart α β)(at level 50, format "α '#' β").
 
-Definition neq_apart {T} (n m : T) := n <> m.
+(* The second half of apart_neq is at least always not not true. *)
+Theorem neq_nnapart S (x y : dom S) : x <> y -> ~~x#y.
+Proof. intros H P; apply (apart_spec S) in P; auto. Qed.
 
-Lemma neq_apart_neq {T} (n m : T) : neq_apart n m -> n <> m.
+Definition full_set {T} (x : T) := True.
+
+(* Apartness for decidable equality *)
+Section DecidableEquality.
+Variable T : Type.
+Variable dec : forall x y : T, {x = y} + {x <> y}.
+Definition dec_apart (n m : T) := n <> m.
+
+Lemma dec_apart_spec (x y : T) :
+  ~dec_apart x y <-> x = y.
+Proof.
+unfold dec_apart; split; intros.
+- destruct (dec x y); auto; exfalso; auto.
+- intros P; auto.
+Qed.
+
+Lemma dec_apart_neq (x y : T) : dec_apart x y -> x <> y.
 Proof. auto. Qed.
 
-Lemma neq_apart_sym {T} (n m : T) : neq_apart n m -> neq_apart m n.
-Proof. unfold neq_apart; intros H P; apply H; auto. Qed.
+Lemma dec_apart_sym (n m : T) : dec_apart n m -> dec_apart m n.
+Proof. unfold dec_apart; intros H P; apply H; auto. Qed.
+
+End DecidableEquality.
 
 (* The natural numbers *)
 Section NaturalNumbers.
 
-Definition nat_member (n : nat) := True.
-
-Definition Nat := CSet nat nat_member neq_apart neq_apart_neq neq_apart_sym.
+Definition Nat := CSet nat full_set (dec_apart nat)
+  (dec_apart_spec nat eq_nat_dec) (dec_apart_neq nat)
+  (dec_apart_sym nat).
 
 End NaturalNumbers.

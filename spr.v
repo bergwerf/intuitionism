@@ -16,7 +16,8 @@ Section SprCSet.
 Definition spread_member X α := forall m, σ X ⟨α;m⟩ = true.
 
 Definition spread_cset (X : spread) :=
-  CSet seq (spread_member X) seq_apart seq_apart_neq seq_apart_sym.
+  CSet seq (spread_member X) seq_apart
+    seq_apart_spec seq_apart_neq seq_apart_sym.
 
 Coercion spread_cset : spread >-> cset.
 
@@ -29,21 +30,6 @@ Lemma intro_inspr (X : spread) α :
 Proof. auto. Qed.
 
 End SprCSet.
-
-(* The Baire space is a spread. *)
-Section BaireSpace.
-
-Definition Nσ (s : fseq) := true.
-
-Lemma Nσ_nil : Nσ [] = true.
-Proof. auto. Qed.
-
-Lemma Nσ_cons s : Nσ s = true <-> exists n, Nσ (n :: s) = true.
-Proof. split; intros; auto. exists 0; auto. Qed.
-
-Definition Baire := Spr Nσ Nσ_nil Nσ_cons.
-
-End BaireSpace.
 
 (* Function to retract the the Baire space onto any spread. *)
 Module Retract.

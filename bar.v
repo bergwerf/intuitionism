@@ -10,7 +10,9 @@ Record bar (F : fan) := Bar {
 
 (* Coerce bar to a cset. *)
 Definition bar_cset F (B : bar F) :=
-  CSet fseq (barred F B) neq_apart neq_apart_neq neq_apart_sym.
+  CSet fseq (barred F B) (dec_apart fseq)
+  (dec_apart_spec fseq (list_eq_dec eq_nat_dec)) (dec_apart_neq fseq)
+  (dec_apart_sym fseq).
 
 Coercion bar_cset : bar >-> cset.
 

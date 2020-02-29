@@ -18,17 +18,22 @@ Theorem not_lpo :
   ~LPO.
 Proof.
 intros LPO.
-assert(R: forall α : seq, exists i,
+assert(P: forall α : seq, exists i,
   (i = 0 /\ exists n, α n <> 0) \/
   (i > 0 /\ forall n, α n = 0)).
 { intros; destruct (LPO α). exists 0; left; auto. exists 1; right; auto. }
-destruct (BCP _ R (0..)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
-- assert(Hα : con m (0..) (0..)). apply con_id.
+destruct (BCP _ P (0..ω)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
+- assert(Hα : con m (0..ω) (0..ω)). apply con_id.
   apply H in Hα as [[_ [i E]]|[n1 _]]; try omega.
   apply E; auto.
-- pose (β := (prepend m (0..) (1..))).
-  assert(Hβ: con m (0..) β). apply con_prepend.
+- pose (β := (prepend m (0..ω) (1..ω))).
+  assert(Hβ: con m (0..ω) β). apply con_prepend.
   apply H in Hβ as [[n0 _]|[_ A]]; try omega.
   assert(Hβ1: β (m + 1) <> 0). unfold β, cseq; rewrite prepend_access_r; omega.
   auto.
 Qed.
+
+(* Any function f : seq -> nat is computable. *)
+Lemma f_computable (f : seq -> nat) :
+  forall α, exists n, f α = n.
+Proof. intros; exists (f α); auto. Qed.
