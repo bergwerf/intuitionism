@@ -3,7 +3,7 @@
 From intuitionism Require Import lib seq.
 
 (* Principle of Omniscience, or the Law of the Excluded Middle *)
-Definition PrincipleOfOmniscience := forall P, P \/ ~P.
+Definition LEM := forall P, P \/ ~P.
 
 (* Limited Principle of Omniscience *)
 Definition LPO := forall (α : seq), (exists n, α n <> 0) \/ (forall n, α n = 0).
@@ -22,9 +22,9 @@ Proof. omega. Qed.
 Lemma even_false_odd n : even n = false -> Odd n.
 Proof. intros; apply odd_spec; unfold odd; rewrite H; auto. Qed.
 
-(* PO is as least as strong as LPO. *)
-Theorem po_lpo :
-  PrincipleOfOmniscience -> LPO.
+(* LEM is as least as strong as LPO. *)
+Theorem lem_lpo :
+  LEM -> LPO.
 Proof.
 intros PO α; destruct (PO (exists n, α n <> 0)). left; auto.
 right; intros n; destruct (eq_nat_dec (α n) 0); auto.
@@ -46,6 +46,33 @@ intros LPO α. destruct (LPO α).
   all: try apply H1 in P; auto.
 - left; intros k [H1 H2]; exfalso; auto.
 Qed.
+
+(* Some results using only constructive logic. *)
+Section Logic.
+
+Lemma nnLEM P : ~~(P \/ ~P).
+Proof. unfold not; auto. Qed.
+
+Lemma nn_forall {T} (P : T -> Prop) :
+  (~~forall x, P x) -> forall x, ~~(P x).
+Proof. unfold not; auto. Qed.
+
+Lemma exists_Px {T} (P : T -> Prop) :
+  (exists x, P x) -> ~forall x, ~P x.
+Proof. intros [x Hx] H. eapply H; apply Hx. Qed.
+
+Lemma forall_not {T} (P : T -> Prop) :
+  (~exists n, P n) -> forall n, ~P n.
+Proof. intros H1 n H2. apply H1; exists n; auto. Qed.
+
+Lemma contra (P Q : Prop) : (P -> Q) -> ~Q -> ~P.
+Proof. auto. Qed.
+
+Lemma nn_imply (P Q : Prop) : (P -> Q) -> ~~P -> ~~Q.
+Proof. auto. Qed.
+
+End Logic.
+
 
 (* Reckless statements *)
 Section Recklessness.

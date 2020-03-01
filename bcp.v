@@ -33,6 +33,10 @@ destruct (BCP _ P (0..ω)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
   auto.
 Qed.
 
+(* And indeed the law of excluded middle does not hold under BCP. *)
+Corollary not_lem : ~LEM.
+Proof. intros H; apply not_lpo; apply lem_lpo; auto. Qed.
+
 (* Any function f : seq -> nat is computable. *)
 Lemma f_computable (f : seq -> nat) :
   forall α, exists n, f α = n.
