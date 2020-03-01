@@ -121,7 +121,7 @@ intros LPO H; destruct (LPO γ) as [[n Hn]|Hn].
 Qed.
 
 (* If sequence inequality implies apartness, then we have Markov's Principle. *)
-Theorem neq_seq_apart_reckless :
+Theorem neq_seq_apart_markov :
   (forall α β, α <> β -> seq_apart α β) -> markov_principle.
 Proof.
 intros H α Hα. assert(αneq0: α <> (0..ω)).

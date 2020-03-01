@@ -11,7 +11,7 @@ want to prove all classical facts in the absence of BCP.
 Theorem weak_injective_strong_markov :
   (forall A B f, weak_injective A B f -> injective A B f) -> markov_principle.
 Proof.
-intros WI α Hα.
+intros WIS α Hα.
 (* A weakly injective function s.t. strong injectivity proves the goal *)
 pose (f (b : bool) := if b then α else (0..ω)).
 assert(weak_inj: weak_injective Bool Seq f).
@@ -20,7 +20,7 @@ assert(weak_inj: weak_injective Bool Seq f).
   apply H. symmetry; apply H. }
 assert(apartness: @apart Bool true false).
 { simpl; unfold dec_apart. discriminate. }
-apply WI in weak_inj as inj.
+apply WIS in weak_inj as inj.
 apply inj in apartness; auto; apply I.
 Qed.
 
