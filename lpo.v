@@ -53,22 +53,25 @@ Section Logic.
 Lemma nnLEM P : ~~(P \/ ~P).
 Proof. unfold not; auto. Qed.
 
-Lemma nn_forall {T} (P : T -> Prop) :
+Lemma forall_nn {T} (P : T -> Prop) :
   (~~forall x, P x) -> forall x, ~~(P x).
 Proof. unfold not; auto. Qed.
 
-Lemma exists_Px {T} (P : T -> Prop) :
+Lemma not_forall_not {T} (P : T -> Prop) :
   (exists x, P x) -> ~forall x, ~P x.
 Proof. intros [x Hx] H. eapply H; apply Hx. Qed.
 
 Lemma forall_not {T} (P : T -> Prop) :
-  (~exists n, P n) -> forall n, ~P n.
+  (~exists x, P x) -> forall x, ~P x.
 Proof. intros H1 n H2. apply H1; exists n; auto. Qed.
 
 Lemma contra (P Q : Prop) : (P -> Q) -> ~Q -> ~P.
 Proof. auto. Qed.
 
-Lemma nn_imply (P Q : Prop) : (P -> Q) -> ~~P -> ~~Q.
+Lemma nn_imply_nn (P Q : Prop) : (P -> Q) -> ~~P -> ~~Q.
+Proof. auto. Qed.
+
+Lemma nn_imply (P Q : Prop) : ~~(P -> Q) -> (P -> ~~Q).
 Proof. auto. Qed.
 
 End Logic.
