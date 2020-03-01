@@ -9,17 +9,17 @@ Record spread := Spr {
   σ_cons : forall s, σ s = true <-> exists n, σ (n :: s) = true;
 }.
 
-(* Coerce spreads to CSet *)
+(* Coerce spreads to aset *)
 Section SprCSet.
 
 (* Spread membership *)
 Definition spread_member X α := forall m, σ X ⟨α;m⟩ = true.
 
-Definition spread_cset (X : spread) :=
-  CSet seq (spread_member X) seq_apart
+Definition spread_aset (X : spread) :=
+  ASet seq (spread_member X) seq_apart
     seq_apart_spec seq_apart_neq seq_apart_sym.
 
-Coercion spread_cset : spread >-> cset.
+Coercion spread_aset : spread >-> aset.
 
 Lemma unfold_inspr (X : spread) α :
   α : X -> forall m, σ X ⟨α;m⟩ = true.

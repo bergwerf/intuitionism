@@ -7,12 +7,22 @@ Note that lpo.v cannot import any files that use the BCP axiom. Of course we
 want to prove all classical facts in the absence of BCP.
 *)
 
-(* A weakly injective function is not always strongly injective. *)
-Theorem weak_injective_not_strong A B f :
-  (weak_injective A B f -> injective A B f) -> strong_recklessness.
+(* If weak injective is strong injective then we have Markov's Principle. *)
+Theorem weak_injective_strong_markov :
+  (forall A B f, weak_injective A B f -> injective A B f) -> markov_principle.
 Proof.
-(* This is just a vague suspicion, I have not yet tried to prove it. *)
-Abort.
+intros WI α Hα.
+(* A weakly injective function s.t. strong injectivity proves the goal *)
+pose (f (b : bool) := if b then α else (0..ω)).
+assert(weak_inj: weak_injective Bool Seq f).
+{ intros a b _ _ H. destruct a, b; auto; exfalso; apply Hα; intros.
+  all: simpl in H; eapply equal_f in H; unfold cseq in H.
+  apply H. symmetry; apply H. }
+assert(apartness: @apart Bool true false).
+{ simpl; unfold dec_apart. discriminate. }
+apply WI in weak_inj as inj.
+apply inj in apartness; auto; apply I.
+Qed.
 
 (* A function which is probably non-surjective is surjective under LPO. *)
 (* Note that the converse is not true because not every α : τ1. *)

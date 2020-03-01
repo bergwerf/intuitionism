@@ -87,10 +87,10 @@ Proof. intros [n H] P; subst; apply H; auto. Qed.
 Lemma seq_apart_sym α β : seq_apart α β -> seq_apart β α.
 Proof. intros [n H]; exists n; auto. Qed.
 
-Definition Seq := CSet seq full_set seq_apart
+Definition Seq := ASet seq full_set seq_apart
   seq_apart_spec seq_apart_neq seq_apart_sym.
 
-Definition FSeq := CSet fseq full_set (dec_apart fseq)
+Definition FSeq := ASet fseq full_set (dec_apart fseq)
   (dec_apart_spec fseq (list_eq_dec eq_nat_dec)) (dec_apart_neq fseq)
   (dec_apart_sym fseq).
 

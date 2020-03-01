@@ -3,16 +3,14 @@
 From intuitionism Require Import lib.
 
 (*
+Sets with positive apartness
+
 The sets we use must provide a positive inequality predicate and a membership
 predicate (like Ensembles). I decided to not use sigma types in this library
 because projections cannot be automatically coerced. I do encourage using
 extensionality axioms.
-
-We need this intermediary definition such that we can later use one clean
-definition of properties like injectivity. (I picked C as prefix for
-*C*onstructive because I couldn't come up with anything better).
 *)
-Record cset := CSet {
+Record aset := ASet {
   dom :> Type;
   member : dom -> Prop;
   apart : dom -> dom -> Prop;
@@ -53,11 +51,10 @@ Proof. unfold dec_apart; intros H P; apply H; auto. Qed.
 
 End DecidableEquality.
 
-(* The natural numbers *)
-Section NaturalNumbers.
-
-Definition Nat := CSet nat full_set (dec_apart nat)
+Definition Nat := ASet nat full_set (dec_apart nat)
   (dec_apart_spec nat eq_nat_dec) (dec_apart_neq nat)
   (dec_apart_sym nat).
 
-End NaturalNumbers.
+Definition Bool := ASet bool full_set (dec_apart bool)
+  (dec_apart_spec bool bool_dec) (dec_apart_neq bool)
+  (dec_apart_sym bool).

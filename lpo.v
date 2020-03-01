@@ -73,13 +73,13 @@ Definition recklessness :=
   (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Even k) \/
   (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
 
-(* A weaker version of LPO is sometimes easier in proofs. *)
-Definition strong_recklessness :=
+(* A version of Markov's Principle that is stronger than recklessness. *)
+Definition markov_principle :=
   forall α : seq, ~(forall n, α n = 0) -> exists n, α n <> 0.
 
-(* Strong recklessness is indeed stronger. *)
-Theorem stronger_recklessness :
-  strong_recklessness -> recklessness.
+(* Markov's Principle is reckless. *)
+Theorem markov_reckless :
+  markov_principle -> recklessness.
 Proof.
 intros SR α Hα. apply (SR α) in Hα.
 pose (n0 := epsilon_smallest _ (neq0_dec α) Hα);
@@ -92,21 +92,14 @@ all: try apply H2 in P; auto.
 all: apply Hn1 in P; rewrite H1 in P; discriminate.
 Qed.
 
-(* LPO is indeed strongly reckless. *)
-Theorem lpo_reckless :
-  LPO -> strong_recklessness.
+(* LPO implies Markov's Principle. *)
+Theorem lpo_markov :
+  LPO -> markov_principle.
 Proof.
 intros LPO α H. destruct (LPO α).
 - destruct H0 as [n Hn]; exists n; auto.
 - exfalso; apply H; auto.
 Qed.
-
-(* LPO is stronger than strong recklessness. *)
-Theorem reckless_not_lpo :
-  ~(strong_recklessness -> LPO).
-Proof.
-(* A serious attempt to prove this failed. *)
-Abort.
 
 End Recklessness.
 
@@ -127,9 +120,9 @@ intros LPO H; destruct (LPO γ) as [[n Hn]|Hn].
 - exfalso; apply H; extensionality n. apply Hγ; auto.
 Qed.
 
-(* It is reckless to say two sequences are apart if they are not equal. *)
+(* If sequence inequality implies apartness, then we have Markov's Principle. *)
 Theorem neq_seq_apart_reckless :
-  (forall α β, α <> β -> seq_apart α β) -> strong_recklessness.
+  (forall α β, α <> β -> seq_apart α β) -> markov_principle.
 Proof.
 intros H α Hα. assert(αneq0: α <> (0..ω)).
 { intros P; apply Hα; rewrite P; auto. }
