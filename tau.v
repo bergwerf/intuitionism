@@ -103,7 +103,19 @@ destruct (BCP _ (f_computable f) (0..ω)) as [m [n Hbcp]].
 (* Full image consists of all sequences up to 0^m. *)
 exists (map (fun k => f (prepend k (0..ω) (1..ω))) (0..m)).
 intros α Hα. pose (k := compare m α (0..ω)).
-Admitted.
+assert(kleqm: k <= m). unfold k; apply compare_leq.
+assert(Hk: eqn k α (0..ω)). apply eqn_compare.
+apply in_map_range with (k0:=k); auto. destruct (eq_nat_dec k m).
+- rewrite e. rewrite Hbcp. symmetry; apply Hbcp.
+  apply eqn_prepend. rewrite <-e. apply eqn_sym; auto.
+- apply f_equal. extensionality i. unfold prepend, replace, fill.
+  destruct (i <? k) eqn:E; bool_to_Prop; unfold cseq.
+  apply Hk; omega. destruct (τ2_cases α i); auto.
+  assert(Hlt: k < m). omega. assert(Heqk: k = compare m α (0..ω)). auto.
+  apply compare_lt in Hlt. rewrite <-Heqk in Hlt.
+  exfalso. apply Hlt; unfold cseq.
+  apply (τ_mono _ _ α) in E; auto. omega.
+Qed.
 
 (*
 Classical surjection is different from intuitionistic surjection.

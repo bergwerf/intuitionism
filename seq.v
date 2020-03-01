@@ -22,7 +22,7 @@ Definition eqn n (α β : seq) := forall i, i < n -> α i = β i.
 Definition seq_apart (α β : seq) := exists n, α n <> β n.
 
 (* Delete first n elements. *)
-Definition del n (α : seq) i := α (i + n).
+Definition del n (α : seq) i := α (n + i).
 
 (* Prepend n times (α 0) to the sequence. *)
 Definition fill n (α : seq) i := α (i - n).
@@ -111,9 +111,14 @@ End Shortcuts.
 (* Facts about the coincedence relation *)
 Section Coincedence.
 
-(* A sequence coincides with itself. *)
-Lemma eqn_id n α : eqn n α α.
+Lemma eqn_refl n α : eqn n α α.
 Proof. intros i; auto. Qed.
+
+Lemma eqn_sym n α β : eqn n α β -> eqn n β α.
+Proof. intros H i Hi. symmetry; apply H; auto. Qed.
+
+Lemma eqn_trans n α β γ : eqn n α β -> eqn n β γ -> eqn n α γ.
+Proof. intros Hαβ Hβγ i Hi. rewrite Hαβ. apply Hβγ. all: omega. Qed.
 
 (* A smaller part of a coincedence also coincides. *)
 Lemma eqn_leq n m α β : eqn (n + m) α β -> eqn n α β.
@@ -127,7 +132,7 @@ split; unfold del; simpl.
 - intros H; split. eapply eqn_leq; apply H.
   intros i Hi; apply H; omega.
 - intros [H1 H2] i Hi. assert(C: i < n \/ i >= n). omega.
-  destruct C. apply H1; auto. replace i with ((i - n) + n) by omega.
+  destruct C. apply H1; auto. replace i with (n + (i - n)) by omega.
   apply H2; omega.
 Qed.
 
@@ -144,26 +149,6 @@ revert α β; induction n; simpl; intros; split; auto.
   + apply IHn; try omega. injection H; auto.
 Qed.
 
-(* Comparison returns at most its input. *)
-Lemma compare_leq n α β :
-  compare n α β <= n.
-Proof.
-revert α β; induction n; simpl; intros; auto.
-destruct (α 0 =? β 0); try omega. apply (succ_le_mono _ n). auto.
-Qed.
-
-(* Comparison implies coincedence. *)
-Lemma compare_con n α β :
-  eqn (compare n α β) α β.
-Proof.
-remember (compare n α β) as k.
-revert Heqk; revert n α β. induction k; intros n α β Hk i Hi. omega.
-revert Hk. destruct n; simpl. discriminate. intros.
-destruct (α 0 =? β 0) eqn:E; bool_to_Prop; try discriminate.
-injection Hk; intros. apply IHk in H. destruct (eq_nat_dec i 0); subst; auto.
-replace i with ((i - 1) + 1) by omega. apply H; omega.
-Qed.
-
 End Coincedence.
 
 (* Facts about delete and fill *)
@@ -173,7 +158,7 @@ Section DeleteFill.
 Lemma del0 α : del 0 α = α.
 Proof.
 apply functional_extensionality.
-intros; unfold del; rewrite add_0_r; auto.
+intros; unfold del; rewrite add_0_l; auto.
 Qed.
 
 (* Fill 0 elements. *)
@@ -183,21 +168,25 @@ apply functional_extensionality.
 intros; unfold fill; rewrite sub_0_r; auto.
 Qed.
 
+(* Rewrite deletion. *)
+Lemma del_access α m n : del m α n = α (m + n).
+Proof. auto. Qed.
+
 (* Repeated deletion *)
 Lemma del_add_distr n m α :
-  del n (del m α) = del (n + m) α.
+  del n (del m α) = del (m + n) α.
 Proof.
 unfold del; apply functional_extensionality.
-intros; rewrite add_assoc; auto.
+intros. rewrite add_assoc; auto.
 Qed.
 
 (* Append element back to deletion. *)
 Lemma del_app_S n m α :
   ⟨del (S n) α;m⟩ ++ [α n] = ⟨del n α;S m⟩.
 Proof.
-induction m; simpl; auto.
+induction m; simpl. unfold del; rewrite add_0_r; auto.
 rewrite IHm; simpl; unfold del.
-replace (m + S n) with (S m + n) by omega; auto.
+replace (S n + m) with (n + S m) by omega; auto.
 Qed.
 
 (* Deletion and append *)
@@ -208,13 +197,55 @@ revert α. induction n, m; simpl; intros; auto.
 - rewrite del0, app_nil_r; auto.
 - rewrite add_0_r; auto.
 - apply cons_split.
-  + unfold del. replace (n + S m) with (m + S n) by omega. auto.
+  + unfold del. replace (n + S m) with (S n + m) by omega. auto.
   + assert(R: forall x (v w : fseq), v ++ x :: w = (v ++ [x]) ++ w).
     { intros; induction v; simpl; auto. rewrite IHv; auto. }
     rewrite R, del_app_S, <-IHn; auto.
 Qed.
 
 End DeleteFill.
+
+(* Facts about sequence comparison *)
+Section Compare.
+
+Lemma compare_com n α β :
+  compare n α β = compare n β α.
+Proof.
+revert α β; induction n; simpl; intros; auto.
+rewrite eqb_sym. destruct (β 0 =? α 0); auto.
+Qed.
+
+(* Comparison returns at most its input. *)
+Lemma compare_leq n α β :
+  compare n α β <= n.
+Proof.
+revert α β; induction n; simpl; intros; auto.
+destruct (α 0 =? β 0); try omega. apply (succ_le_mono _ n). auto.
+Qed.
+
+(* If comparison returns less than its input there is an inequality. *)
+Lemma compare_lt n α β :
+  compare n α β < n -> α (compare n α β) <> β (compare n α β).
+Proof.
+revert α β; induction n; simpl; intros. omega.
+destruct (α 0 =? β 0) eqn:E; bool_to_Prop; auto.
+apply succ_lt_mono in H. apply IHn in H.
+rewrite ?del_access, ?add_1_l in H; auto.
+Qed.
+
+(* Comparison implies coincedence. *)
+Lemma eqn_compare n α β :
+  eqn (compare n α β) α β.
+Proof.
+remember (compare n α β) as k.
+revert Heqk; revert n α β. induction k; intros n α β Hk i Hi. omega.
+revert Hk. destruct n; simpl. discriminate. intros.
+destruct (α 0 =? β 0) eqn:E; bool_to_Prop; try discriminate.
+injection Hk; intros. apply IHk in H. destruct (eq_nat_dec i 0); subst; auto.
+replace i with (1 + (i - 1)) by omega. apply H; omega.
+Qed.
+
+End Compare.
 
 (* Facts about properties of sequence elements *)
 Section SeqProp.
@@ -264,7 +295,7 @@ Qed.
 Corollary get_cseq c n :
   ⟨c..ω;n⟩ = cfseq c n.
 Proof.
-apply get_cseq_eq_cfseq. apply eqn_id.
+apply get_cseq_eq_cfseq. apply eqn_refl.
 Qed.
 
 Lemma get_S_cons α m n s :
@@ -313,11 +344,8 @@ replace (n + m - n) with m by omega.
 auto.
 Qed.
 
-Corollary prepend_access_r0 n α β :
-  prepend n α β n = β 0.
-Proof.
-rewrite <-(add_0_r n) at 2. apply prepend_access_r.
-Qed.
+Corollary prepend_access_r0 n α β : prepend n α β n = β 0.
+Proof. rewrite <-(add_0_r n) at 2. apply prepend_access_r. Qed.
 
 End Prepend.
 
@@ -345,5 +373,17 @@ rewrite iota_add_app_r; apply app_split; auto.
 replace (n + (1 + m - n)) with (S m) by omega.
 replace (1 + (m + S k) - S m) with (S k) by omega; auto.
 Qed.
+
+Lemma in_map_iota {T} (f : nat -> T) k n m x :
+  n <= k < n + m -> x = f k -> In x (map f (iota n m)).
+Proof.
+revert n; induction m; intros; simpl. omega.
+destruct (eq_nat_dec n k); subst; auto.
+right; apply IHm; auto. omega.
+Qed.
+
+Corollary in_map_range {T} (f : nat -> T) k n x :
+  k <= n -> x = f k -> In x (map f (0..n)).
+Proof. intros; apply in_map_iota with (k0:=k). omega. auto. Qed.
 
 End IotaRange.
