@@ -76,7 +76,6 @@ Proof. auto. Qed.
 
 End Logic.
 
-
 (* Reckless statements *)
 Section Recklessness.
 (*

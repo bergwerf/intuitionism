@@ -60,7 +60,7 @@ Theorem brouwers_sequence : exists β : seq,
   ~~(exists n, β n <> 0) /\ ((exists n, β n <> 0) -> P \/ ~P).
 Proof.
 destruct (have_intuition (P \/ ~P)) as [π [H1π H2π]].
-exists π; split. apply (nn_imply (P \/ ~P)). auto. apply nnLEM.
+exists π; split. apply (nn_imply_nn (P \/ ~P)). auto. apply nnLEM.
 intros [n Hn]. apply (H1π n); auto.
 Qed.
 

@@ -11,7 +11,7 @@ because projections cannot be automatically coerced. I do encourage using
 extensionality axioms.
 *)
 Record aset := ASet {
-  dom :> Type;
+  dom : Type;
   member : dom -> Prop;
   apart : dom -> dom -> Prop;
   apart_spec : forall x y, ~apart x y <-> x = y;

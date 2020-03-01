@@ -18,7 +18,8 @@ Definition Pσ (s : fseq) := fold_right (fun n b => b && (n <=? N)) true s.
 Lemma Pσ_nil : Pσ [] = true.
 Proof. auto. Qed.
 
-Lemma Pσ_cons s : Pσ s = true <-> exists n, Pσ (n :: s) = true.
+Lemma Pσ_cons s :
+  Pσ s = true <-> exists n, Pσ (n :: s) = true.
 Proof.
 split. intros; exists 0; simpl; rewrite H; auto.
 intros [n Hn]; simpl in Hn. apply andb_prop in Hn as [P _]; auto.
@@ -35,3 +36,20 @@ Definition PointSpace := Fan (Spr Pσ Pσ_nil Pσ_cons) Pσ_fan.
 End PointSpace.
 
 Definition Cantor := PointSpace 1.
+
+(* Branch of an existing fan. *)
+Section FanBranch.
+
+Variable F : fan.
+Variable root : {s | σ F s = true}.
+
+Lemma Bσ_fan s :
+  Bσ F root s = true -> exists n, forall m, Bσ F root (m :: s) = true -> m <= n.
+Proof.
+unfold Bσ; intros. apply (fanP F) in H as [n Hn].
+exists n; intros. apply Hn. rewrite app_comm_cons; auto.
+Qed.
+
+Definition FanBranch := Fan (SprBranch F root) Bσ_fan.
+
+End FanBranch.

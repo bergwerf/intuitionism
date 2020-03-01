@@ -11,6 +11,7 @@ Export ListNotations.
 
 Arguments In {_}.
 Arguments Forall {_}.
+Arguments exist {_ _}.
 
 Ltac bool_to_Prop :=
   match goal with

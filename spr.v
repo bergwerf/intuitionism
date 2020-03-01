@@ -31,6 +31,32 @@ Proof. auto. Qed.
 
 End SprCSet.
 
+(* Branch of an existing spread. *)
+Section SpreadBranch.
+
+Variable S : spread.
+Variable root : {s | σ S s = true}.
+
+Definition Bσ s := σ S (s ++ (proj1_sig root)).
+
+Lemma Bσ_nil : Bσ [] = true.
+Proof. unfold Bσ; destruct root; simpl. auto. Qed.
+
+Lemma Bσ_cons s :
+  Bσ s = true <-> exists n, Bσ (n :: s) = true.
+Proof.
+split; unfold Bσ.
+- intros. apply (σ_cons S) in H as [n Hn].
+  exists n. rewrite <-app_comm_cons; auto.
+- intros [n Hn]. rewrite <-app_comm_cons in Hn.
+  assert(Hn': exists n, σ S (n :: s ++ proj1_sig root) = true).
+  exists n; auto. apply (σ_cons S (s ++ proj1_sig root)) in Hn'; auto.
+Qed.
+
+Definition SprBranch := Spr Bσ Bσ_nil Bσ_cons.
+
+End SpreadBranch.
+
 (* Function to retract the the Baire space onto any spread. *)
 Module Retract.
 Section Retract.
