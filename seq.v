@@ -324,12 +324,6 @@ intros i Hi; unfold pre, replace, fill.
 apply ltb_lt in Hi; rewrite Hi; auto.
 Qed.
 
-(* Get elements of pre. *)
-Lemma pre_get n m α β :
-  ⟨pre n α β;n + m⟩ = ⟨β;m⟩ ++ ⟨α;n⟩.
-Proof.
-Admitted.
-
 (* Prepend zero elements. *)
 Lemma pre0 α β :
   pre 0 α β = β.
@@ -359,6 +353,24 @@ Qed.
 
 Corollary pre_r0 n α β : (pre n α β) n = β 0.
 Proof. rewrite <-(add_0_r n) at 2. apply pre_r. Qed.
+
+Lemma pre_get_l n m α β :
+  ⟨pre (n + m) α β;n⟩ = ⟨α;n⟩.
+Proof.
+revert m; induction n; simpl; intros; auto.
+replace (S (n + m)) with (n + S m) by omega.
+rewrite pre_l, IHn; auto.
+Qed.
+
+(* Get elements of pre. *)
+Lemma pre_get n m α β :
+  ⟨pre n α β;n + m⟩ = ⟨β;m⟩ ++ ⟨α;n⟩.
+Proof.
+revert n; induction m; simpl; intros.
+- rewrite add_0_r. rewrite <-(add_0_r n) at 2. rewrite pre_get_l; auto.
+- replace (n + S m) with (S (n + m)) by omega; simpl. rewrite <-IHm.
+  rewrite pre_r; auto.
+Qed.
 
 End Prepend.
 

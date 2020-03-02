@@ -49,8 +49,10 @@ Lemma Intσ_cons s :
   Intσ s = true <-> exists n, Intσ (n :: s) = true.
 Proof.
 split.
-- unfold Intσ; intros; bool_to_Prop. apply σ_cons in H as [n Hn].
-  admit.
+- unfold Intσ; intros; bool_to_Prop.
+  destruct (lt_dec (length s) (length root)).
+  + exists (nth (length s) root 0). admit.
+  + apply σ_cons in H as [k Hk]. exists k; bool_to_Prop; auto. admit.
 - intros [n Hn]. unfold Intσ in Hn; bool_to_Prop.
   assert(H: σ X s = true). apply σ_cons. exists n; auto.
   unfold Intσ; bool_to_Prop; auto.
