@@ -19,12 +19,10 @@ Definition proof_scan (α : seq) := forall n, α n <> 0 -> P.
 
 (*
 To Brouwer the meaning of truth is relative; there is no absolute truth which
-exists regardless of the thoughts of the individual. Instead there is only
-individual truth. If something is true, then there exists a day when he wrote
-down a proof in his diary. The resulting two axioms can almost be proven (they
-are both not not true under BCP). Note that the recall axiom in general states
-there is an effective proof search technique. We could consider humanity as a
-whole as the proof searching object.
+exists regardless of the thoughts of the individual. Instead there is only truth
+within the reference of the 'creating subject'. We could consider humanity as a
+whole as the creating subject. Will we not only accept something as true if one
+day someone comes up with a proof?
 *)
 
 (* + Regardless of P, Brouwer can scan through his diary for a proof. *)
