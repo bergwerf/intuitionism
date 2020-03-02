@@ -32,35 +32,65 @@ Proof. auto. Qed.
 End SprCSet.
 
 (* Intersection of a spread. *)
-Section SpreadIntersect.
+Section SpreadIntersection.
 
 Variable X : spread.
 Variable root : fseq.
+Variable rootP : σ X root = true.
 
-Definition Intσ s := (fseq_match s root) && σ X s.
+(* Note that get and σ use a reveresed list ordering. *)
+Definition Intσ s := (fcompare (rev s) (rev root)) && σ X s.
 
 Lemma Intσ_nil : Intσ [] = true.
 Proof. unfold Intσ; simpl; auto. apply σ_nil. Qed.
 
 Lemma Intσ_true s : Intσ s = true -> σ X s = true.
-Proof. unfold Intσ; intros. bool_to_Prop; auto. Qed.
+Proof. unfold Intσ; intros. now bool_to_Prop. Qed.
+
+Lemma app_nth_firstn (s t : fseq) :
+  length s < length t -> fcompare s t = true
+  -> s ++ [nth (length s) t 0] = firstn (length s + 1) t.
+Proof.
+revert t; induction s; simpl; intros.
+- destruct t0. now simpl in H. easy.
+- destruct t0; simpl in H. easy. repeat bool_to_Prop; subst.
+  simpl. rewrite IHs; auto. omega.
+Qed.
+
+Lemma σ_firstn n s :
+  σ X s = true -> σ X (rev (firstn n (rev s))) = true.
+Proof.
+induction s; intros. simpl; now rewrite firstn_nil.
+simpl; rewrite firstn_app; simpl_list. destruct (lt_dec (length s) n) as [N|N].
+- replace (n - length s) with (S (n - 1 - length s)) by omega; simpl.
+  rewrite firstn_nil. rewrite firstn_all2; simpl_list. auto. omega.
+- replace (n - length s) with 0 by omega. rewrite firstn_O, app_nil_r.
+  apply IHs. apply σ_cons. now exists a.
+Qed.
 
 Lemma Intσ_cons s :
   Intσ s = true <-> exists n, Intσ (n :: s) = true.
 Proof.
-split.
-- unfold Intσ; intros; bool_to_Prop.
-  destruct (lt_dec (length s) (length root)).
-  + exists (nth (length s) root 0). admit.
-  + apply σ_cons in H as [k Hk]. exists k; bool_to_Prop; auto. admit.
-- intros [n Hn]. unfold Intσ in Hn; bool_to_Prop.
-  assert(H: σ X s = true). apply σ_cons. exists n; auto.
-  unfold Intσ; bool_to_Prop; auto.
-Admitted.
+unfold Intσ; simpl; split.
+- intros; bool_to_Prop.
+  destruct (lt_dec (length (rev s)) (length (rev root))) as [L|L].
+  + (* Extend along the root path. *)
+    pose(n := nth (length (rev s)) (rev root) 0). exists n. bool_to_Prop.
+    unfold n; rewrite app_nth_firstn; auto. apply fcompare_sym, fcompare_firstn.
+    replace (n :: s) with (rev ((rev s) ++ [n])) by (simpl_list; auto).
+    unfold n; rewrite app_nth_firstn; auto. apply σ_firstn; auto.
+  + (* Extend using σ_cons. *)
+    apply σ_cons in H as [n Hn]; exists n. bool_to_Prop; auto.
+    apply fcompare_trans with (t:=rev s); auto. omega.
+    apply fcompare_sym, fcompare_app.
+- intros [n Hn]; repeat bool_to_Prop.
+  + apply fcompare_sym; eapply fcompare_app_inv. apply fcompare_sym, Hn0.
+  + apply σ_cons. exists n; auto.
+Qed.
 
 Definition sprint := Spr Intσ Intσ_nil Intσ_cons.
 
-End SpreadIntersect.
+End SpreadIntersection.
 
 (* Function to retract the the Baire space onto any spread. *)
 Module Retract.

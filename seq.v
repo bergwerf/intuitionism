@@ -47,13 +47,6 @@ Fixpoint get n (α : seq) : fseq :=
   | S m => α m :: (get m α)
   end.
 
-(* Increasing sequence from n .. n + k *)
-Fixpoint iota (n k : nat) : fseq :=
-  match k with
-  | 0 => []
-  | S l => n :: (iota (S n) l)
-  end.
-
 (* Check, up to n, how many elements of α and β coincide. *)
 Fixpoint compare (n : nat) (α β : seq) :=
   match n with
@@ -61,11 +54,18 @@ Fixpoint compare (n : nat) (α β : seq) :=
   | S m => if α 0 =? β 0 then S (compare m (del 1 α) (del 1 β)) else 0
   end.
 
-(* Match two finite sequences until either runs out. *)
-Fixpoint fseq_match (s t : fseq) := 
+(* Check if two sequences have a shared prefix. *)
+Fixpoint fcompare (s t : fseq) := 
   match s, t with
-  | s1 :: s', t1 :: t' => (s1 =? t1) && fseq_match s' t'
+  | s1 :: s', t1 :: t' => (s1 =? t1) && fcompare s' t'
   | _, _ => true
+  end.
+
+(* Increasing sequence from n .. n + k *)
+Fixpoint iota (n k : nat) : fseq :=
+  match k with
+  | 0 => []
+  | S l => n :: (iota (S n) l)
   end.
 
 (* Alternative notation *)
@@ -254,6 +254,52 @@ Qed.
 
 End Compare.
 
+(* Facts about finite sequence comparison. *)
+Section FiniteCompare.
+
+Lemma fcompare_refl s : fcompare s s = true.
+Proof. intros; induction s; simpl; auto. repeat bool_to_Prop; auto. Qed.
+
+Lemma fcompare_sym s t :
+  fcompare s t = true -> fcompare t s = true.
+Proof.
+revert s; induction t; simpl; intros; auto.
+destruct s; auto; simpl in H. repeat bool_to_Prop; auto.
+Qed.
+
+Lemma fcompare_trans s t u :
+  length t >= length u ->
+  fcompare s t = true -> fcompare t u = true -> fcompare s u = true.
+Proof.
+revert s t; induction u; simpl; intros s t.
+- destruct s, t; simpl; auto.
+- destruct s, t; simpl; auto; intros L H1 H2. omega.
+  repeat bool_to_Prop. omega. apply IHu with (t:=t0); auto.
+  apply le_S_n; auto.
+Qed.
+
+Lemma fcompare_nil_r s : fcompare s [] = true.
+Proof. now apply fcompare_sym. Qed.
+
+Lemma fcompare_app s t : fcompare s (s ++ t) = true.
+Proof. induction s; simpl; auto. repeat bool_to_Prop; auto. Qed.
+
+Lemma fcompare_app_inv s t u :
+  fcompare s (t ++ u) = true -> fcompare s t = true.
+Proof.
+intros; eapply fcompare_trans. 2: apply H. rewrite app_length; omega.
+apply fcompare_sym; apply fcompare_app.
+Qed.
+
+Lemma fcompare_firstn n s :
+  fcompare s (firstn n s) = true.
+Proof.
+revert n; induction s; simpl; auto. destruct n; simpl; auto.
+repeat bool_to_Prop; auto.
+Qed.
+
+End FiniteCompare.
+
 (* Facts about properties of sequence elements *)
 Section SeqProp.
 
@@ -274,8 +320,8 @@ Qed.
 
 End SeqProp.
 
-(* Facts about get (finite start sequence) *)
-Section GetStart.
+(* Facts about get *)
+Section GetPrefix.
 
 (* Different length prefixes are never equal. *)
 Lemma get_neq n m α β :
@@ -291,7 +337,7 @@ Qed.
 Lemma get_cseq_eq_cfseq c n α :
   (eqn n α (c^ω)) <-> ⟨α;n⟩ = cfseq c n.
 Proof.
-induction n; simpl; split; auto.
+induction n;simpl; split; auto.
 - intros _ i Hi; omega.
 - rewrite <-add_1_r; intros H1; apply eqn_leq in H1 as H2.
   apply cons_split. apply H1; omega. apply IHn; auto.
@@ -311,7 +357,7 @@ Proof.
 destruct m; simpl; intros; inversion H; auto.
 Qed.
 
-End GetStart.
+End GetPrefix.
 
 (* Facts about prefix *)
 Section Prefix.

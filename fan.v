@@ -52,6 +52,6 @@ unfold Intσ; intros; bool_to_Prop. apply (fanP F) in H as [n Hn].
 exists n; intros; bool_to_Prop; auto.
 Qed.
 
-Definition fanint := Fan (sprint F root) Intσ_fan.
+Definition fanint := Fan (sprint F root rootP) Intσ_fan.
 
 End FanIntersection.

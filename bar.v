@@ -16,15 +16,16 @@ Coercion fbar_bar : fbar >-> bar.
 
 (* Note: using a sigma type for s created a mess. *)
 (* s is in F safe with respect to B. *)
-Definition safe (F : fan) B s := barred (fanint F s) B.
+Definition safe (F : fan) B s :=
+  exists H : σ F s = true, barred (fanint F s H) B.
 
 (* If B bars F, then [] is in F safe with respect to B. *)
 Lemma safe_nil F B :
   barred F B -> safe F B [].
 Proof.
-intros H. intros α Hα. apply (H α).
+intros H. exists (σ_nil F). intros α Hα. apply (H α).
 intros m. assert(M := Hα m). simpl in M; unfold Intσ in M.
-bool_to_Prop; auto.
+now bool_to_Prop.
 Qed.
 
 (* Brouwer suggest safe F B [] must have a canonical proof. *)
@@ -39,24 +40,51 @@ Inductive safe_can (F : fan) (B : bar) s :=
     (H2 : σ F s = true)
     (H3 : safe_can F B t).
 
+Lemma fanint_get_root F s Hs α :
+  α : fanint F s Hs -> ⟨α;length s⟩ = s.
+Proof.
+Admitted.
+
+Lemma in_fanint_forward1 F s α H :
+  α : fanint F s H -> σ F (α (length s) :: s) = true.
+Proof.
+Admitted.
+
+Lemma in_fanint_forward2 F s α H1 H2:
+  α : fanint F s H1 -> α : fanint F (α (length s) :: s) H2.
+Proof.
+Admitted.
+
+Lemma in_fanint_backward F n s α H1 H2 :
+  α : fanint F (n :: s) H1 -> α : fanint F s H2.
+Proof.
+intros Hα m. assert(Hm := Hα m). revert Hm; simpl.
+unfold Intσ; intros. repeat bool_to_Prop; auto.
+simpl in Hm0. eapply fcompare_app_inv; apply Hm0.
+Qed.
+
 (* safe_can is as strong as safe. *)
 Theorem safe_can_safe F B s (can : safe_can F B s) :
   σ F s = true -> safe F B s.
 Proof.
-intros σs; induction can; unfold safe; simpl.
+intros σs; induction can; unfold safe; simpl; exists σs.
 - (* Skip *)
   exfalso. rewrite σs in H1. discriminate.
-- (* Intro *)
-  intros α Hα. exists (length s). admit.
+- (* Introduction step *)
+  intros α Hα. exists (length s). replace ⟨α;length s⟩ with s; auto.
+  now rewrite fanint_get_root.
 - (* Forward step *)
-  intros α Hα. admit.
+  intros α Hα. clear H2. pose(αs := α (length s)).
+  assert(σαs: σ F (αs :: s) = true). now apply in_fanint_forward1 in Hα.
+  assert(αsN: αs <= N). now apply H1.
+  apply H in αsN; auto. clear σαs; destruct αsN as [σαs Bαs]. apply Bαs.
+  unfold αs. eapply in_fanint_forward2; apply Hα.
 - (* Backward step *)
   intros α Hα. subst s; clear H2.
-  apply IHcan. apply σ_cons. exists n; auto.
-  intros m. assert(Hm := Hα m). revert Hm; simpl.
-  unfold Intσ. intros; repeat bool_to_Prop; auto.
-  admit.
-Abort.
+  assert(Hex: exists n, σ F (n :: t0) = true). now exists n.
+  apply σ_cons in Hex. apply IHcan in Hex as [Ht0 Bt0]. apply Bt0.
+  eapply in_fanint_backward; apply Hα.
+Qed.
 
 
 
