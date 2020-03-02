@@ -111,7 +111,7 @@ Theorem markov_reckless :
   markov_principle -> recklessness.
 Proof.
 intros SR α Hα. apply (SR α) in Hα.
-pose (n0 := epsilon_smallest _ (neq0_dec α) Hα);
+assert(n0 := epsilon_smallest _ (neq0_dec α) Hα);
 destruct n0 as [n0 [H1 H2]]; destruct (even n0) eqn:E.
 1: apply even_spec in E; left.
 2: apply even_false_odd in E; right.
@@ -140,7 +140,7 @@ Theorem lpo_neq_seq_apart α β :
   LPO -> α <> β -> seq_apart α β.
 Proof.
 (* Define a sequence which is non-zero where α anb β are not equal. *)
-pose (γ n := if α n =? β n then 0 else 1).
+pose(γ n := if α n =? β n then 0 else 1).
 assert(Hγ: forall n, γ n = 0 -> α n = β n).
 { unfold γ; intros n. destruct (α n =? β n) eqn:H; bool_omega. }
 intros LPO H; destruct (LPO γ) as [[n Hn]|Hn].
@@ -153,7 +153,7 @@ Qed.
 Theorem neq_seq_apart_markov :
   (forall α β, α <> β -> seq_apart α β) -> markov_principle.
 Proof.
-intros H α Hα. assert(αneq0: α <> (0..ω)).
+intros H α Hα. assert(αneq0: α <> (0^ω)).
 { intros P; apply Hα; rewrite P; auto. }
 apply H in αneq0 as [n Hn].
 exists n; auto.

@@ -37,19 +37,21 @@ End PointSpace.
 
 Definition Cantor := PointSpace 1.
 
-(* Branch of an existing fan. *)
-Section FanBranch.
+(* Intersection of a fan. *)
+Section FanIntersection.
 
 Variable F : fan.
-Variable root : {s | σ F s = true}.
+Variable root : fseq.
+Variable rootP :  σ F root = true.
 
-Lemma Bσ_fan s :
-  Bσ F root s = true -> exists n, forall m, Bσ F root (m :: s) = true -> m <= n.
+Lemma Intσ_fan s :
+  Intσ F root s = true ->
+  exists n, forall m, Intσ F root (m :: s) = true -> m <= n.
 Proof.
-unfold Bσ; intros. apply (fanP F) in H as [n Hn].
-exists n; intros. apply Hn. rewrite app_comm_cons; auto.
+unfold Intσ; intros; bool_to_Prop. apply (fanP F) in H as [n Hn].
+exists n; intros; bool_to_Prop; auto.
 Qed.
 
-Definition FanBranch := Fan (SprBranch F root) Bσ_fan.
+Definition fanint := Fan (sprint F root) Intσ_fan.
 
-End FanBranch.
+End FanIntersection.

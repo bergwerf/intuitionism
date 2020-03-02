@@ -99,19 +99,19 @@ Theorem τ2_to_Nat_fin_image (f : seq -> nat) :
   exists image, forall α, α : τ2 -> In (f α) image.
 Proof.
 (* Number of leading zeros after which f outputs a result. *)
-destruct (BCP _ (f_computable f) (0..ω)) as [m [n Hbcp]].
+destruct (BCP _ (f_computable f) (0^ω)) as [m [n Hbcp]].
 (* Full image consists of all sequences up to 0^m. *)
-exists (map (fun k => f (prepend k (0..ω) (1..ω))) (0..m)).
-intros α Hα. pose (k := compare m α (0..ω)).
+exists (map (fun k => f (pre k (0^ω) (1^ω))) (0..m)).
+intros α Hα. pose(k := compare m α (0^ω)).
 assert(kleqm: k <= m). unfold k; apply compare_leq.
-assert(Hk: eqn k α (0..ω)). apply eqn_compare.
+assert(Hk: eqn k α (0^ω)). apply eqn_compare.
 apply in_map_range with (k0:=k); auto. destruct (eq_nat_dec k m).
 - rewrite e. rewrite Hbcp. symmetry; apply Hbcp.
-  apply eqn_prepend. rewrite <-e. apply eqn_sym; auto.
-- apply f_equal. extensionality i. unfold prepend, replace, fill.
+  apply eqn_pre. rewrite <-e. apply eqn_sym; auto.
+- apply f_equal. extensionality i. unfold pre, replace, fill.
   destruct (i <? k) eqn:E; bool_to_Prop; unfold cseq.
   apply Hk; omega. destruct (τ2_cases α i); auto.
-  assert(Hlt: k < m). omega. assert(Heqk: k = compare m α (0..ω)). auto.
+  assert(Hlt: k < m). omega. assert(Heqk: k = compare m α (0^ω)). auto.
   apply compare_lt in Hlt. rewrite <-Heqk in Hlt.
   exfalso. apply Hlt; unfold cseq.
   apply (τ_mono _ _ α) in E; auto. omega.
@@ -123,8 +123,8 @@ See classic.v for a proof that f is surjective under LPO.
 *)
 Definition f n :=
   match n with
-  | 0 => 0..ω
-  | S m => prepend m (0..ω) (1..ω)
+  | 0 => 0^ω
+  | S m => pre m (0^ω) (1^ω)
   end.
 
 Lemma f_image n :
@@ -132,8 +132,8 @@ Lemma f_image n :
 Proof.
 apply intro_inspr; intros; apply intro_τP. unfold f; destruct n.
 - intros n; unfold cseq; omega.
-- intros i. split. split; apply prepend_prop; intros; unfold cseq; omega.
-  unfold prepend, replace, fill, cseq.
+- intros i. split. split; apply pre_prop; intros; unfold cseq; omega.
+  unfold pre, replace, fill, cseq.
   destruct (i <? n) eqn:E1; destruct (S i <? n) eqn:E2; bool_omega.
 Qed.
 
@@ -143,33 +143,33 @@ Theorem f_inj :
 Proof.
 intros n m _ _; simpl; unfold dec_apart; intros H.
 assert(C: n < m \/ m < n). omega. destruct C, n, m; try omega; simpl.
-- exists m. rewrite <-(add_0_r m) at 3; rewrite prepend_access_r.
+- exists m. rewrite <-(add_0_r m) at 3; rewrite pre_r.
   unfold cseq; omega.
 - exists n. apply le_exists_sub in H0 as [k [Hk _]].
-  replace m with (n + S k) by omega. rewrite prepend_access_l.
-  rewrite <-(add_0_r n) at 2; rewrite prepend_access_r. unfold cseq; omega.
-- exists n. rewrite <-(add_0_r n) at 2; rewrite prepend_access_r.
+  replace m with (n + S k) by omega. rewrite pre_l.
+  rewrite <-(add_0_r n) at 2; rewrite pre_r. unfold cseq; omega.
+- exists n. rewrite <-(add_0_r n) at 2; rewrite pre_r.
   unfold cseq; omega.
 - exists m. apply le_exists_sub in H0 as [k [Hk _]].
-  replace n with (m + S k) by omega. rewrite prepend_access_l.
-  rewrite <-(add_0_r m) at 3; rewrite prepend_access_r. unfold cseq; omega.
+  replace n with (m + S k) by omega. rewrite pre_l.
+  rewrite <-(add_0_r m) at 3; rewrite pre_r. unfold cseq; omega.
 Qed.
 
 (* f is not surjective. *)
 Theorem f_not_surj :
   ~surjective Nat τ2 f.
 Proof.
-assert(P0: 0..ω : τ2). apply member_τP; intros n; unfold cseq; omega.
-intros H; destruct (BCPext τ2 _ H (0..ω) P0) as [m [n Q]].
+assert(P0: 0^ω : τ2). apply member_τP; intros n; unfold cseq; omega.
+intros H; destruct (BCPext τ2 _ H (0^ω) P0) as [m [n Q]].
 assert(P1: f (S (m + n)) : τ2). apply f_image. apply Q in P1 as [_ P1].
 revert P1; destruct n; simpl; intros P1.
 - apply equal_f with (x:=m) in P1; revert P1.
-  rewrite add_0_r; rewrite prepend_access_r0.
+  rewrite add_0_r; rewrite pre_r0.
   unfold cseq; intros; omega.
-- apply equal_f with (x:=n) in P1; revert P1. rewrite prepend_access_r0.
-  replace (m + S n) with (n + S m) by omega. rewrite prepend_access_l.
+- apply equal_f with (x:=n) in P1; revert P1. rewrite pre_r0.
+  replace (m + S n) with (n + S m) by omega. rewrite pre_l.
   unfold cseq; intros; omega.
-- intros i Hi; unfold f. unfold prepend, replace, fill.
+- intros i Hi; unfold f. unfold pre, replace, fill.
   replace (i <? m + n) with true by bool_omega. omega.
 Qed.
 

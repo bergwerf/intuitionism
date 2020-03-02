@@ -29,7 +29,7 @@ Theorem seqs_uncountable :
   ~exists f, surjective Nat Seq f.
 Proof.
 intros H; destruct H as [f H].
-pose (γ (n : nat) := f n n + 1).
+pose(γ (n : nat) := f n n + 1).
 assert(P: γ : Seq). apply I.
 apply H in P as [n [Hn Hf]].
 apply equal_f with (x:=n) in Hf.

@@ -35,9 +35,9 @@ Definition intuition := exists π, proof_scan π /\ (P -> exists n, π n <> 0).
 Theorem lem_intuition : LEM -> intuition.
 Proof.
 intros LEM; destruct (LEM P).
-- exists (1..ω); split. intros _ _; auto.
+- exists (1^ω); split. intros _ _; auto.
   intros _; exists 0. unfold cseq; omega.
-- exists (0..ω); split. unfold cseq; intros n Hn. omega.
+- exists (0^ω); split. unfold cseq; intros n Hn. omega.
   intros HP. exfalso; auto.
 Qed.
 

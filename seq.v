@@ -31,7 +31,7 @@ Definition fill n (α : seq) i := α (i - n).
 Definition replace n (α β : seq) i := if i <? n then β i else α i.
 
 (* Prepend first n elements of α to β. *)
-Definition prepend n α β := replace n (fill n β) α.
+Definition pre n α β := replace n (fill n β) α.
 
 (* Check if α starts with s. *)
 Fixpoint starts s (α : seq) := 
@@ -61,10 +61,17 @@ Fixpoint compare (n : nat) (α β : seq) :=
   | S m => if α 0 =? β 0 then S (compare m (del 1 α) (del 1 β)) else 0
   end.
 
+(* Match two finite sequences until either runs out. *)
+Fixpoint fseq_match (s t : fseq) := 
+  match s, t with
+  | s1 :: s', t1 :: t' => (s1 =? t1) && fseq_match s' t'
+  | _, _ => true
+  end.
+
 (* Alternative notation *)
 Definition range n m := iota n (1 + m - n).
 
-Notation "c '..ω'" := (cseq c) (at level 10, format "c '..ω'").
+Notation "c '^ω'" := (cseq c) (at level 10, format "c '^ω'").
 Notation "n '..' m" := (range n m) (at level 10, format "n '..' m").
 Notation "'⟨' α ';' n '⟩'" := (get n α) (at level 0, format "'⟨' α ';' n '⟩'").
 Notation "s '⊏' α" := (starts s α) (at level 50).
@@ -208,7 +215,7 @@ End DeleteFill.
 (* Facts about sequence comparison *)
 Section Compare.
 
-Lemma compare_com n α β :
+Lemma compare_comm n α β :
   compare n α β = compare n β α.
 Proof.
 revert α β; induction n; simpl; intros; auto.
@@ -253,15 +260,15 @@ Section SeqProp.
 Variable P : nat -> Prop.
 
 Lemma cseq_prop c :
-  P c -> forall n, P (c..ω n).
+  P c -> forall n, P (c^ω n).
 Proof. unfold cseq; intros; auto. Qed.
 
-Lemma prepend_prop n α β :
+Lemma pre_prop n α β :
   (forall i, P (α i))
   -> (forall i, P (β i))
-  -> (forall i, P (prepend n α β i)).
+  -> (forall i, P (pre n α β i)).
 Proof.
-intros Hα Hβ i; unfold prepend, replace, fill.
+intros Hα Hβ i; unfold pre, replace, fill.
 destruct (i <? n); auto.
 Qed.
 
@@ -282,7 +289,7 @@ Qed.
 
 (* Get finite part of a partially constant sequence. *)
 Lemma get_cseq_eq_cfseq c n α :
-  (eqn n α (c..ω)) <-> ⟨α;n⟩ = cfseq c n.
+  (eqn n α (c^ω)) <-> ⟨α;n⟩ = cfseq c n.
 Proof.
 induction n; simpl; split; auto.
 - intros _ i Hi; omega.
@@ -293,7 +300,7 @@ induction n; simpl; split; auto.
 Qed.
 
 Corollary get_cseq c n :
-  ⟨c..ω;n⟩ = cfseq c n.
+  ⟨c^ω;n⟩ = cfseq c n.
 Proof.
 apply get_cseq_eq_cfseq. apply eqn_refl.
 Qed.
@@ -310,42 +317,48 @@ End GetStart.
 Section Prepend.
 
 (* A prepended sequence coincides with itself. *)
-Lemma eqn_prepend n α β :
-  eqn n α (prepend n α β).
+Lemma eqn_pre n α β :
+  eqn n α (pre n α β).
 Proof.
-intros i Hi; unfold prepend, replace, fill.
+intros i Hi; unfold pre, replace, fill.
 apply ltb_lt in Hi; rewrite Hi; auto.
 Qed.
 
-(* Prepend zero elements. *)
-Lemma prepend_zero α β :
-  prepend 0 α β = β.
+(* Get elements of pre. *)
+Lemma pre_get n m α β :
+  ⟨pre n α β;n + m⟩ = ⟨β;m⟩ ++ ⟨α;n⟩.
 Proof.
-extensionality n. unfold prepend, replace, fill.
+Admitted.
+
+(* Prepend zero elements. *)
+Lemma pre0 α β :
+  pre 0 α β = β.
+Proof.
+extensionality n. unfold pre, replace, fill.
 replace (n <? 0) with false by bool_omega.
 rewrite sub_0_r; auto.
 Qed.
 
 (* Access left sequence of prepend. *)
-Lemma prepend_access_l n m α β :
-  prepend (n + S m) α β n = α n.
+Lemma pre_l n m α β :
+  (pre (n + S m) α β) n = α n.
 Proof.
-unfold prepend, replace, fill.
+unfold pre, replace, fill.
 replace (n <? n + S m) with true by bool_omega; auto.
 Qed.
 
 (* Access right sequence of prepend. *)
-Lemma prepend_access_r n m α β :
-  prepend n α β (n + m) = β m.
+Lemma pre_r n m α β :
+  (pre n α β) (n + m) = β m.
 Proof.
-unfold prepend, replace, fill.
+unfold pre, replace, fill.
 replace (n + m <? n) with false by bool_omega.
 replace (n + m - n) with m by omega.
 auto.
 Qed.
 
-Corollary prepend_access_r0 n α β : prepend n α β n = β 0.
-Proof. rewrite <-(add_0_r n) at 2. apply prepend_access_r. Qed.
+Corollary pre_r0 n α β : (pre n α β) n = β 0.
+Proof. rewrite <-(add_0_r n) at 2. apply pre_r. Qed.
 
 End Prepend.
 

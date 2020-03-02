@@ -31,31 +31,34 @@ Proof. auto. Qed.
 
 End SprCSet.
 
-(* Branch of an existing spread. *)
-Section SpreadBranch.
+(* Intersection of a spread. *)
+Section SpreadIntersect.
 
-Variable S : spread.
-Variable root : {s | σ S s = true}.
+Variable X : spread.
+Variable root : fseq.
 
-Definition Bσ s := σ S (s ++ (proj1_sig root)).
+Definition Intσ s := (fseq_match s root) && σ X s.
 
-Lemma Bσ_nil : Bσ [] = true.
-Proof. unfold Bσ; destruct root; simpl. auto. Qed.
+Lemma Intσ_nil : Intσ [] = true.
+Proof. unfold Intσ; simpl; auto. apply σ_nil. Qed.
 
-Lemma Bσ_cons s :
-  Bσ s = true <-> exists n, Bσ (n :: s) = true.
+Lemma Intσ_true s : Intσ s = true -> σ X s = true.
+Proof. unfold Intσ; intros. bool_to_Prop; auto. Qed.
+
+Lemma Intσ_cons s :
+  Intσ s = true <-> exists n, Intσ (n :: s) = true.
 Proof.
-split; unfold Bσ.
-- intros. apply (σ_cons S) in H as [n Hn].
-  exists n. rewrite <-app_comm_cons; auto.
-- intros [n Hn]. rewrite <-app_comm_cons in Hn.
-  assert(Hn': exists n, σ S (n :: s ++ proj1_sig root) = true).
-  exists n; auto. apply (σ_cons S (s ++ proj1_sig root)) in Hn'; auto.
-Qed.
+split.
+- unfold Intσ; intros; bool_to_Prop. apply σ_cons in H as [n Hn].
+  admit.
+- intros [n Hn]. unfold Intσ in Hn; bool_to_Prop.
+  assert(H: σ X s = true). apply σ_cons. exists n; auto.
+  unfold Intσ; bool_to_Prop; auto.
+Admitted.
 
-Definition SprBranch := Spr Bσ Bσ_nil Bσ_cons.
+Definition sprint := Spr Intσ Intσ_nil Intσ_cons.
 
-End SpreadBranch.
+End SpreadIntersect.
 
 (* Function to retract the the Baire space onto any spread. *)
 Module Retract.
@@ -139,7 +142,7 @@ intros Rall.
 pose(rσ := (Retract.r X)).
 pose(T := (fun α n => R (rσ α) n)).
 assert(HT: forall α, exists n, T α n).
-{ intros; pose (Hα := Retract.r_image X α); apply Rall in Hα.
+{ intros; pose(Hα := Retract.r_image X α); apply Rall in Hα.
   destruct Hα as [n Hn]; exists n; auto. }
 intros; destruct (BCP T HT α) as [m [n P]]. exists m; exists n; intros.
 apply P in H1; unfold T, rσ in H1; rewrite Retract.r_id in H1; auto.

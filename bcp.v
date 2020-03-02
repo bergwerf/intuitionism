@@ -22,14 +22,14 @@ assert(P: forall α : seq, exists i,
   (i = 0 /\ exists n, α n <> 0) \/
   (i > 0 /\ forall n, α n = 0)).
 { intros; destruct (LPO α). exists 0; left; auto. exists 1; right; auto. }
-destruct (BCP _ P (0..ω)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
-- assert(Hα : eqn m (0..ω) (0..ω)). apply eqn_refl.
+destruct (BCP _ P (0^ω)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
+- assert(Hα : eqn m (0^ω) (0^ω)). apply eqn_refl.
   apply H in Hα as [[_ [i E]]|[n1 _]]; try omega.
   apply E; auto.
-- pose (β := (prepend m (0..ω) (1..ω))).
-  assert(Hβ: eqn m (0..ω) β). apply eqn_prepend.
+- pose(β := pre m (0^ω) (1^ω)).
+  assert(Hβ: eqn m (0^ω) β). apply eqn_pre.
   apply H in Hβ as [[n0 _]|[_ A]]; try omega.
-  assert(Hβ1: β (m + 1) <> 0). unfold β, cseq; rewrite prepend_access_r; omega.
+  assert(Hβ1: β (m + 1) <> 0). unfold β, cseq; rewrite pre_r; omega.
   auto.
 Qed.
 
