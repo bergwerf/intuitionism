@@ -6,7 +6,7 @@ From intuitionism Require Import lib set seq bcp spr fan.
 Definition bar := fseq -> Prop.
 Definition fbar := list fseq.
 
-(* F is barred by B if all sequences in F have a finite part in B. *)
+(* F is barred by B if all sequences in F have a prefix in B. *)
 Definition barred (F : fan) (B : bar) :=
   forall α, α : F -> exists n, B ⟨α;n⟩.
 

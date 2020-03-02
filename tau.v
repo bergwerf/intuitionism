@@ -107,7 +107,7 @@ assert(kleqm: k <= m). unfold k; apply compare_leq.
 assert(Hk: eqn k α (0^ω)). apply eqn_compare.
 apply in_map_range with (k0:=k); auto. destruct (eq_nat_dec k m).
 - rewrite e. rewrite Hbcp. symmetry; apply Hbcp.
-  apply eqn_pre. rewrite <-e. apply eqn_sym; auto.
+  apply eqn_pre_n. rewrite <-e. apply eqn_sym; auto.
 - apply f_equal. extensionality i. unfold pre, replace, fill.
   destruct (i <? k) eqn:E; bool_to_Prop; unfold cseq.
   apply Hk; omega. destruct (τ2_cases α i); auto.

@@ -24,13 +24,13 @@ Definition seq_apart (α β : seq) := exists n, α n <> β n.
 (* Delete first n elements. *)
 Definition del n (α : seq) i := α (n + i).
 
-(* Prepend n times (α 0) to the sequence. *)
+(* Add n times (α 0) as prefix. *)
 Definition fill n (α : seq) i := α (i - n).
 
 (* Overwrite the first n elements of α with β. *)
 Definition replace n (α β : seq) i := if i <? n then β i else α i.
 
-(* Prepend first n elements of α to β. *)
+(* Add n elements from α as prefix to β. *)
 Definition pre n α β := replace n (fill n β) α.
 
 (* Check if α starts with s. *)
@@ -127,7 +127,7 @@ Proof. intros H i Hi. symmetry; apply H; auto. Qed.
 Lemma eqn_trans n α β γ : eqn n α β -> eqn n β γ -> eqn n α γ.
 Proof. intros Hαβ Hβγ i Hi. rewrite Hαβ. apply Hβγ. all: omega. Qed.
 
-(* A smaller part of a coincedence also coincides. *)
+(* A smaller prefix of a coincedence also coincides. *)
 Lemma eqn_leq n m α β : eqn (n + m) α β -> eqn n α β.
 Proof. intros H i Hi; apply H; omega. Qed.
 
@@ -277,7 +277,7 @@ End SeqProp.
 (* Facts about get (finite start sequence) *)
 Section GetStart.
 
-(* Different length parts are never equal. *)
+(* Different length prefixes are never equal. *)
 Lemma get_neq n m α β :
   n <> m -> ⟨α;n⟩ <> ⟨β;m⟩.
 Proof.
@@ -313,18 +313,21 @@ Qed.
 
 End GetStart.
 
-(* Facts about prepend *)
-Section Prepend.
+(* Facts about prefix *)
+Section Prefix.
 
-(* A prepended sequence coincides with itself. *)
-Lemma eqn_pre n α β :
-  eqn n α (pre n α β).
+(* A prefixed sequence coincides with itself. *)
+Lemma eqn_pre n m α β :
+  eqn n α (pre (n + m) α β).
 Proof.
 intros i Hi; unfold pre, replace, fill.
-apply ltb_lt in Hi; rewrite Hi; auto.
+replace (i <? n + m) with true by bool_omega; auto.
 Qed.
 
-(* Prepend zero elements. *)
+Corollary eqn_pre_n n α β : eqn n α (pre n α β).
+Proof. rewrite <-add_0_r at 2. apply eqn_pre. Qed.
+
+(* Prefix zero elements. *)
 Lemma pre0 α β :
   pre 0 α β = β.
 Proof.
@@ -333,7 +336,7 @@ replace (n <? 0) with false by bool_omega.
 rewrite sub_0_r; auto.
 Qed.
 
-(* Access left sequence of prepend. *)
+(* Access sequence after prefix. *)
 Lemma pre_l n m α β :
   (pre (n + S m) α β) n = α n.
 Proof.
@@ -341,7 +344,7 @@ unfold pre, replace, fill.
 replace (n <? n + S m) with true by bool_omega; auto.
 Qed.
 
-(* Access right sequence of prepend. *)
+(* Access prefix. *)
 Lemma pre_r n m α β :
   (pre n α β) (n + m) = β m.
 Proof.
@@ -362,7 +365,7 @@ replace (S (n + m)) with (n + S m) by omega.
 rewrite pre_l, IHn; auto.
 Qed.
 
-(* Get elements of pre. *)
+(* Get prefixed elements. *)
 Lemma pre_get n m α β :
   ⟨pre n α β;n + m⟩ = ⟨β;m⟩ ++ ⟨α;n⟩.
 Proof.
@@ -372,7 +375,7 @@ revert n; induction m; simpl; intros.
   rewrite pre_r; auto.
 Qed.
 
-End Prepend.
+End Prefix.
 
 (* Facts about iota and range *)
 Section IotaRange.

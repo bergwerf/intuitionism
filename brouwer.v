@@ -14,9 +14,6 @@ Section Truth.
 
 Variable P : Prop.
 
-(* α describes if P was proven on the n-th day of my life if this holds. *)
-Definition proof_scan (α : seq) := forall n, α n <> 0 -> P.
-
 (*
 To Brouwer the meaning of truth is relative; there is no absolute truth which
 exists regardless of the thoughts of the individual. Instead there is only truth
@@ -25,12 +22,15 @@ whole as the creating subject. Will we not only accept something as true if one
 day someone comes up with a proof?
 *)
 
-(* + Regardless of P, Brouwer can scan through his diary for a proof. *)
-(* + Brouwer insists to only accept P as true if he ever wrote down a proof. *)
-Definition intuition := exists π, proof_scan π /\ (P -> exists n, π n <> 0).
+(* α describes a proof search for P. If α is 1 then a proof of P is found. *)
+Definition proof_search (α : seq) := forall n, α n <> 0 -> P.
+
+(* Brouwer insists to only accept P as true if he ever wrote down a proof. *)
+Definition creating_subject :=
+  exists π, proof_search π /\ (P -> exists n, π n <> 0).
 
 (* The Principle of Omniscience has immediate knowledge. *)
-Theorem lem_intuition : LEM -> intuition.
+Theorem lem_intuition : LEM -> creating_subject.
 Proof.
 intros LEM; destruct (LEM P).
 - exists (1^ω); split. intros _ _; auto.
@@ -39,9 +39,8 @@ intros LEM; destruct (LEM P).
   intros HP. exfalso; auto.
 Qed.
 
-(* + Regardless of P, Brouwer can scan through his diary for a proof. *)
-(* + Brouwer insists to only accept P as true if he ever wrote down a proof. *)
-Axiom have_intuition : intuition.
+(* We consider ourselves as the creating subject; we decide what is true. *)
+Axiom internal_truth : creating_subject.
 
 End Truth.
 
@@ -57,7 +56,7 @@ for which apartness from zero is reckless.
 Theorem brouwers_sequence : exists β : seq,
   ~~(exists n, β n <> 0) /\ ((exists n, β n <> 0) -> P \/ ~P).
 Proof.
-destruct (have_intuition (P \/ ~P)) as [π [H1π H2π]].
+destruct (internal_truth (P \/ ~P)) as [π [H1π H2π]].
 exists π; split. apply (nn_imply_nn (P \/ ~P)). auto. apply nnLEM.
 intros [n Hn]. apply (H1π n); auto.
 Qed.
