@@ -36,22 +36,3 @@ Definition PointSpace := Fan (Spr Pσ Pσ_nil Pσ_cons) Pσ_fan.
 End PointSpace.
 
 Definition Cantor := PointSpace 1.
-
-(* Intersection of a fan. *)
-Section FanIntersection.
-
-Variable F : fan.
-Variable root : fseq.
-Variable rootP :  σ F root = true.
-
-Lemma Intσ_fan s :
-  Intσ F root s = true ->
-  exists n, forall m, Intσ F root (m :: s) = true -> m <= n.
-Proof.
-unfold Intσ; intros; bool_to_Prop. apply (fanP F) in H as [n Hn].
-exists n; intros; bool_to_Prop; auto.
-Qed.
-
-Definition fanint := Fan (sprint F root rootP) Intσ_fan.
-
-End FanIntersection.

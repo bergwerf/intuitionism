@@ -54,13 +54,6 @@ Fixpoint compare (n : nat) (α β : seq) :=
   | S m => if α 0 =? β 0 then S (compare m (del 1 α) (del 1 β)) else 0
   end.
 
-(* Check if two sequences have a shared prefix. *)
-Fixpoint fcompare (s t : fseq) := 
-  match s, t with
-  | s1 :: s', t1 :: t' => (s1 =? t1) && fcompare s' t'
-  | _, _ => true
-  end.
-
 (* Increasing sequence from n .. n + k *)
 Fixpoint iota (n k : nat) : fseq :=
   match k with
@@ -74,10 +67,14 @@ Definition range n m := iota n (1 + m - n).
 Notation "c '^ω'" := (cseq c) (at level 10, format "c '^ω'").
 Notation "n '..' m" := (range n m) (at level 10, format "n '..' m").
 Notation "'⟨' α ';' n '⟩'" := (get n α) (at level 0, format "'⟨' α ';' n '⟩'").
-Notation "s '⊏' α" := (starts s α) (at level 50).
 
-(* Set of all infinite and finite sequences *)
-Section SeqSet.
+(* Apartness set for finite sequences. *)
+Definition FSeq := ASet fseq full_set (dec_apart fseq)
+  (dec_apart_spec fseq (list_eq_dec eq_nat_dec)) (dec_apart_neq fseq)
+  (dec_apart_sym fseq).
+
+(* Apartness set of all infinite sequences *)
+Section BaireSpace.
 
 Lemma seq_apart_spec α β :
   ~seq_apart α β <-> α = β.
@@ -94,17 +91,21 @@ Proof. intros [n H] P; subst; apply H; auto. Qed.
 Lemma seq_apart_sym α β : seq_apart α β -> seq_apart β α.
 Proof. intros [n H]; exists n; auto. Qed.
 
-Definition Seq := ASet seq full_set seq_apart
-  seq_apart_spec seq_apart_neq seq_apart_sym.
+Record baire := Baire {
+  baire_member : seq -> Prop;
+}.
 
-Definition FSeq := ASet fseq full_set (dec_apart fseq)
-  (dec_apart_spec fseq (list_eq_dec eq_nat_dec)) (dec_apart_neq fseq)
-  (dec_apart_sym fseq).
+Definition baire_aset (X : baire) :=
+  ASet seq (baire_member X) seq_apart
+    seq_apart_spec seq_apart_neq seq_apart_sym.
 
-End SeqSet.
+Coercion baire_aset : baire >-> aset.
+Definition Seq := Baire full_set.
 
-(* Shortcuts for proofs about sequences *)
-Section Shortcuts.
+End BaireSpace.
+
+(* Splitting lemmas *)
+Section SplitLemmas.
 
 Lemma app_split (a b x y : fseq) : a = b -> x = y -> a ++ x = b ++ y.
 Proof. intros; subst; auto. Qed.
@@ -113,7 +114,7 @@ Lemma cons_split h1 h2 (t1 t2 : fseq) :
   h1 = h2 -> t1 = t2 -> h1 :: t1 = h2 :: t2.
 Proof. intros; subst; auto. Qed.
 
-End Shortcuts.
+End SplitLemmas.
 
 (* Facts about the coincedence relation *)
 Section Coincedence.
@@ -253,52 +254,6 @@ replace i with (1 + (i - 1)) by omega. apply H; omega.
 Qed.
 
 End Compare.
-
-(* Facts about finite sequence comparison. *)
-Section FiniteCompare.
-
-Lemma fcompare_refl s : fcompare s s = true.
-Proof. intros; induction s; simpl; auto. repeat bool_to_Prop; auto. Qed.
-
-Lemma fcompare_sym s t :
-  fcompare s t = true -> fcompare t s = true.
-Proof.
-revert s; induction t; simpl; intros; auto.
-destruct s; auto; simpl in H. repeat bool_to_Prop; auto.
-Qed.
-
-Lemma fcompare_trans s t u :
-  length t >= length u ->
-  fcompare s t = true -> fcompare t u = true -> fcompare s u = true.
-Proof.
-revert s t; induction u; simpl; intros s t.
-- destruct s, t; simpl; auto.
-- destruct s, t; simpl; auto; intros L H1 H2. omega.
-  repeat bool_to_Prop. omega. apply IHu with (t:=t0); auto.
-  apply le_S_n; auto.
-Qed.
-
-Lemma fcompare_nil_r s : fcompare s [] = true.
-Proof. now apply fcompare_sym. Qed.
-
-Lemma fcompare_app s t : fcompare s (s ++ t) = true.
-Proof. induction s; simpl; auto. repeat bool_to_Prop; auto. Qed.
-
-Lemma fcompare_app_inv s t u :
-  fcompare s (t ++ u) = true -> fcompare s t = true.
-Proof.
-intros; eapply fcompare_trans. 2: apply H. rewrite app_length; omega.
-apply fcompare_sym; apply fcompare_app.
-Qed.
-
-Lemma fcompare_firstn n s :
-  fcompare s (firstn n s) = true.
-Proof.
-revert n; induction s; simpl; auto. destruct n; simpl; auto.
-repeat bool_to_Prop; auto.
-Qed.
-
-End FiniteCompare.
 
 (* Facts about properties of sequence elements *)
 Section SeqProp.
