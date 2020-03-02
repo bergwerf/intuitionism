@@ -9,6 +9,5 @@ fan.v
 tau.v
 bar.v
 func.v
-isect.v
 classic.v
 brouwer.v
