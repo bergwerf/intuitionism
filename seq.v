@@ -63,7 +63,7 @@ Notation "'⟨' α ';' n '⟩'" := (get n α) (at level 0, format "'⟨' α ';' 
 
 (* Apartness set for finite sequences. *)
 Definition FSeq := ASet fseq full_set (dec_apart fseq)
-  (dec_apart_spec fseq (list_eq_dec eq_nat_dec)) (dec_apart_neq fseq)
+  (dec_apart_spec fseq (list_eq_dec eq_dec)) (dec_apart_neq fseq)
   (dec_apart_sym fseq).
 
 (* Apartness set of all infinite sequences *)
@@ -73,7 +73,7 @@ Lemma seq_apart_spec α β :
   ~seq_apart α β <-> α = β.
 Proof.
 unfold seq_apart; split; intros.
-- extensionality n. destruct (eq_nat_dec (α n) (β n)); auto.
+- extensionality n. destruct (eq_dec (α n) (β n)); auto.
   exfalso; apply H; exists n; auto.
 - intros [n P]; subst; auto.
 Qed.
@@ -119,11 +119,11 @@ Lemma eqn_sym n α β : eqn n α β -> eqn n β α.
 Proof. intros H i Hi. symmetry; apply H; auto. Qed.
 
 Lemma eqn_trans n α β γ : eqn n α β -> eqn n β γ -> eqn n α γ.
-Proof. intros Hαβ Hβγ i Hi. rewrite Hαβ. apply Hβγ. all: omega. Qed.
+Proof. intros Hαβ Hβγ i Hi. rewrite Hαβ. apply Hβγ. all: lia. Qed.
 
 (* A smaller prefix of a coincedence also coincides. *)
 Lemma eqn_leq n m α β : eqn (n + m) α β -> eqn n α β.
-Proof. intros H i Hi; apply H; omega. Qed.
+Proof. intros H i Hi; apply H; lia. Qed.
 
 (* Delete part of a coincedence. *)
 Lemma eqn_del n m α β :
@@ -131,10 +131,10 @@ Lemma eqn_del n m α β :
 Proof.
 split; unfold del; simpl.
 - intros H; split. eapply eqn_leq; apply H.
-  intros i Hi; apply H; omega.
-- intros [H1 H2] i Hi. assert(C: i < n \/ i >= n). omega.
-  destruct C. apply H1; auto. replace i with (n + (i - n)) by omega.
-  apply H2; omega.
+  intros i Hi; apply H; lia.
+- intros [H1 H2] i Hi. assert(C: i < n \/ i >= n). lia.
+  destruct C. apply H1; auto. replace i with (n + (i - n)) by lia.
+  apply H2; lia.
 Qed.
 
 (* α and β coincide iff their first n elements are the same. *)
@@ -142,12 +142,12 @@ Lemma eqn_eq_get n α β :
   eqn n α β <-> ⟨α;n⟩ = ⟨β;n⟩.
 Proof.
 revert α β; induction n; simpl; intros; split; auto.
-- intros _ i Hi; omega.
+- intros _ i Hi; lia.
 - intros H; rewrite H; auto. rewrite (proj1 (IHn α β)); auto.
   intros i Hi; apply H; auto.
 - intros H i Hi. destruct (eq_dec i n).
   + subst; injection H; auto.
-  + apply IHn; try omega. injection H; auto.
+  + apply IHn; try lia. injection H; auto.
 Qed.
 
 End Coincedence.
@@ -187,7 +187,7 @@ Lemma del_app_S n m α :
 Proof.
 induction m; simpl. unfold del; rewrite add_0_r; auto.
 rewrite IHm; simpl; unfold del.
-replace (S n + m) with (n + S m) by omega; auto.
+replace (S n + m) with (n + S m) by lia; auto.
 Qed.
 
 (* Deletion and append *)
@@ -198,7 +198,7 @@ revert α. induction n, m; simpl; intros; auto.
 - rewrite del0, app_nil_r; auto.
 - rewrite add_0_r; auto.
 - apply cons_split.
-  + unfold del. replace (n + S m) with (S n + m) by omega. auto.
+  + unfold del. replace (n + S m) with (S n + m) by lia. auto.
   + assert(R: forall x (v w : fseq), v ++ x :: w = (v ++ [x]) ++ w).
     { intros; induction v; simpl; auto. rewrite IHv; auto. }
     rewrite R, del_app_S, <-IHn; auto.
@@ -221,14 +221,14 @@ Lemma compare_leq n α β :
   compare n α β <= n.
 Proof.
 revert α β; induction n; simpl; intros; auto.
-destruct (α 0 =? β 0); try omega. apply (succ_le_mono _ n). auto.
+destruct (α 0 =? β 0); try lia. apply (succ_le_mono _ n). auto.
 Qed.
 
 (* If comparison returns less than its input there is an inequality. *)
 Lemma compare_lt n α β :
   compare n α β < n -> α (compare n α β) <> β (compare n α β).
 Proof.
-revert α β; induction n; simpl; intros. omega.
+revert α β; induction n; simpl; intros. lia.
 destruct (α 0 =? β 0) eqn:E; bool_to_Prop; auto.
 apply succ_lt_mono in H. apply IHn in H.
 rewrite ?del_access, ?add_1_l in H; auto.
@@ -239,11 +239,11 @@ Lemma eqn_compare n α β :
   eqn (compare n α β) α β.
 Proof.
 remember (compare n α β) as k.
-revert Heqk; revert n α β. induction k; intros n α β Hk i Hi. omega.
+revert Heqk; revert n α β. induction k; intros n α β Hk i Hi. lia.
 revert Hk. destruct n; simpl. discriminate. intros.
 destruct (α 0 =? β 0) eqn:E; bool_to_Prop; try discriminate.
-injection Hk; intros. apply IHk in H. destruct (eq_nat_dec i 0); subst; auto.
-replace i with (1 + (i - 1)) by omega. apply H; omega.
+injection Hk; intros. apply IHk in H. destruct (eq_dec i 0); subst; auto.
+replace i with (1 + (i - 1)) by lia. apply H; lia.
 Qed.
 
 End Compare.
@@ -276,7 +276,7 @@ Lemma get_neq n m α β :
   n <> m -> ⟨α;n⟩ <> ⟨β;m⟩.
 Proof.
 revert m; induction n; intros; simpl.
-- destruct m; try omega; simpl. apply nil_cons.
+- destruct m; try lia; simpl. apply nil_cons.
 - destruct m; simpl; intros P; inversion P.
   apply IHn in H2; auto.
 Qed.
@@ -286,11 +286,11 @@ Lemma get_cseq_eq_cfseq c n α :
   (eqn n α (c^ω)) <-> ⟨α;n⟩ = cfseq c n.
 Proof.
 induction n;simpl; split; auto.
-- intros _ i Hi; omega.
+- intros _ i Hi; lia.
 - rewrite <-add_1_r; intros H1; apply eqn_leq in H1 as H2.
-  apply cons_split. apply H1; omega. apply IHn; auto.
+  apply cons_split. apply H1; lia. apply IHn; auto.
 - intros H i Hi; inversion H; subst. destruct (eq_dec i n).
-  subst; auto. apply IHn in H2; apply H2; omega.
+  subst; auto. apply IHn in H2; apply H2; lia.
 Qed.
 
 Corollary get_cseq c n : ⟨c^ω;n⟩ = cfseq c n.
@@ -306,7 +306,7 @@ Lemma eqn_pre n m α β :
   eqn n α (pre (n + m) α β).
 Proof.
 intros i Hi; unfold pre, replace, fill.
-replace (i <? n + m) with true by bool_omega; auto.
+replace (i <? n + m) with true by bool_lia; auto.
 Qed.
 
 Corollary eqn_pre_n n α β : eqn n α (pre n α β).
@@ -317,7 +317,7 @@ Lemma pre0 α β :
   pre 0 α β = β.
 Proof.
 extensionality n. unfold pre, replace, fill.
-replace (n <? 0) with false by bool_omega.
+replace (n <? 0) with false by bool_lia.
 rewrite sub_0_r; auto.
 Qed.
 
@@ -326,7 +326,7 @@ Lemma pre_l n m α β :
   (pre (n + S m) α β) n = α n.
 Proof.
 unfold pre, replace, fill.
-replace (n <? n + S m) with true by bool_omega; auto.
+replace (n <? n + S m) with true by bool_lia; auto.
 Qed.
 
 (* Access prefix. *)
@@ -334,8 +334,8 @@ Lemma pre_r n m α β :
   (pre n α β) (n + m) = β m.
 Proof.
 unfold pre, replace, fill.
-replace (n + m <? n) with false by bool_omega.
-replace (n + m - n) with m by omega.
+replace (n + m <? n) with false by bool_lia.
+replace (n + m - n) with m by lia.
 auto.
 Qed.
 
@@ -346,7 +346,7 @@ Lemma pre_get_l n m α β :
   ⟨pre (n + m) α β;n⟩ = ⟨α;n⟩.
 Proof.
 revert m; induction n; simpl; intros; auto.
-replace (S (n + m)) with (n + S m) by omega.
+replace (S (n + m)) with (n + S m) by lia.
 rewrite pre_l, IHn; auto.
 Qed.
 
@@ -356,7 +356,7 @@ Lemma pre_get n m α β :
 Proof.
 revert n; induction m; simpl; intros.
 - rewrite add_0_r. rewrite <-(add_0_r n) at 2. rewrite pre_get_l; auto.
-- replace (n + S m) with (S (n + m)) by omega; simpl. rewrite <-IHm.
+- replace (n + S m) with (S (n + m)) by lia; simpl. rewrite <-IHm.
   rewrite pre_r; auto.
 Qed.
 
@@ -374,29 +374,29 @@ Lemma iota_add_app_r n k l :
 Proof.
 revert n l; induction k; intros; simpl.
 - rewrite add_0_r; auto.
-- rewrite IHk. replace (S n + k) with (n + S k) by omega; auto.
+- rewrite IHk. replace (S n + k) with (n + S k) by lia; auto.
 Qed.
 
 Lemma range_add_app_r n m k :
   n <= m -> n..(m + S k) = n..m ++ (S m)..(m + S k).
 Proof.
 unfold range; intros H.
-replace (1 + (m + S k) - n) with (1 + m - n + S k) by omega.
+replace (1 + (m + S k) - n) with (1 + m - n + S k) by lia.
 rewrite iota_add_app_r; apply app_split; auto.
-replace (n + (1 + m - n)) with (S m) by omega.
-replace (1 + (m + S k) - S m) with (S k) by omega; auto.
+replace (n + (1 + m - n)) with (S m) by lia.
+replace (1 + (m + S k) - S m) with (S k) by lia; auto.
 Qed.
 
 Lemma in_map_iota {T} (f : nat -> T) k n m x :
   n <= k < n + m -> x = f k -> In x (map f (iota n m)).
 Proof.
-revert n; induction m; intros; simpl. omega.
-destruct (eq_nat_dec n k); subst; auto.
-right; apply IHm; auto. omega.
+revert n; induction m; intros; simpl. lia.
+destruct (eq_dec n k); subst; auto.
+right; apply IHm; auto. lia.
 Qed.
 
 Corollary in_map_range {T} (f : nat -> T) k n x :
   k <= n -> x = f k -> In x (map f (0..n)).
-Proof. intros; apply in_map_iota with (k0:=k). omega. auto. Qed.
+Proof. intros; apply in_map_iota with (k0:=k). lia. auto. Qed.
 
 End IotaRange.

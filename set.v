@@ -52,7 +52,7 @@ Proof. unfold dec_apart; intros H P; apply H; auto. Qed.
 End DecidableEquality.
 
 Definition Nat := ASet nat full_set (dec_apart nat)
-  (dec_apart_spec nat eq_nat_dec) (dec_apart_neq nat)
+  (dec_apart_spec nat eq_dec) (dec_apart_neq nat)
   (dec_apart_sym nat).
 
 Definition Bool := ASet bool full_set (dec_apart bool)

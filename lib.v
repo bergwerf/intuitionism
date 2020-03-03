@@ -5,8 +5,8 @@ Require Export Coq.Bool.Bool.
 Require Export Coq.Lists.List.
 Require Export Coq.Logic.ConstructiveEpsilon.
 Require Export Coq.Logic.FunctionalExtensionality.
-Require Export Omega.
-Export Nat.
+Require Export Coq.micromega.Lia.
+Export PeanoNat.Nat.
 Export ListNotations.
 
 Arguments In {_}.
@@ -33,7 +33,7 @@ Ltac bool_to_Prop :=
   | _ => idtac
   end.
 
-Ltac bool_omega :=
+Ltac bool_lia :=
   repeat bool_to_Prop;
   try (symmetry; repeat bool_to_Prop);
-  omega.
+  lia.

@@ -14,10 +14,10 @@ Definition LLPO := forall (α : seq),
   (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
 
 Lemma neq0_dec (α : seq) n : {α n <> 0} + {~(α n <> 0)}.
-Proof. intros; destruct (eq_dec (α n) 0). right; omega. left; omega. Qed.
+Proof. intros; destruct (eq_dec (α n) 0). right; lia. left; lia. Qed.
 
 Lemma nat_nltgt_eq n m : ~(n < m) -> ~(n > m) -> n = m.
-Proof. omega. Qed.
+Proof. lia. Qed.
 
 Lemma even_false_odd n : even n = false -> Odd n.
 Proof. intros; apply odd_spec; unfold odd; rewrite H; auto. Qed.
@@ -27,7 +27,7 @@ Theorem lem_lpo :
   LEM -> LPO.
 Proof.
 intros PO α; destruct (PO (exists n, α n <> 0)). left; auto.
-right; intros n; destruct (eq_nat_dec (α n) 0); auto.
+right; intros n; destruct (eq_dec (α n) 0); auto.
 exfalso; apply H; exists n; auto.
 Qed.
 
@@ -152,10 +152,10 @@ Proof.
 (* Define a sequence which is non-zero where α anb β are not equal. *)
 pose(γ n := if α n =? β n then 0 else 1).
 assert(Hγ: forall n, γ n = 0 -> α n = β n).
-{ unfold γ; intros n. destruct (α n =? β n) eqn:H; bool_omega. }
+{ unfold γ; intros n. destruct (α n =? β n) eqn:H; bool_lia. }
 intros LPO H; destruct (LPO γ) as [[n Hn]|Hn].
 - exists n; intros P; revert Hn; unfold γ.
-  replace (α n =? β n) with true by bool_omega; auto.
+  replace (α n =? β n) with true by bool_lia; auto.
 - exfalso; apply H; extensionality n. apply Hγ; auto.
 Qed.
 

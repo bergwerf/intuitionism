@@ -34,8 +34,8 @@ Theorem lem_intuition : LEM -> creating_subject.
 Proof.
 intros LEM; destruct (LEM P).
 - exists (1^ω); split. intros _ _; auto.
-  intros _; exists 0. unfold cseq; omega.
-- exists (0^ω); split. unfold cseq; intros n Hn. omega.
+  intros _; exists 0. unfold cseq; lia.
+- exists (0^ω); split. unfold cseq; intros n Hn. lia.
   intros HP. exfalso; auto.
 Qed.
 
@@ -71,7 +71,7 @@ unfold markov_principle; intros MP β.
 destruct (brouwers_sequence (exists n, β n <> 0)) as [γ [H1γ H2γ]].
 assert(MPH: ~forall n, γ n = 0). { intros H. apply H1γ; intros [n Hn]; auto. }
 apply MP in MPH. apply H2γ in MPH as [H1|H2]. left; auto.
-right; intros n. destruct (eq_nat_dec (β n) 0); auto.
+right; intros n. destruct (eq_dec (β n) 0); auto.
 exfalso; apply H2. exists n; auto.
 Qed.
 

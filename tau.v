@@ -24,8 +24,8 @@ Proof. auto. Qed.
 Lemma τσ_cons s : τσ s = true <-> exists n, τσ (n :: s) = true.
 Proof.
 split; intros. destruct s.
-- exists lower; simpl; bool_omega.
-- exists n; simpl in *; destruct s; repeat bool_to_Prop; try omega; auto.
+- exists lower; simpl; bool_lia.
+- exists n; simpl in *; destruct s; repeat bool_to_Prop; try lia; auto.
 - destruct H as [n H]; simpl in H; destruct s; auto; repeat bool_to_Prop; auto.
 Qed.
 
@@ -33,7 +33,7 @@ Lemma τσ_fan s :
   τσ s = true -> exists n, forall m, τσ (m :: s) = true -> m <= n.
 Proof.
 intros; exists (lower + range); intros.
-simpl in H0; destruct s; bool_omega.
+simpl in H0; destruct s; bool_lia.
 Qed.
 
 Definition τ := Fan (Spr τσ τσ_nil τσ_cons) τσ_fan.
@@ -54,7 +54,7 @@ Lemma member_τP α :
 Proof.
 split.
 - intros H n; eapply unfold_inspr with (m:=S (S n)) in H; simpl in H.
-  destruct ⟨α;n⟩ eqn:E; bool_omega.
+  destruct ⟨α;n⟩ eqn:E; bool_lia.
 - intros H m. apply intro_τP; auto.
 Qed.
 
@@ -63,8 +63,8 @@ Lemma τ_mono α :
   α isin τ -> forall i j, i <= j -> α i <= α j.
 Proof.
 intros. apply le_exists_sub in H0 as [d [Hd _]]. rewrite Hd; clear Hd.
-revert i; induction d; intros; simpl; try omega.
-replace (S (d + i)) with (d + S i) by omega.
+revert i; induction d; intros; simpl; try lia.
+replace (S (d + i)) with (d + S i) by lia.
 transitivity (α (S i)); auto. apply member_τP; auto.
 Qed.
 
@@ -91,7 +91,7 @@ Lemma τ2_cases α n :
   α isin τ2 -> α n = 0 \/ α n = 1.
 Proof.
 intros; apply member_τP in H; destruct (α n) eqn:E; auto.
-right; rewrite <-E. assert(D: α n <= 1). apply H. omega.
+right; rewrite <-E. assert(D: α n <= 1). apply H. lia.
 Qed.
 
 (* Any function τ2 -> Nat has a finite image. *)
@@ -105,16 +105,16 @@ exists (map (fun k => f (pre k (0^ω) (1^ω))) (0..m)).
 intros α Hα. pose(k := compare m α (0^ω)).
 assert(kleqm: k <= m). unfold k; apply compare_leq.
 assert(Hk: eqn k α (0^ω)). apply eqn_compare.
-apply in_map_range with (k0:=k); auto. destruct (eq_nat_dec k m).
+apply in_map_range with (k0:=k); auto. destruct (eq_dec k m).
 - rewrite e. rewrite Hbcp. symmetry; apply Hbcp.
   apply eqn_pre_n. rewrite <-e. now apply eqn_sym.
 - apply f_equal. extensionality i. unfold pre, replace, fill.
   destruct (i <? k) eqn:E; bool_to_Prop; unfold cseq.
-  apply Hk; omega. destruct (τ2_cases α i); auto.
-  assert(Hlt: k < m). omega. assert(Heqk: k = compare m α (0^ω)). auto.
+  apply Hk; lia. destruct (τ2_cases α i); auto.
+  assert(Hlt: k < m). lia. assert(Heqk: k = compare m α (0^ω)). auto.
   apply compare_lt in Hlt. rewrite <-Heqk in Hlt.
   exfalso. apply Hlt; unfold cseq.
-  apply (τ_mono _ _ α) in E; auto. omega.
+  apply (τ_mono _ _ α) in E; auto. lia.
 Qed.
 
 (*
@@ -131,10 +131,10 @@ Lemma f_image n :
   f n isin τ2.
 Proof.
 apply intro_inspr; intros; apply intro_τP. unfold f; destruct n.
-- intros n; unfold cseq; omega.
-- intros i. split. split; apply pre_prop; intros; unfold cseq; omega.
+- intros n; unfold cseq; lia.
+- intros i. split. split; apply pre_prop; intros; unfold cseq; lia.
   unfold pre, replace, fill, cseq.
-  destruct (i <? n) eqn:E1; destruct (S i <? n) eqn:E2; bool_omega.
+  destruct (i <? n) eqn:E1; destruct (S i <? n) eqn:E2; bool_lia.
 Qed.
 
 (* f is injective. *)
@@ -142,35 +142,35 @@ Theorem f_inj :
   injective Nat τ2 f.
 Proof.
 intros n m _ _; simpl; unfold dec_apart; intros H.
-assert(C: n < m \/ m < n). omega. destruct C, n, m; try omega; simpl.
+assert(C: n < m \/ m < n). lia. destruct C, n, m; try lia; simpl.
 - exists m. rewrite <-(add_0_r m) at 3; rewrite pre_r.
-  unfold cseq; omega.
+  unfold cseq; lia.
 - exists n. apply le_exists_sub in H0 as [k [Hk _]].
-  replace m with (n + S k) by omega. rewrite pre_l.
-  rewrite <-(add_0_r n) at 2; rewrite pre_r. unfold cseq; omega.
+  replace m with (n + S k) by lia. rewrite pre_l.
+  rewrite <-(add_0_r n) at 2; rewrite pre_r. unfold cseq; lia.
 - exists n. rewrite <-(add_0_r n) at 2; rewrite pre_r.
-  unfold cseq; omega.
+  unfold cseq; lia.
 - exists m. apply le_exists_sub in H0 as [k [Hk _]].
-  replace n with (m + S k) by omega. rewrite pre_l.
-  rewrite <-(add_0_r m) at 3; rewrite pre_r. unfold cseq; omega.
+  replace n with (m + S k) by lia. rewrite pre_l.
+  rewrite <-(add_0_r m) at 3; rewrite pre_r. unfold cseq; lia.
 Qed.
 
 (* f is not surjective. *)
 Theorem f_not_surj :
   ~surjective Nat τ2 f.
 Proof.
-assert(P0: 0^ω isin τ2). apply member_τP; intros n; unfold cseq; omega.
+assert(P0: 0^ω isin τ2). apply member_τP; intros n; unfold cseq; lia.
 intros H; destruct (BCPext τ2 _ H (0^ω) P0) as [m [n Q]].
 assert(P1: f (S (m + n)) isin τ2). apply f_image. apply Q in P1 as [_ P1].
 revert P1; destruct n; simpl; intros P1.
 - apply equal_f with (x:=m) in P1; revert P1.
   rewrite add_0_r; rewrite pre_r0.
-  unfold cseq; intros; omega.
+  unfold cseq; intros; lia.
 - apply equal_f with (x:=n) in P1; revert P1. rewrite pre_r0.
-  replace (m + S n) with (n + S m) by omega. rewrite pre_l.
-  unfold cseq; intros; omega.
+  replace (m + S n) with (n + S m) by lia. rewrite pre_l.
+  unfold cseq; intros; lia.
 - intros i Hi; unfold f. unfold pre, replace, fill.
-  replace (i <? m + n) with true by bool_omega. omega.
+  replace (i <? m + n) with true by bool_lia. lia.
 Qed.
 
 End Tau2.

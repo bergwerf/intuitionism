@@ -33,15 +33,14 @@ pose(γ (n : nat) := f n n + 1).
 assert(P: γ isin Seq). apply I.
 apply H in P as [n [Hn Hf]].
 apply equal_f with (x:=n) in Hf.
-unfold γ in Hf. omega.
+unfold γ in Hf. lia.
 Qed.
 
 (* The set of all finite sequences is denumerable. *)
 Theorem fseq_eq_nat :
   exists f, bijective Nat FSeq f.
 Proof.
-(* The classic approach is to use prime factorization, but I think it is easier
-to prove something using binary encoding and decoding. *)
+(* The classic approach is to use prime factorization. *)
 Admitted.
 
 (*

@@ -33,8 +33,8 @@ intros LPO; intros β Hβ; destruct (LPO β).
 - pose(n := epsilon_smallest _ (neq0_dec β) H); destruct n as [n [Hn1 Hn2]].
   exists (S n); split. apply I. simpl; extensionality i.
   unfold pre, replace, fill, cseq.
-  destruct (i <? n) eqn:E; bool_to_Prop. apply Hn2 in E; omega.
-  eapply τ_mono_ext with (n:=1)(j:=i) in Hβ. omega. apply E. omega.
+  destruct (i <? n) eqn:E; bool_to_Prop. apply Hn2 in E; lia.
+  eapply τ_mono_ext with (n:=1)(j:=i) in Hβ. lia. apply E. lia.
 - exists 0; split. apply I. simpl.
   extensionality n; auto.
 Qed.
