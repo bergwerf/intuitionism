@@ -12,7 +12,7 @@ extensionality axioms.
 *)
 Record aset := ASet {
   dom : Type;
-  member :> dom -> Prop;
+  member : dom -> Prop;
   apart : dom -> dom -> Prop;
   apart_spec : forall x y, ~apart x y <-> x = y;
   apart_neq : forall x y, apart x y -> x <> y;

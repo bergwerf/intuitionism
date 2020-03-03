@@ -25,10 +25,8 @@ Section Intersection.
 Variable X : baire.
 Variable s : fseq.
 
-Lemma isect_in_parent α :
-  α isin (X ∩ s) -> α isin X.
-Proof.
-Admitted.
+Lemma isin_isect_inv α : α isin (X ∩ s) -> α isin X.
+Proof. intros H; simpl in H; unfold isect_member in H. easy. Qed.
 
 End Intersection.
 
@@ -37,7 +35,7 @@ Definition safe (F : fan) B s := barred (F ∩ s) B.
 
 (* If B bars F, then [] is in F safe with respect to B. *)
 Lemma safe_nil (F : fan) B : barred F B -> safe F B [].
-Proof. intros H m Hm. apply (H m). apply isect_in_parent; auto. Qed.
+Proof. intros H m Hm. apply (H m). apply isin_isect_inv; auto. Qed.
 
 (* Brouwer suggest safe F B [] must have a canonical proof. *)
 Inductive safe_can (F : fan) (B : bar) s :=
