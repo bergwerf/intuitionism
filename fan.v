@@ -35,4 +35,5 @@ Qed.
 Definition PointSpace := Fan (Spr Pσ Pσ_nil Pσ_cons) Pσ_fan.
 End PointSpace.
 
-Definition Cantor := PointSpace 1.
+(* The cantor space, or binary sequences. *)
+Definition Bin := PointSpace 1.
