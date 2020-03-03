@@ -1,6 +1,6 @@
 (* Bar induction and the Fan Law *)
 
-From intuitionism Require Import lib set seq bcp spr fan.
+From intuitionism Require Import lib set seq bcp spr fan tau.
 
 (* A bar is a proposition on finite sequences. *)
 Definition bar := fseq -> Prop.
@@ -24,6 +24,9 @@ Section Intersection.
 
 Variable X : baire.
 Variable s : fseq.
+
+Lemma isin_isect_nil α : α isin X -> α isin (X ∩ []).
+Proof. intros. simpl; now unfold isect_member. Qed.
 
 Lemma isin_isect_inv α : α isin (X ∩ s) -> α isin X.
 Proof. intros H; simpl in H; unfold isect_member in H. easy. Qed.
@@ -74,15 +77,35 @@ induction can; unfold safe; simpl; intros α [H1α H2α].
   simpl in H2α. now injection H2α.
 Qed.
 
+(*
+To build some confidence in the existence of a canonical proof, we show that
+such a proof can be constructed directly when a finite bar is given.
+*)
+Theorem fbar_safe_can F (B : fbar) s :
+  safe F B s -> safe_can F B s.
+Proof.
+Admitted.
 
+(* We can directly construct a finite bar for τ fans. *)
+Theorem τ_fbar m n s :
+  exists B : fbar, safe (τ m n) B s.
+Proof.
+Admitted.
 
+(* Given a canonical safe proof, we can construct a finite bar in F. *)
+Theorem fan_fbar F B s :
+  safe_can F B s -> exists B' : fbar, safe F B' s.
+Proof.
+Admitted.
 
+(* Let us assume the existence of a canonical proof for arbitrary fans. *)
+Axiom safe_can_ex : forall F B s, safe F B s -> safe_can F B s.
 
-
-
-
-
-
-
-
-
+(* We can remove safe to obtain the final Fan Theorem. *)
+Theorem fan_theorem (F : fan) B :
+  barred F B -> exists B' : fbar, barred F B'.
+Proof.
+intros. apply safe_nil in H. apply safe_can_ex in H.
+apply fan_fbar in H as [B' HB']. exists B'.
+intros α Hα. apply HB'. now apply isin_isect_nil.
+Qed.
