@@ -20,7 +20,7 @@ Record aset := ASet {
 }.
 
 Arguments apart {_}.
-Notation "α ':' X" := (member X α) (at level 50).
+Notation "α 'isin' X" := (member X α) (at level 50).
 Notation "α '#' β" := (apart α β) (at level 50, format "α '#' β").
 
 (* The second half of apart_neq is at least always not not true. *)

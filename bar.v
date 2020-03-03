@@ -12,10 +12,10 @@ Coercion fbar_bar : fbar >-> bar.
 
 (* X is barred by B if all sequences in X have a prefix in B. *)
 Definition barred (X : baire) (B : bar) :=
-  forall α, α : X -> exists n, B ⟨α;n⟩.
+  forall α, α isin X -> exists n, B ⟨α;n⟩.
 
 (* Define prefix intersection. *)
-Definition isect_member (X : baire) s α := α : X /\ starts s α.
+Definition isect_member (X : baire) s α := α isin X /\ starts s α.
 Definition isect X s := Baire (isect_member X s).
 Notation "X '∩' s" := (isect X s) (at level 50).
 
@@ -26,7 +26,7 @@ Variable X : baire.
 Variable s : fseq.
 
 Lemma isect_in_parent α :
-  α : (X ∩ s) -> α : X.
+  α isin (X ∩ s) -> α isin X.
 Proof.
 Admitted.
 

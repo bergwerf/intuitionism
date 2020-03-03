@@ -4,15 +4,15 @@ From intuitionism Require Import lib set seq bcp spr fan.
 
 (* Classic injective function. *)
 Definition weak_injective A B (f : dom A -> dom B) :=
-  forall a α, a : A -> α : A -> f a = f α -> a = α.
+  forall a α, a isin A -> α isin A -> f a = f α -> a = α.
 
 (* Strong injective function. *)
 Definition injective A B (f : dom A -> dom B) :=
-  forall a α, a : A -> α : A -> a#α -> f a # f α.
+  forall a α, a isin A -> α isin A -> a#α -> f a # f α.
 
 (* Surjective function. *)
 Definition surjective A B (f : dom A -> dom B) :=
-  forall β, β : B -> exists α, α : A /\ f α = β.
+  forall β, β isin B -> exists α, α isin A /\ f α = β.
 
 Definition bijective A B f := injective A B f /\ surjective A B f.
 
@@ -30,7 +30,7 @@ Theorem seqs_uncountable :
 Proof.
 intros H; destruct H as [f H].
 pose(γ (n : nat) := f n n + 1).
-assert(P: γ : Seq). apply I.
+assert(P: γ isin Seq). apply I.
 apply H in P as [n [Hn Hf]].
 apply equal_f with (x:=n) in Hf.
 unfold γ in Hf. omega.
