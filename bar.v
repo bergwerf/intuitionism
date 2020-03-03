@@ -15,7 +15,7 @@ Definition barred (X : baire) (B : bar) :=
   forall α, α isin X -> exists n, B ⟨α;n⟩.
 
 (* Define prefix intersection. *)
-Definition isect_member (X : baire) s α := α isin X /\ starts s α.
+Definition isect_member (X : baire) s α := α isin X /\ ⟨α;length s⟩ = s.
 Definition isect X s := Baire (isect_member X s).
 Notation "X '∩' s" := (isect X s) (at level 50).
 
@@ -51,28 +51,28 @@ Inductive safe_can (F : fan) (B : bar) s :=
 
 (* safe_can is as strong as safe. *)
 Theorem safe_can_safe F B s (can : safe_can F B s) :
-  σ F s = true -> safe F B s.
+  safe F B s.
 Proof.
-intros σs; induction can; unfold safe; simpl.
+induction can; unfold safe; simpl; intros α [H1α H2α].
 - (* Skip *)
-  exfalso. rewrite σs in H1. discriminate.
-- (* Introduction step *)
-  intros α Hα. exists (length s). replace ⟨α;length s⟩ with s; auto.
-  admit.
-- (* Forward step *)
-  intros α Hα. clear H2. pose(αs := α (length s)).
-  assert(σαs: σ F (αs :: s) = true). admit.
-  assert(αsN: αs <= N). now apply H1.
-  apply H in αsN; auto. apply αsN. admit.
-- (* Backward step *)
-  intros α Hα. subst s; clear H2.
-  assert(H: exists n, σ F (n :: t0) = true). now exists n.
-  apply σ_cons in H. apply IHcan in H. apply H.
-  admit.
-Admitted.
-
-
-
+  exfalso. revert H1α; simpl; unfold isect_member; intros.
+  revert H1. rewrite <-H2α; rewrite H1α. discriminate.
+- (* Introduction *)
+  exists (length s). now rewrite H2α.
+- (* Forward *)
+  clear H2. pose(αs := α (length s)).
+  assert(σαs: σ F (αs :: s) = true).
+  { replace (αs :: s) with ⟨α;S (length s)⟩.
+    apply H1α. now rewrite <-H2α at 2. }
+  assert(αsN: αs <= N). { now apply H1. }
+  apply H in αsN; auto. apply αsN.
+  simpl; unfold isect_member; split; auto.
+  simpl. now rewrite <-H2α at 3.
+- (* Backward *)
+  subst s. apply IHcan.
+  simpl; unfold isect_member; split; auto.
+  simpl in H2α. now injection H2α.
+Qed.
 
 
 

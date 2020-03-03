@@ -33,13 +33,6 @@ Definition replace n (α β : seq) i := if i <? n then β i else α i.
 (* Add n elements from α as prefix to β. *)
 Definition pre n α β := replace n (fill n β) α.
 
-(* Check if α starts with s. *)
-Fixpoint starts s (α : seq) := 
-  match s with
-  | [] => True
-  | s0 :: t => α 0 = s0 /\ starts t (del 1 α)
-  end.
-
 (* Get first n elements of α. *)
 Fixpoint get n (α : seq) : fseq :=
   match n with
@@ -300,17 +293,8 @@ induction n;simpl; split; auto.
   subst; auto. apply IHn in H2; apply H2; omega.
 Qed.
 
-Corollary get_cseq c n :
-  ⟨c^ω;n⟩ = cfseq c n.
-Proof.
-apply get_cseq_eq_cfseq. apply eqn_refl.
-Qed.
-
-Lemma get_S_cons α m n s :
-  ⟨α;S m⟩ = n :: s -> α m = n.
-Proof.
-destruct m; simpl; intros; inversion H; auto.
-Qed.
+Corollary get_cseq c n : ⟨c^ω;n⟩ = cfseq c n.
+Proof. apply get_cseq_eq_cfseq, eqn_refl. Qed.
 
 End GetPrefix.
 
