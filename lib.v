@@ -3,6 +3,7 @@
 Require Export Coq.Init.Nat.
 Require Export Coq.Bool.Bool.
 Require Export Coq.Lists.List.
+Require Export Coq.Arith.Compare_dec.
 Require Export Coq.Logic.ConstructiveEpsilon.
 Require Export Coq.Logic.FunctionalExtensionality.
 Require Export Coq.micromega.Lia.
