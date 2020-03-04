@@ -182,7 +182,7 @@ yields a contradiction.
 Theorem not_fan_theorem (F : fan) :
   contains_diagonal F -> ~denumerable F.
 Proof.
-intros D [f [f_inj f_surj]].
+intros D [f [f_wd [f_inj f_surj]]].
 (* We create a bar in F from f. *)
 pose(B s := exists n, s = ⟨f n;n + 1⟩).
 assert(HB: barred F B).
@@ -191,7 +191,11 @@ assert(HB: barred F B).
 apply fan_theorem in HB as [b [Bb bbar]].
 (* We define an α that cannot occur in b by diagonalization. *)
 pose(α := prefix_diagonal b).
-assert(Hα: α isin F). apply D. admit.
+assert(Hα: α isin F).
+{ apply D. clear bbar. induction b. apply Forall_nil.
+  inversion Bb; subst. apply Forall_cons. 2: now apply IHb.
+  unfold B in H1; destruct H1 as [n Hn]. exists (f n); split.
+  now apply f_wd. now rewrite Hn, get_length. }
 apply bbar in Hα as [n Hn].
 (* There is only one bar of length n, and α escapes it. *)
 Admitted.

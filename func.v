@@ -2,6 +2,10 @@
 
 From intuitionism Require Import lib set seq bcp spr fan.
 
+(* A well defined function from A to B. *)
+Definition well_defined A B (f : dom A -> dom B) :=
+  forall α, α isin A -> f α isin B.
+
 (* Classic injective function. *)
 Definition weak_injective A B (f : dom A -> dom B) :=
   forall a α, a isin A -> α isin A -> f a = f α -> a = α.
@@ -15,8 +19,8 @@ Definition surjective A B (f : dom A -> dom B) :=
   forall β, β isin B -> exists α, α isin A /\ f α = β.
 
 Definition bijective A B f := injective A B f /\ surjective A B f.
+Definition denumerable A := exists f, well_defined Nat A f /\ bijective Nat A f.
 
-Definition denumerable A := exists f, bijective Nat A f.
 Definition preceq A B := exists f, injective A B f.
 Notation "A >-> B" := (preceq A B) (at level 50).
 
@@ -85,7 +89,7 @@ Theorem fseq_denumerable :
   denumerable FSeq.
 Proof.
 (* The classic approach is to use prime factorization. *)
-exists nat_to_fseq; split.
+exists nat_to_fseq; split. easy. split.
 - intros n m nN mN Hnm. simpl in *; unfold dec_apart in *.
   intros H; apply Hnm. apply nat_to_fseq_weak_inj; auto.
 - intros s _. exists (fseq_to_nat s); split.

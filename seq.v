@@ -296,6 +296,9 @@ Qed.
 Corollary get_cseq c n : ⟨c^ω;n⟩ = cfseq c n.
 Proof. apply get_cseq_eq_cfseq, eqn_refl. Qed.
 
+Lemma get_length α n : length ⟨α;n⟩ = n.
+Proof. induction n; simpl; auto. Qed.
+
 End GetPrefix.
 
 (* Facts about prefix *)
