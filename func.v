@@ -16,6 +16,10 @@ Definition surjective A B (f : dom A -> dom B) :=
 
 Definition bijective A B f := injective A B f /\ surjective A B f.
 
+Definition denumerable A := exists f, bijective Nat A f.
+Definition preceq A B := exists f, injective A B f.
+Notation "A >-> B" := (preceq A B) (at level 50).
+
 (* Strong injective implies weak injective. *)
 Theorem injective_to_weak A B f :
   injective A B f -> weak_injective A B f.
@@ -25,7 +29,7 @@ apply H in P; auto. apply apart_spec in P; auto.
 Qed.
 
 (* The set of all sequences is not denumerable. *)
-Theorem seqs_uncountable :
+Theorem baire_uncountable :
   ~exists f, surjective Nat Seq f.
 Proof.
 intros H; destruct H as [f H].
@@ -77,8 +81,8 @@ Proof.
 Admitted.
 
 (* The set of all finite sequences is denumerable. *)
-Theorem fseq_eq_nat :
-  exists f, bijective Nat FSeq f.
+Theorem fseq_denumerable :
+  denumerable FSeq.
 Proof.
 (* The classic approach is to use prime factorization. *)
 exists nat_to_fseq; split.
@@ -97,13 +101,17 @@ Fixpoint pos_to_list (p : positive) :=
 
 Definition seq_to_bin α n := nth n (rev (pos_to_list (fseq_to_pos ⟨α;n⟩))) 0.
 
-(*
-There exists an injection from the Baire space (natural number sequences) to the
-Cantor space (binary sequences). With the Fan Theorem we can later prove that a
-bijection is not possible.
-*)
-Theorem seq_eq_bin :
-  exists f, injective Seq Bin f.
+(* There is an injection from binary sequences to number sequences (trivial). *)
+Theorem bin_preceq_seq :
+  Bin >-> Seq.
+Proof.
+pose(f (α : seq) := α). exists f.
+intros α β Hα Hβ. now unfold f.
+Qed.
+
+(* There is an injection from number sequences to binary sequences. *)
+Theorem seq_preceq_bin :
+  Seq >-> Bin.
 Proof.
 exists seq_to_bin. intros α β _ _ Hαβ.
 (* We need the smallest n at which α an β are apart. *)
