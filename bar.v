@@ -1,6 +1,6 @@
 (* Bar induction and the Fan Theorem *)
 
-From intuitionism Require Import lib set seq bcp spr fan tau func.
+From intuitionism Require Import lib set seq spr fan func bcp.
 
 (* A bar is a proposition on finite sequences. *)
 Definition bar := fseq -> Prop.

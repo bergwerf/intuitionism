@@ -62,7 +62,7 @@ Notation "n '..' m" := (range n m) (at level 10, format "n '..' m").
 Notation "'⟨' α ';' n '⟩'" := (get n α) (at level 0, format "'⟨' α ';' n '⟩'").
 
 (* Apartness set for finite sequences. *)
-Definition FSeq := ASet fseq full_set (dec_apart fseq)
+Definition FSeq := ASet fseq fullset (dec_apart fseq)
   (dec_apart_spec fseq (list_eq_dec eq_dec)) (dec_apart_neq fseq)
   (dec_apart_sym fseq).
 
@@ -93,7 +93,7 @@ Definition baire_aset (X : baire) :=
     seq_apart_spec seq_apart_neq seq_apart_sym.
 
 Coercion baire_aset : baire >-> aset.
-Definition Seq := Baire full_set.
+Definition Seq := Baire fullset.
 
 End BaireSpace.
 

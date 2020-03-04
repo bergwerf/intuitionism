@@ -17,21 +17,23 @@ Definition LLPO := forall (α : seq),
 Definition MarkovsPrinciple :=
   forall α : seq, ~(forall n, α n = 0) -> exists n, α n <> 0.
 
-(* Recklessness; a weaker version of LLPO. *)
-Definition Recklessness :=
-  forall α, ~(forall n, α n = 0) ->
-  (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Even k) \/
-  (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
-
 (*
 Some statements do not directly imply LPO or LLPO, yet intuitionists still do
 not want to consider them as true. In particular these are statements that can
 prove properties about a number which is still unknown to mathematics and that
 might not even exist at all. An example is the length of the first cycle in a
 a Collatz sequence that does not contain 1, or the first position at which the
-decimal expansion of π contains 99 consecutive nines.
-This notion is embodied by Recklessness.
+decimal expansion of π contains 99 consecutive nines. This notion is embodied by
+Recklessness; a weaker version of LLPO.
 *)
+Definition Recklessness :=
+  forall α, ~(forall n, α n = 0) ->
+  (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Even k) \/
+  (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
+
+(* A definition of infinity without numbers by Dedekind. *)
+Definition Dedekind_infinite A := exists x f,
+  x isin A /\ well_defined A A f /\ injective A A f /\ forall y, f y # x.
 
 (* LEM is as least as strong as LPO. *)
 Theorem lem_lpo :
@@ -136,9 +138,17 @@ Qed.
 
 End Apartness.
 
+(* If A is Dedekind infinite, then A is denumerable. *)
+Theorem dedekind_infinite_denumerable A :
+  Dedekind_infinite A -> denumerable A.
+Proof.
+intros [f [x [Ax [f_wd [f_inj f_y]]]]].
+(* We define a bijection by repeated application of f. *)
+Admitted.
+
 (* A classic proof for the Cantor-Schröder-Bernstein theorem. *)
 Theorem schroder_bernstein :
   LEM -> CSBTheorem.
 Proof.
 (* www.cs.cornell.edu/courses/cs2800/2017fa/lectures/lec14-cantor.html *)
-Admitted.
+Admitted. 

@@ -21,13 +21,14 @@ Record aset := ASet {
 
 Arguments apart {_}.
 Notation "α 'isin' X" := (member X α) (at level 50).
-Notation "α '#' β" := (apart α β) (at level 50, format "α '#' β").
+Notation "α '#' β" := (apart α β) (at level 50).
+
+Definition fullset {T} (x : T) := True.
+Definition inhabited A := exists x, x isin A.
 
 (* The second half of apart_neq is at least always not not true. *)
 Theorem neq_nnapart S (x y : dom S) : x <> y -> ~~x#y.
 Proof. intros H P; apply (apart_spec S) in P; auto. Qed.
-
-Definition full_set {T} (x : T) := True.
 
 (* Apartness for decidable equality *)
 Section DecidableEquality.
@@ -51,10 +52,10 @@ Proof. unfold dec_apart; intros H P; apply H; auto. Qed.
 
 End DecidableEquality.
 
-Definition Nat := ASet nat full_set (dec_apart nat)
+Definition Nat := ASet nat fullset (dec_apart nat)
   (dec_apart_spec nat eq_dec) (dec_apart_neq nat)
   (dec_apart_sym nat).
 
-Definition Bool := ASet bool full_set (dec_apart bool)
+Definition Bool := ASet bool fullset (dec_apart bool)
   (dec_apart_spec bool bool_dec) (dec_apart_neq bool)
   (dec_apart_sym bool).

@@ -134,7 +134,7 @@ apply intro_inspr; intros; apply intro_τP. unfold f; destruct n.
 - intros n; unfold cseq; lia.
 - intros i. split. split; apply pre_prop; intros; unfold cseq; lia.
   unfold pre, replace, fill, cseq.
-  destruct (i <? n) eqn:E1; destruct (S i <? n) eqn:E2; bool_lia.
+  destruct (i <? n) eqn:E1, (S i <? n) eqn:E2; bool_lia.
 Qed.
 
 (* f is injective. *)
