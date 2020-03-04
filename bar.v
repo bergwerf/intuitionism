@@ -1,4 +1,4 @@
-(* Bar induction and the Fan Law *)
+(* Bar induction and the Fan Theorem *)
 
 From intuitionism Require Import lib set seq bcp spr fan tau func.
 
@@ -80,15 +80,11 @@ Theorem safe_can_safe F B s :
   safe_can F B s -> safe F B s.
 Proof.
 intros can; induction can; unfold safe; simpl.
-- (* Skip *)
-  intros α Hα. exfalso. eapply isect_σ_false. apply Hα. auto.
-- (* Introduction *)
-  intros α [H1α H2α]. exists (length s). now rewrite H2α.
-- (* Forward *)
-  intros α Hα. eapply fan_s_extension in Hα as αN; auto.
+- intros α Hα. exfalso. eapply isect_σ_false. apply Hα. auto.
+- intros α [H1α H2α]. exists (length s). now rewrite H2α.
+- intros α Hα. eapply fan_s_extension in Hα as αN; auto.
   apply H in αN. apply αN. now apply isect_cons_length.
-- (* Backward *)
-  intros α Hα. apply IHcan. subst; now apply isect_cons.
+- intros α Hα. apply IHcan. subst; now apply isect_cons.
 Qed.
 
 (* In the lecture notes they call this property supersafe. *)
