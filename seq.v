@@ -271,15 +271,18 @@ End SeqProp.
 (* Facts about get *)
 Section GetPrefix.
 
-(* Different length prefixes are never equal. *)
-Lemma get_neq n m α β :
-  n <> m -> ⟨α;n⟩ <> ⟨β;m⟩.
+(* Equality implies the same length prefix. *)
+Lemma get_n_eq n m α β :
+  ⟨α;n⟩ = ⟨β;m⟩ -> n = m.
 Proof.
-revert m; induction n; intros; simpl.
-- destruct m; try lia; simpl. apply nil_cons.
-- destruct m; simpl; intros P; inversion P.
-  apply IHn in H2; auto.
+revert m; induction n; simpl.
+- now destruct m.
+- destruct m. now simpl. simpl; intros H.
+  injection H; intros. apply IHn in H0. now subst.
 Qed.
+
+Corollary get_n_neq n m α β : n <> m -> ⟨α;n⟩ <> ⟨β;m⟩.
+Proof. intros H P. apply H. eapply get_n_eq. apply P. Qed.
 
 (* Get finite part of a partially constant sequence. *)
 Lemma get_cseq_eq_cfseq c n α :

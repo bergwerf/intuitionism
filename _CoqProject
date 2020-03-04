@@ -1,13 +1,14 @@
 -R . intuitionism
+
 lib.v
 set.v
 seq.v
-lpo.v
-bcp.v
 spr.v
 fan.v
-tau.v
-bar.v
 func.v
 classic.v
+
+bcp.v
+tau.v
+bar.v
 brouwer.v

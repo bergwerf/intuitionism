@@ -189,11 +189,13 @@ apply fan_theorem in HB as [b [Bb bbar]].
 pose(α := prefix_diagonal b).
 assert(Hα: α isin F).
 { apply D. clear bbar. induction b. apply Forall_nil.
-  inversion Bb; subst. apply Forall_cons. 2: now apply IHb.
-  unfold B in H1; destruct H1 as [n Hn]. exists (f n); split.
+  inversion_clear Bb. apply Forall_cons. 2: now apply IHb.
+  unfold B in H; destruct H as [n Hn]. exists (f n); split.
   now apply f_wd. now rewrite Hn, get_length. }
-apply bbar in Hα as [n Hn].
-(* There is only one bar of length n, and α escapes it. *)
+apply bbar in Hα as [m Hm].
+(* There is only one bar of length m, and α escapes it. *)
+unfold fbar_bar in Hm. eapply Forall_forall in Bb. 2: apply Hm.
+destruct Bb as [n Hn]. rewrite Hn in Hm. apply get_n_eq in Hn as Hnm; subst.
 Admitted.
 
 End Computability.

@@ -1,6 +1,6 @@
 (* Functions *)
 
-From intuitionism Require Import lib set seq bcp spr fan.
+From intuitionism Require Import lib set seq spr fan.
 
 (* A well defined function from A to B. *)
 Definition well_defined A B (f : dom A -> dom B) :=
@@ -18,13 +18,24 @@ Definition injective A B (f : dom A -> dom B) :=
 Definition surjective A B (f : dom A -> dom B) :=
   forall β, β isin B -> exists α, α isin A /\ f α = β.
 
+(* An injective and surjective function is bijective. *)
 Definition bijective A B f := injective A B f /\ surjective A B f.
-Definition denumerable A := exists f, well_defined Nat A f /\ bijective Nat A f.
 
-Definition preceq A B := exists f, injective A B f.
+(* Notation for 'there exists an injective mapping from A to B'. *)
+Definition preceq A B := exists f, well_defined A B f /\ injective A B f.
 Notation "A >-> B" := (preceq A B) (at level 50).
 
-(* Strong injective implies weak injective. *)
+(* Notation for 'there exists a one-to-one mapping between A and B'. *)
+Definition equiv A B := exists f, well_defined A B f /\ bijective A B f.
+Notation "A ≡ B" := (equiv A B) (at level 50).
+
+(* Cantor-Schröder-Bernstein theorem. *)
+Definition CSBTheorem := forall A B, A >-> B /\ B >-> A -> A ≡ B.
+
+Definition denumerable A := Nat ≡ A.
+Definition uncountable A :=
+  forall f, well_defined Nat A f -> ~surjective Nat A f.
+
 Theorem injective_to_weak A B f :
   injective A B f -> weak_injective A B f.
 Proof.
@@ -32,19 +43,20 @@ intros H a α Ha Hα Hf. apply apart_spec; intros P.
 apply H in P; auto. apply apart_spec in P; auto.
 Qed.
 
-(* The set of all sequences is not denumerable. *)
-Theorem baire_uncountable :
-  ~exists f, surjective Nat Seq f.
+Theorem seq_uncountable :
+  uncountable Seq.
 Proof.
-intros H; destruct H as [f H].
+intros f f_wd f_surj.
 pose(γ (n : nat) := f n n + 1).
 assert(P: γ isin Seq). apply I.
-apply H in P as [n [Hn Hf]].
+apply f_surj in P as [n [Hn Hf]].
 apply equal_f with (x:=n) in Hf.
 unfold γ in Hf. lia.
 Qed.
 
+(* All finite sequences are denumerable. *)
 Require Import Coq.PArith.BinPosDef.
+Section FSeqDenumerable.
 
 (* Process xI as S and xO/xH as separator. *)
 Fixpoint pos_to_fseq (p : positive) (acc : nat) : fseq :=
@@ -84,7 +96,6 @@ Lemma fseq_to_nat_inv s :
 Proof.
 Admitted.
 
-(* The set of all finite sequences is denumerable. *)
 Theorem fseq_denumerable :
   denumerable FSeq.
 Proof.
@@ -96,6 +107,23 @@ exists nat_to_fseq; split. easy. split.
   apply I. apply fseq_to_nat_inv.
 Qed.
 
+End FSeqDenumerable.
+
+(*
+It is possible to construct an injection from Seq (Baire space) to
+Bin (Cantor space) and vice versa.
+*)
+Section InjSeqBin.
+
+(* Trivial direction *)
+Theorem bin_preceq_seq :
+  Bin >-> Seq.
+Proof.
+pose(f (α : seq) := α). exists f; split.
+- intros α Hα; apply I.
+- intros α β Hα Hβ. now unfold f.
+Qed.
+
 Fixpoint pos_to_list (p : positive) :=
   match p with
   | xI q => 1 :: pos_to_list q
@@ -105,19 +133,15 @@ Fixpoint pos_to_list (p : positive) :=
 
 Definition seq_to_bin α n := nth n (rev (pos_to_list (fseq_to_pos ⟨α;n⟩))) 0.
 
-(* There is an injection from binary sequences to number sequences (trivial). *)
-Theorem bin_preceq_seq :
-  Bin >-> Seq.
-Proof.
-pose(f (α : seq) := α). exists f.
-intros α β Hα Hβ. now unfold f.
-Qed.
-
-(* There is an injection from number sequences to binary sequences. *)
+(* Hard direction *)
 Theorem seq_preceq_bin :
   Seq >-> Bin.
 Proof.
-exists seq_to_bin. intros α β _ _ Hαβ.
-(* We need the smallest n at which α an β are apart. *)
-(* We then find the first location at which the image is apart. *)
+exists seq_to_bin; split.
+- intros α Hα. admit.
+- intros α β _ _ Hαβ. admit.
+  (* We need the smallest n at which α an β are apart. *)
+  (* We then find the first location at which the image is apart. *)
 Admitted.
+
+End InjSeqBin.

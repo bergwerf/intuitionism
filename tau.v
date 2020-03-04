@@ -1,6 +1,6 @@
 (* The Tau fan *)
 
-From intuitionism Require Import lib set seq bcp spr fan func.
+From intuitionism Require Import lib set seq spr fan func classic bcp.
 
 Section TauFan.
 
@@ -171,6 +171,20 @@ revert P1; destruct n; simpl; intros P1.
   unfold cseq; intros; lia.
 - intros i Hi; unfold f. unfold pre, replace, fill.
   replace (i <? m + n) with true by bool_lia. lia.
+Qed.
+
+(* f is surjective under LPO. *)
+Theorem lpo_f_surj :
+  LPO -> surjective Nat τ2 Tau2.f.
+Proof.
+intros LPO; intros β Hβ; destruct (LPO β).
+- pose(n := epsilon_smallest _ (neq0_dec β) H); destruct n as [n [Hn1 Hn2]].
+  exists (S n); split. apply I. simpl; extensionality i.
+  unfold pre, replace, fill, cseq.
+  destruct (i <? n) eqn:E; bool_to_Prop. apply Hn2 in E; lia.
+  eapply τ_mono_ext with (n:=1)(j:=i) in Hβ. lia. apply E. lia.
+- exists 0; split. apply I. simpl.
+  extensionality n; auto.
 Qed.
 
 End Tau2.

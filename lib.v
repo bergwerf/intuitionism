@@ -10,9 +10,48 @@ Require Export Coq.micromega.Lia.
 Export PeanoNat.Nat.
 Export ListNotations.
 
-Arguments In {_}.
-Arguments Forall {_}.
 Arguments exist {_ _}.
+
+(* Some first results in propositional logic. *)
+Section PropositionalLogic.
+
+Lemma nnLEM P : ~~(P \/ ~P).
+Proof. unfold not; auto. Qed.
+
+Lemma contra (P Q : Prop) : (P -> Q) -> ~Q -> ~P.
+Proof. auto. Qed.
+
+Lemma nn_imply_nn (P Q : Prop) : (P -> Q) -> ~~P -> ~~Q.
+Proof. auto. Qed.
+
+Lemma nn_imply (P Q : Prop) : ~~(P -> Q) -> (P -> ~~Q).
+Proof. auto. Qed.
+
+End PropositionalLogic.
+
+(* Some first results in predicate logic. *)
+Section PredicateLogic.
+
+Variable T : Type.
+Variable P : T -> Prop.
+
+Lemma forall_nn : (~~forall x, P x) -> forall x, ~~(P x).
+Proof. unfold not; auto. Qed.
+
+Lemma not_forall_not : (exists x, P x) -> ~forall x, ~P x.
+Proof. intros [x Hx] H. eapply H; apply Hx. Qed.
+
+Lemma forall_not : (~exists x, P x) -> forall x, ~P x.
+Proof. intros H1 n H2. apply H1; exists n; auto. Qed.
+
+Lemma nn_exists (Q : T -> Prop) :
+  ~~(exists x, P x) -> (forall x, P x -> Q x) -> ~~(exists x, Q x).
+Proof.
+intros nnEx PQ nH. apply nnEx; intros [x Px].
+apply nH; exists x. now apply PQ.
+Qed.
+
+End PredicateLogic.
 
 Ltac bool_to_Prop :=
   match goal with

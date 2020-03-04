@@ -1,6 +1,6 @@
 (* Finitary spreads *)
 
-From intuitionism Require Import lib set seq bcp.
+From intuitionism Require Import lib set seq.
 
 (* Spread: a subset of the entire Baire space *)
 Record spread := Spr {
@@ -100,18 +100,3 @@ Qed.
 
 End Retract.
 End Retract.
-
-(* BCP generalizes to spreads *)
-Theorem BCPext (X : spread) (R : seq -> nat -> Prop) :
-  (forall α, α isin X -> exists n, R α n) ->
-  (forall α, α isin X -> exists m n, forall β, β isin X -> eqn m α β -> R β n).
-Proof.
-intros Rall.
-pose(rσ := (Retract.r X)).
-pose(T := (fun α n => R (rσ α) n)).
-assert(HT: forall α, exists n, T α n).
-{ intros; pose(Hα := Retract.r_image X α); apply Rall in Hα.
-  destruct Hα as [n Hn]; exists n; auto. }
-intros; destruct (BCP T HT α) as [m [n P]]. exists m; exists n; intros.
-apply P in H1; unfold T, rσ in H1; rewrite Retract.r_id in H1; auto.
-Qed.
