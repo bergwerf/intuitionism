@@ -64,7 +64,7 @@ pose(T := (λ α n, R (rσ α) n)).
 assert(HT: ∀ α, ∃ n, T α n).
 - intros; pose(Hα := Retract.r_image X α); apply Rall in Hα.
   destruct Hα as [n Hn]; exists n; auto.
-- intros; destruct (BCP T HT α) as [m [n P]]. exists m; exists n; intros.
+- intros; destruct (BCP T HT α) as [m [n P]]. exists m, n; intros.
   apply P in H1; unfold T, rσ in H1; rewrite Retract.r_id in H1; auto.
 Qed.
 

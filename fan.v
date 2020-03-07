@@ -33,6 +33,14 @@ apply leb_le; auto.
 Qed.
 
 Definition PointSpace := Fan (Spr Pσ Pσ_nil Pσ_cons) Pσ_fan.
+
+Lemma isin_pointspace α :
+  α isin PointSpace -> forall n, α n <= N.
+Proof.
+intros H n. assert(Hn := H (S n)).
+simpl in Hn. now repeat bool_to_Prop.
+Qed.
+
 End PointSpace.
 
 (* The cantor space, or binary sequences. *)

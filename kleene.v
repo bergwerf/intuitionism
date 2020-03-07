@@ -35,6 +35,51 @@ Definition recognizer e P := ∀ n, P n <-> accept e n.
 (* P is solvable if there exists a decidable recognizer. *)
 Definition solvable (P : nat -> Prop) := ∃ e, decider e /\ recognizer e P.
 
+(* Some useful lemmas *)
+Section Lemmas.
+
+Variable e : nat.
+Variable n : nat.
+
+Lemma T_μT :
+  (∃ z, T e n z) -> ∃ z, μT e n z.
+Proof.
+intros. destruct (epsilon_smallest _ (T_dec e n) H) as [z [H1z H2z]].
+exists z; now split.
+Qed.
+
+Lemma μT_nlt z1 z2 : μT e n z1 -> μT e n z2 -> ~(z1 < z2).
+Proof. intros H1 H2 H. eapply H2. apply H. apply H1. Qed.
+
+Lemma μT_eq z1 z2 :
+  μT e n z1 -> μT e n z2 -> z1 = z2.
+Proof.
+intros H1 H2. apply eq_dne; intros H.
+apply not_eq in H as [H|H]; eapply μT_nlt.
+apply H1. apply H2. auto. apply H2. apply H1. auto.
+Qed.
+
+Lemma reject_not_accept :
+  reject e n -> ~accept e n.
+Proof.
+intros [az [μaz Uaz]] [rz [μrz Urz]].
+rewrite (μT_eq _ _ μaz μrz) in Uaz.
+rewrite Uaz in Urz; discriminate.
+Qed.
+
+Corollary accept_not_reject : accept e n -> ~reject e n.
+Proof. intros A R; apply reject_not_accept in R; auto. Qed.
+
+Variable dec : decider e.
+
+Lemma not_reject_accept : ~reject e n -> accept e n.
+Proof. intros; destruct (dec n); auto. now exfalso. Qed.
+
+Lemma not_accept_reject : ~accept e n -> reject e n.
+Proof. intros; destruct (dec n); auto. now exfalso. Qed.
+
+End Lemmas.
+
 (* A note about the halting problem. *)
 Section HaltingProblem.
 
@@ -54,32 +99,6 @@ If e is a decider for HALT, then HALTdiag is also solvable.
 *)
 Variable HALTdiag_solvable : ∀ e,
   decider e -> recognizer e HALT -> solvable (HALTdiag e).
-
-Lemma μT_nlt e n z1 z2 : μT e n z1 -> μT e n z2 -> ~(z1 < z2).
-Proof. intros H1 H2 H. eapply H2. apply H. apply H1. Qed.
-
-Lemma μT_eq e n z1 z2 :
-  μT e n z1 -> μT e n z2 -> z1 = z2.
-Proof.
-intros H1 H2. apply eq_dne; intros H.
-apply not_eq in H as [H|H]; eapply μT_nlt.
-apply H1. apply H2. auto. apply H2. apply H1. auto.
-Qed.
-
-Lemma T_μT e n :
-  (∃ z, T e n z) -> ∃ z, μT e n z.
-Proof.
-intros. destruct (epsilon_smallest _ (T_dec e n) H) as [z [H1z H2z]].
-exists z; now split.
-Qed.
-
-Lemma reject_not_accept e n :
-  reject e n -> ~accept e n.
-Proof.
-intros [az [μaz Uaz]] [rz [μrz Urz]].
-rewrite (μT_eq _ _ _ _ μaz μrz) in Uaz.
-rewrite Uaz in Urz; discriminate.
-Qed.
 
 (* The Halting problem is unsolvable. *)
 Theorem HALT_unsolvable :
@@ -101,19 +120,140 @@ Qed.
 
 End HaltingProblem.
 
+(* Set corresponding to a binary mapping. *)
+Definition bin_set (α : seq) := λ n, α n = 1.
+
 (*
 We are considering the Turing decidable subspace of the Cantor space. At first
-it may seem that any finite prefix in Bin is also in Solv. However we cannot
+it may seem that any finite prefix in Bin is also in Bin_solv. However we cannot
 claim both sets are equal due to the Halting problem.
 *)
-Definition Solv := Baire (λ α, α isin Bin /\ solvable (λ n, α n = 1)).
+Definition is_solvable α := α isin Bin /\ solvable (bin_set α).
+Definition Bin_solv := Baire is_solvable.
 
 (*
 We will construct a bar for which any finite bar fails. If we accept Bin_solv as
 a fan, then this contradicts the Fan Theorem. If it is possible to enumerate
-all solvable sets using a Turing program, then Solv would indeed be a fan.
+all solvable sets using a Turing program, then Bin_solv would indeed be a fan.
 However as we learned from the Halting problem, it is not possible for a Turing
 program to exactly enumerate all possible decider programs.
 *)
+
+(* Compare the prefix of sequence α in Bin to Turing program e. *)
+Section CheckPrefix.
+
+Variable α : seq.
+Variable e : nat.
+Variable bin : α isin Bin.
+Variable dec : decider e.
+Variable rec : recognizer e (bin_set α).
+
+(* s is a prefix of the Turing program e. Note that i must count down. *)
+Fixpoint check_prefix s i :=
+  match s with
+  | [] => True
+  | n :: s' => check_prefix s' (pred i) /\
+    match n with
+    | 0 => reject e i
+    | 1 => accept e i
+    | _ => False
+    end
+  end.
+
+Lemma check_prefix_n n :
+  match α n with
+  | 0 => reject e n
+  | 1 => accept e n
+  | _ => False
+  end.
+Proof.
+apply isin_pointspace with (n:=n) in bin.
+destruct (α n) eqn:E; bool_to_Prop.
+- apply not_accept_reject; auto; intros H. apply rec in H.
+  unfold bin_set in H; now rewrite E in H.
+- replace n0 with 0 by lia. apply rec. unfold bin_set. lia.
+Qed.
+
+Corollary check_prefix_full n : check_prefix ⟨α;S n⟩ n.
+Proof. induction n; simpl; split; auto; apply check_prefix_n. Qed.
+
+Lemma check_prefix_unique_length s t i :
+  check_prefix s i -> check_prefix t i -> length s = length t -> s = t.
+Proof.
+revert s i; induction t; simpl; intros. now apply length_zero_iff_nil.
+destruct H0. destruct s; simpl in *. easy. destruct H. apply cons_split.
+- destruct n, a; try destruct n; try destruct a; auto; try easy.
+  all: exfalso; now apply reject_not_accept with (e:=e)(n:=i).
+- eapply IHt. apply H. apply H0. now apply eq_add_S.
+Qed.
+
+End CheckPrefix.
+
+(* We use these prefixes to define a bar. The bar name is somewhat random. *)
+Definition good : bar := λ s, ∃ e, length s = S e /\ check_prefix e s e.
+
+(* Each sequence in good has a unique length. *)
+Lemma good_unique_length s t :
+  good s -> good t -> length s = length t -> s = t.
+Proof.
+intros [es [sL sP]] [et [tL tP]] HL.
+rewrite HL in sL. rewrite sL in tL. apply eq_add_S in tL; subst.
+eapply check_prefix_unique_length. apply sP. apply tP. easy.
+Qed.
+
+(* Diagonalization of a finite bar. *)
+Fixpoint good_diag (b : fbar) n :=
+  match b with 
+  | [] => 0
+  | s :: t => if length s =? S n then 1 - hd 0 s else good_diag t n
+  end.
+
+(* Given a finite bar, fbar_diag is fully decidable. *)
+Variable good_diag_solvable : ∀ b, solvable (bin_set (good_diag b)).
+
+(* Hence, good_diag is in Bin_solv. *)
+Lemma good_diag_Bin_solv b :
+  good_diag b isin Bin_solv.
+Proof.
+split. 2: apply good_diag_solvable.
+intros n; induction n; simpl; repeat bool_to_Prop; auto. clear IHn.
+induction b; simpl. lia. destruct (length a =? S n); auto.
+destruct (hd 0 a); lia.
+Qed.
+
+(* For sequence (n :: s) in fbar b, good_diag b <> (n :: s) at (length s). *)
+Lemma good_diag_neq b n s :
+  Forall good b -> In (n :: s) b -> good_diag b (length s) <> n.
+Proof.
+induction b; simpl; auto. intros Hab [H|H].
+- subst. simpl. rewrite eqb_refl. destruct n; lia.
+- inversion_clear Hab. destruct (length a =? S (length s)) eqn:E; bool_to_Prop.
+  + (* Again a = n :: s by the uniqueness of length in diag_bar. *)
+    eapply Forall_forall in H1. 2: apply H.
+    eapply good_unique_length in H1. 2: apply H0. subst.
+    simpl; destruct n; lia. now rewrite E.
+  + (* Use induction hypothesis. *)
+    now apply IHb.
+Qed.
+
+(* good is a bar in Bin_solv. *)
+Theorem barred_Bin_solv_good :
+  barred Bin_solv good.
+Proof.
+intros α [Cα [e [e_dec α_rec]]]. unfold good.
+exists (S e), e; split. apply get_length. now apply check_prefix_full.
+Qed.
+
+(* Any finite subset of good is insufficient. *)
+Theorem no_good_fbar (b : fbar) :
+  Forall good b -> not_barred_fbar Bin_solv b.
+Proof.
+intros H. exists (good_diag b); split. apply good_diag_Bin_solv.
+apply Forall_forall; intros s Hs. destruct s.
+- eapply Forall_forall in H. 2: apply Hs.
+  now unfold good in H; destruct H as [e [He _]].
+- simpl. intros Heq; injection Heq; intros.
+  eapply good_diag_neq. apply H. apply Hs. easy.
+Qed.
 
 End Kleene.

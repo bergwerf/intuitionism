@@ -11,8 +11,25 @@ Definition fbar_bar (B : fbar) : bar := λ s, In s B.
 Coercion fbar_bar : fbar >-> bar.
 
 (* X is barred by B if all sequences in X have a prefix in B. *)
-Definition barred (X : baire) (B : bar) :=
-  ∀ α, α isin X -> ∃ n, B ⟨α;n⟩.
+Definition barred (X : baire) (B : bar) := ∀ α, α isin X -> ∃ n, B ⟨α;n⟩.
+
+(* Positive definition for a failing bar. *)
+Definition not_barred (X : baire) (B : bar) := ∃ α, α isin X /\ ∀ n, ~B ⟨α;n⟩.
+
+(* Positive definition for a failing finite bar. *)
+Definition not_barred_fbar (X : baire) (b : fbar) :=
+  ∃ α, α isin X /\ Forall (λ s, ⟨α;length s⟩ <> s) b.
+
+Theorem not_barred_fbar_weaken X b :
+  not_barred_fbar X b -> not_barred X b.
+Proof.
+intros [α [H1 H2]]. exists α; split; auto. intros n Hn.
+unfold fbar_bar in Hn. eapply Forall_forall in H2. 2: apply Hn.
+apply H2. now rewrite get_length.
+Qed.
+
+Theorem not_barred_weaken X B : not_barred X B -> ~barred X B.
+Proof. intros [α [Hα HB]] H. apply H in Hα as [n Hn]. eapply HB, Hn. Qed.
 
 (* Proof of the Fan Theorem. *)
 Section FanTheorem.
