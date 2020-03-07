@@ -97,26 +97,48 @@ Variable F : fan.
 Variable B : bar.
 Variable s : fseq.
 Variable N : nat.
-Variable H : forall n : nat, n <= N -> supersafe F B (n :: s).
+Variable Hsupersafe : forall n : nat, n <= N -> supersafe F B (n :: s).
 
 Definition fbar_union_nth n :=
   match le_dec n N with
-  | left P => proj1_sig (H n P)
+  | left P => proj1_sig (Hsupersafe n P)
   | right _ => []
   end.
 
-Definition fbar_union : fbar :=
-  concat (map fbar_union_nth (0..N)).
+Definition fbar_union : fbar := flat_map fbar_union_nth (0..N).
+
+Lemma in_flat_map {X Y} (f : X -> list Y) xs y :
+  In y (flat_map f xs) <-> exists x, In x xs /\ In y (f x).
+Proof.
+induction xs; simpl; split.
+- intros H; now exfalso.
+- now intros [_ [Fex _]].
+- intros. apply in_app_or in H as [H|H].
+  exists a; auto. apply IHxs in H as [x [Hxs Hx]]. exists x; auto.
+- intros [x [[Hx|Hx] Hy]]; apply in_or_app. subst; now left.
+  right; apply IHxs. now exists x.
+Qed.
 
 Lemma fbar_union_subset :
   Forall B fbar_union.
 Proof.
-Admitted.
+apply Forall_forall; intros bs Hbs.
+apply in_flat_map in Hbs as [n [HnN Hn]].
+apply in_range in HnN as [H0n H1n].
+unfold fbar_union_nth in Hn. destruct (le_dec n N); try easy.
+assert(Hbs := proj1 (proj2_sig (Hsupersafe n l))); simpl in Hbs.
+eapply Forall_forall in Hbs. apply Hbs. auto.
+Qed.
 
 Lemma fbar_union_safe n :
   n <= N -> safe F fbar_union (n :: s).
 Proof.
-Admitted.
+intros nN. intros α Hα. destruct (le_dec n N) eqn:E. 2: easy.
+assert(nsafe := proj2 (proj2_sig (Hsupersafe n l))); simpl in nsafe.
+destruct (nsafe α) as [m Hm]; auto. exists m; apply in_flat_map.
+exists n; split. apply in_range; lia.
+unfold fbar_union_nth. now rewrite E.
+Qed.
 
 End BarInductionUnion.
 
@@ -155,47 +177,27 @@ Qed.
 
 End FanTheorem.
 
-(* Under the fan theorem the number of sequences cannot be denumerable. *)
-Section Computability.
+(* The Fan Theorem has implications for functions with a fan domain. *)
+Section FanFunctions.
 
-(* s is a prefix in X. *)
-Definition prefix_in (X : baire) s := exists α, α isin X /\ ⟨α;length s⟩ = s.
+Variable F : fan.
 
-(* Function that is diagonalized from b. *)
-Definition prefix_diagonal (b : list fseq) n :=
-  if n <? length b then 1 - nth n (nth n b []) 0 else 0.
-
-(* X allows a sequence that is defined as a diagonalization. *)
-Definition contains_diagonal (X : baire) :=
-  forall s : list fseq, Forall (prefix_in X) s -> prefix_diagonal s isin X.
-
-(*
-If we only want to consider computable sequences (those enumerated by a Turing
-Machine), then the fan theorem does not hold. More generally, any denumerable
-fan (such as the computable subspace of C) where diagonalization is possible
-yields a contradiction.
-*)
-Theorem not_fan_theorem (F : fan) :
-  contains_diagonal F -> ~denumerable F.
+(* Any function from F to nat has a finite image. *)
+Theorem fan_to_nat_image (f : dom F -> nat) :
+  exists image : fseq, forall α, In (f α) image.
 Proof.
-intros D [f [f_wd [f_inj f_surj]]].
-(* We create a bar in F from f. *)
-pose(B s := exists n, s = ⟨f n;n + 1⟩).
+assert(H := BCPext _ _ (fully_defined_aset_dom f)).
+pose(B s := exists n, forall β, β isin F -> ⟨β;length s⟩ = s -> f β = n).
 assert(HB: barred F B).
-{ intros α Hα. destruct (f_surj α) as [n [_ Hn]]; auto.
-  exists (n + 1). exists n. now rewrite Hn. }
-apply fan_theorem in HB as [b [Bb bbar]].
-(* We define an α that cannot occur in b by diagonalization. *)
-pose(α := prefix_diagonal b).
-assert(Hα: α isin F).
-{ apply D. clear bbar. induction b. apply Forall_nil.
-  inversion_clear Bb. apply Forall_cons. 2: now apply IHb.
-  unfold B in H; destruct H as [n Hn]. exists (f n); split.
-  now apply f_wd. now rewrite Hn, get_length. }
-apply bbar in Hα as [m Hm].
-(* There is only one bar of length m, and α escapes it. *)
-unfold fbar_bar in Hm. eapply Forall_forall in Bb. 2: apply Hm.
-destruct Bb as [n Hn]. rewrite Hn in Hm. apply get_n_eq in Hn as Hnm; subst.
+{ intros α Hα. apply H in Hα as [m [n Hmn]]. exists m; exists n; intros.
+  apply Hmn; auto. apply eqn_eq_get. now apply get_eq_r in H1. }
+apply fan_theorem in HB as [b [bB Hb]].
 Admitted.
 
-End Computability.
+(* Any function from nat to F has a finite pre-image. *)
+Theorem nat_to_fan_preimage (f : nat -> dom F) :
+  exists image : fseq, forall α, exists n, In n image /\ f n = α.
+Proof.
+Admitted.
+
+End FanFunctions.

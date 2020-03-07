@@ -37,15 +37,19 @@ Qed.
 Corollary not_lem : ~LEM.
 Proof. intros H; apply not_lpo; apply lem_lpo; auto. Qed.
 
-(* Any function f : seq -> nat is computable. *)
-Lemma f_computable (f : seq -> nat) : forall α, exists n, f α = n.
+Lemma fully_defined {A B} (f : A -> B) :
+  forall a, exists b, f a = b.
+Proof. intros; now exists (f a). Qed.
+
+Lemma fully_defined_aset_dom {A B} (f : dom A -> B) :
+  forall α, α isin A -> exists b, f α = b.
 Proof. intros; now exists (f α). Qed.
 
 (* Continuity of functions. *)
 Theorem BCPf (f : seq -> nat) α :
   exists n, forall β, eqn n α β -> f α = f β.
 Proof.
-destruct (BCP _ (f_computable f) α) as [m [n H]]. exists m; intros.
+destruct (BCP _ (fully_defined f) α) as [m [n H]]. exists m; intros.
 rewrite H. symmetry; rewrite H; auto. apply eqn_refl.
 Qed.
 

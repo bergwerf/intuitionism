@@ -138,13 +138,36 @@ Qed.
 
 End Apartness.
 
-(* If A is Dedekind infinite, then A is denumerable. *)
-Theorem dedekind_infinite_denumerable A :
-  Dedekind_infinite A -> denumerable A.
+(* Apply f n times to x. *)
+Fixpoint appn {A} f (x : A) n :=
+  match n with 0 => x | S m => f (appn f x m) end.
+
+Lemma appn_isin {A : aset} x f n :
+  x isin A -> well_defined A A f -> appn f x n isin A.
+Proof. intros; induction n; simpl; auto. Qed.
+
+Lemma appn_apart {A : aset} x f m n :
+  x isin A -> well_defined A A f -> injective A A f -> (forall y, f y # x) ->
+  appn f x n # appn f x (n + S m).
 Proof.
-intros [f [x [Ax [f_wd [f_inj f_y]]]]].
-(* We define a bijection by repeated application of f. *)
-Admitted.
+intros; induction n; simpl; auto; intros.
+- induction m; simpl; apply apart_sym; auto.
+- apply H1; auto; apply appn_isin; auto.
+Qed.
+
+(* If A is Dedekind infinite, then A is as least as big as Nat. *)
+Theorem dedekind_ω_inifinite A :
+  Dedekind_infinite A -> Nat >-> A.
+Proof.
+intros [x [f [Ax [f_wd [f_inj f_y]]]]].
+(* We define an injection by repeated application of f. *)
+exists (appn f x); split.
+- intros n _. clear f_y; revert Ax; revert x. induction n; simpl; auto.
+- intros n m _ _. simpl; intros Hnm. apply not_eq in Hnm; destruct Hnm.
+  replace m with (n + S (m - n - 1)) by lia; now apply appn_apart.
+  apply apart_sym. replace n with (m + S (n - m - 1)) by lia;
+  now apply appn_apart.
+Qed.
 
 (* A classic proof for the Cantor-Schröder-Bernstein theorem. *)
 Theorem schroder_bernstein :

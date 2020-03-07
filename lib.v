@@ -15,16 +15,22 @@ Arguments exist {_ _}.
 (* Some first results in propositional logic. *)
 Section PropositionalLogic.
 
-Lemma nnLEM P : ~~(P \/ ~P).
+Variable P : Prop.
+Variable Q : Prop.
+
+Lemma nnLEM : ~~(P \/ ~P).
 Proof. unfold not; auto. Qed.
 
-Lemma contra (P Q : Prop) : (P -> Q) -> ~Q -> ~P.
+Lemma implyn_n : (P -> ~P) -> ~P.
 Proof. auto. Qed.
 
-Lemma nn_imply_nn (P Q : Prop) : (P -> Q) -> ~~P -> ~~Q.
+Lemma contra : (P -> Q) -> ~Q -> ~P.
 Proof. auto. Qed.
 
-Lemma nn_imply (P Q : Prop) : ~~(P -> Q) -> (P -> ~~Q).
+Lemma nn_imply_nn : (P -> Q) -> ~~P -> ~~Q.
+Proof. auto. Qed.
+
+Lemma nn_imply : ~~(P -> Q) -> (P -> ~~Q).
 Proof. auto. Qed.
 
 End PropositionalLogic.

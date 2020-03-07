@@ -11,4 +11,5 @@ classic.v
 bcp.v
 tau.v
 bar.v
+kleene.v
 brouwer.v

@@ -31,8 +31,6 @@ End SpreadBaire.
 (* Function to retract the the Baire space onto any spread. *)
 Module Retract.
 Section Retract.
-Notation "'σπ1'" := proj1_sig.
-Notation "'σπ2'" := proj2_sig.
 Arguments exist {_ _}.
 
 Variable X : spread.
@@ -46,23 +44,23 @@ Fixpoint ρ (s : fseq) : {t | σ X t = true} :=
   match s with
   | [] => exist [] (σ_nil X)
   | n :: t =>
-    let ρt := σπ1 (ρ t) in
-    let ρtP := σπ2 (ρ t) in
+    let ρt := proj1_sig (ρ t) in
+    let ρtP := proj2_sig (ρ t) in
     match X_dec ρt n with
     | left accept => exist (n :: ρt) accept
     | right _ =>
       let ex := proj1 (σ_cons X ρt) ρtP in
       let n0 := epsilon_smallest _ (X_dec ρt) ex in
-      exist (σπ1 n0 :: ρt) (proj1 (σπ2 n0))
+      exist (proj1_sig n0 :: ρt) (proj1 (proj2_sig n0))
     end
   end.
 
 (* Retract function *)
-Definition r α n := hd 0 (σπ1 (ρ ⟨α;n+1⟩)).
+Definition r α n := hd 0 (proj1_sig (ρ ⟨α;n+1⟩)).
 
 (* r is the same as ρ *)
 Lemma r_eq_ρ α n :
-  ⟨r α;n⟩ = σπ1 (ρ ⟨α;n⟩).
+  ⟨r α;n⟩ = proj1_sig (ρ ⟨α;n⟩).
 Proof.
 induction n; simpl; auto.
 destruct (ρ ⟨α;n⟩) as [ρt Hρ] eqn:Rρ; simpl in *.
@@ -74,7 +72,7 @@ Qed.
 
 (* ρ does not alter sequences in X. *)
 Lemma ρ_id α n :
-  α isin X -> σπ1 (ρ ⟨α;n⟩) = ⟨α;n⟩.
+  α isin X -> proj1_sig (ρ ⟨α;n⟩) = ⟨α;n⟩.
 Proof.
 intros; induction n; simpl; auto.
 destruct (ρ ⟨α;n⟩); simpl in *; subst.

@@ -281,6 +281,12 @@ revert m; induction n; simpl.
   injection H; intros. apply IHn in H0. now subst.
 Qed.
 
+Corollary get_eq_l n m α β : ⟨α;n⟩ = ⟨β;m⟩ -> ⟨α;n⟩ = ⟨β;n⟩.
+Proof. intros; apply get_n_eq in H as R; now subst. Qed.
+
+Corollary get_eq_r n m α β : ⟨α;n⟩ = ⟨β;m⟩ -> ⟨α;m⟩ = ⟨β;m⟩.
+Proof. intros; apply get_n_eq in H as R; now subst. Qed.
+
 Corollary get_n_neq n m α β : n <> m -> ⟨α;n⟩ <> ⟨β;m⟩.
 Proof. intros H P. apply H. eapply get_n_eq. apply P. Qed.
 
@@ -393,16 +399,15 @@ replace (n + (1 + m - n)) with (S m) by lia.
 replace (1 + (m + S k) - S m) with (S k) by lia; auto.
 Qed.
 
-Lemma in_map_iota {T} (f : nat -> T) k n m x :
-  n <= k < n + m -> x = f k -> In x (map f (iota n m)).
+Lemma in_iota n k x :
+  In x (iota n k) <-> n <= x < n + k.
 Proof.
-revert n; induction m; intros; simpl. lia.
-destruct (eq_dec n k); subst; auto.
-right; apply IHm; auto. lia.
+revert n; induction k; simpl. lia. split.
+- intros [H|H]. subst; lia. apply IHk in H; lia.
+- intros H. destruct (eq_dec n x). now left. right. apply IHk; lia.
 Qed.
 
-Corollary in_map_range {T} (f : nat -> T) k n x :
-  k <= n -> x = f k -> In x (map f (0..n)).
-Proof. intros; apply in_map_iota with (k0:=k). lia. auto. Qed.
+Corollary in_range n m x : In x (range n m) <-> n <= x <= m.
+Proof. split; intros. apply in_iota in H; lia. apply in_iota; lia. Qed.
 
 End IotaRange.
