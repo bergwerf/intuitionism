@@ -6,24 +6,24 @@ From intuitionism Require Import lib set seq.
 Record spread := Spr {
   σ : fseq -> bool;
   σ_nil : σ [] = true;
-  σ_cons : forall s, σ s = true <-> exists n, σ (n :: s) = true;
+  σ_cons : ∀ s, σ s = true <-> ∃ n, σ (n :: s) = true;
 }.
 
 (* Coerce spreads to baire. *)
 Section SpreadBaire.
 
 (* Spread membership *)
-Definition spread_member X α := forall m, σ X ⟨α;m⟩ = true.
+Definition spread_member X α := ∀ m, σ X ⟨α;m⟩ = true.
 
 Definition spread_biare (X : spread) := Baire (spread_member X).
 Coercion spread_biare : spread >-> baire.
 
 Lemma unfold_inspr (X : spread) α :
-  α isin X -> forall m, σ X ⟨α;m⟩ = true.
+  α isin X -> ∀ m, σ X ⟨α;m⟩ = true.
 Proof. auto. Qed.
 
 Lemma intro_inspr (X : spread) α :
-  (forall m, σ X ⟨α;m⟩ = true) -> α isin X.
+  (∀ m, σ X ⟨α;m⟩ = true) -> α isin X.
 Proof. auto. Qed.
 
 End SpreadBaire.

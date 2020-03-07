@@ -3,19 +3,19 @@
 From intuitionism Require Import lib set seq spr fan func.
 
 (* Principle of Omniscience, or the Law of the Excluded Middle *)
-Definition LEM := forall P, P \/ ~P.
+Definition LEM := ∀ P, P \/ ~P.
 
 (* Limited Principle of Omniscience *)
-Definition LPO := forall (α : seq), (exists n, α n <> 0) \/ (forall n, α n = 0).
+Definition LPO := ∀ (α : seq), (∃ n, α n <> 0) \/ (∀ n, α n = 0).
 
 (* Lesser Limited Principle of Omniscience *)
-Definition LLPO := forall (α : seq),
-  (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Even k) \/
-  (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
+Definition LLPO := ∀ (α : seq),
+  (∀ k, ((∀ i, i < k -> α i = 0) /\ α k <> 0) -> Even k) \/
+  (∀ k, ((∀ i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
 
 (* Markov's Principle; a weaker version of LPO. *)
 Definition MarkovsPrinciple :=
-  forall α : seq, ~(forall n, α n = 0) -> exists n, α n <> 0.
+  ∀ α : seq, ~(∀ n, α n = 0) -> ∃ n, α n <> 0.
 
 (*
 Some statements do not directly imply LPO or LLPO, yet intuitionists still do
@@ -27,19 +27,19 @@ decimal expansion of π contains 99 consecutive nines. This notion is embodied b
 Recklessness; a weaker version of LLPO.
 *)
 Definition Recklessness :=
-  forall α, ~(forall n, α n = 0) ->
-  (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Even k) \/
-  (forall k, ((forall i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
+  ∀ α, ~(∀ n, α n = 0) ->
+  (∀ k, ((∀ i, i < k -> α i = 0) /\ α k <> 0) -> Even k) \/
+  (∀ k, ((∀ i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
 
 (* A definition of infinity without numbers by Dedekind. *)
-Definition Dedekind_infinite A := exists x f,
-  x isin A /\ well_defined A A f /\ injective A A f /\ forall y, f y # x.
+Definition Dedekind_infinite A := ∃ x f,
+  x isin A /\ well_defined A A f /\ injective A A f /\ ∀ y, f y # x.
 
 (* LEM is as least as strong as LPO. *)
 Theorem lem_lpo :
   LEM -> LPO.
 Proof.
-intros PO α; destruct (PO (exists n, α n <> 0)). left; auto.
+intros PO α; destruct (PO (∃ n, α n <> 0)). left; auto.
 right; intros n; destruct (eq_dec (α n) 0); auto.
 exfalso; apply H; exists n; auto.
 Qed.
@@ -102,7 +102,7 @@ Theorem lpo_neq_seq_apart α β :
 Proof.
 (* Define a sequence which is non-zero where α anb β are not equal. *)
 pose(γ n := if α n =? β n then 0 else 1).
-assert(Hγ: forall n, γ n = 0 -> α n = β n).
+assert(Hγ: ∀ n, γ n = 0 -> α n = β n).
 { unfold γ; intros n. destruct (α n =? β n) eqn:H; bool_lia. }
 intros LPO H; destruct (LPO γ) as [[n Hn]|Hn].
 - exists n; intros P; revert Hn; unfold γ.
@@ -112,7 +112,7 @@ Qed.
 
 (* If sequence inequality implies apartness, then we have Markov's Principle. *)
 Theorem neq_seq_apart_markov :
-  (forall α β, α <> β -> seq_apart α β) -> MarkovsPrinciple.
+  (∀ α β, α <> β -> seq_apart α β) -> MarkovsPrinciple.
 Proof.
 intros H α Hα. assert(αneq0: α <> (0^ω)).
 - intros P; apply Hα; rewrite P; auto.
@@ -121,7 +121,7 @@ Qed.
 
 (* If weak injective is strong injective, then we have Markov's Principle. *)
 Theorem weak_injective_strong_markov :
-  (forall A B f, weak_injective A B f -> injective A B f) -> MarkovsPrinciple.
+  (∀ A B f, weak_injective A B f -> injective A B f) -> MarkovsPrinciple.
 Proof.
 intros WIS α Hα.
 (* A weakly injective function s.t. strong injectivity proves the goal *)
@@ -147,7 +147,7 @@ Lemma appn_isin {A : aset} x f n :
 Proof. intros; induction n; simpl; auto. Qed.
 
 Lemma appn_apart {A : aset} x f m n :
-  x isin A -> well_defined A A f -> injective A A f -> (forall y, f y # x) ->
+  x isin A -> well_defined A A f -> injective A A f -> (∀ y, f y # x) ->
   appn f x n # appn f x (n + S m).
 Proof.
 intros; induction n; simpl; auto; intros.

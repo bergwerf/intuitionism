@@ -7,6 +7,7 @@ Require Export Coq.Arith.Compare_dec.
 Require Export Coq.Logic.ConstructiveEpsilon.
 Require Export Coq.Logic.FunctionalExtensionality.
 Require Export Coq.micromega.Lia.
+Require Export Coq.Unicode.Utf8.
 Export PeanoNat.Nat.
 Export ListNotations.
 
@@ -41,17 +42,17 @@ Section PredicateLogic.
 Variable T : Type.
 Variable P : T -> Prop.
 
-Lemma forall_nn : (~~forall x, P x) -> forall x, ~~(P x).
+Lemma forall_nn : (~~∀ x, P x) -> ∀ x, ~~(P x).
 Proof. unfold not; auto. Qed.
 
-Lemma not_forall_not : (exists x, P x) -> ~forall x, ~P x.
+Lemma not_forall_not : (∃ x, P x) -> ~∀ x, ~P x.
 Proof. intros [x Hx] H. eapply H; apply Hx. Qed.
 
-Lemma forall_not : (~exists x, P x) -> forall x, ~P x.
+Lemma forall_not : (~∃ x, P x) -> ∀ x, ~P x.
 Proof. intros H1 n H2. apply H1; exists n; auto. Qed.
 
 Lemma nn_exists (Q : T -> Prop) :
-  ~~(exists x, P x) -> (forall x, P x -> Q x) -> ~~(exists x, Q x).
+  ~~(∃ x, P x) -> (∀ x, P x -> Q x) -> ~~(∃ x, Q x).
 Proof.
 intros nnEx PQ nH. apply nnEx; intros [x Px].
 apply nH; exists x. now apply PQ.

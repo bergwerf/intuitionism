@@ -14,9 +14,9 @@ Record aset := ASet {
   dom : Type;
   member : dom -> Prop;
   apart : dom -> dom -> Prop;
-  apart_spec : forall x y, ~apart x y <-> x = y;
-  apart_neq : forall x y, apart x y -> x <> y;
-  apart_sym : forall x y, apart x y -> apart y x;
+  apart_spec : ∀ x y, ~apart x y <-> x = y;
+  apart_neq : ∀ x y, apart x y -> x <> y;
+  apart_sym : ∀ x y, apart x y -> apart y x;
 }.
 
 Arguments apart {_}.
@@ -24,7 +24,7 @@ Notation "α 'isin' X" := (member X α) (at level 50).
 Notation "α '#' β" := (apart α β) (at level 50).
 
 Definition fullset {T} (x : T) := True.
-Definition inhabited A := exists x, x isin A.
+Definition inhabited A := ∃ x, x isin A.
 
 (* The second half of apart_neq is at least always not not true. *)
 Theorem neq_nnapart S (x y : dom S) : x <> y -> ~~x#y.
@@ -33,7 +33,7 @@ Proof. intros H P; apply (apart_spec S) in P; auto. Qed.
 (* Apartness for decidable equality *)
 Section DecidableEquality.
 Variable T : Type.
-Variable dec : forall x y : T, {x = y} + {x <> y}.
+Variable dec : ∀ x y : T, {x = y} + {x <> y}.
 Definition dec_apart (n m : T) := n <> m.
 
 Lemma dec_apart_spec (x y : T) :
