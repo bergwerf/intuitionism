@@ -1,13 +1,13 @@
 (* The Brouwer-Kripke scheme *)
 
-From intuitionism Require Import lib set seq classic bcp.
+From intuitionism Require Import lib set seq classic bcp choice.
 
 (*
 In response to a letter from C. Griss about removing negation altogether,
 Brouwer tries to agrue that without negation some interesting properties of
 mathematics can not be stated ('Essentieel-negatieve eigenschappen').
 *)
-Section BrouwerKripkeScheme.
+Module BrouwerKripkeScheme.
 
 (*
 To Brouwer the meaning of truth is relative; there is no absolute truth which
@@ -20,15 +20,19 @@ the creating subject:
 *)
 Axiom BKS : ∀P, ∃π, P <-> ∃n : nat, π n <> 0.
 
-(* We can use this axiom to create a special sequence. *)
-Theorem brouwers_sequence P : ∃β : seq,
-  ~~(∃n, β n <> 0) /\ ((∃n, β n <> 0) -> P \/ ~P).
+(* AC_11 is false under BKS. *)
+Corollary not_AC_11 : ~AC_11.
+Proof. intros H. apply AC_11_controversy in H. apply H; intros. apply BKS. Qed.
+
+(* We can use BKS to create a sequence with an 'essential negative property'. *)
+Theorem brouwers_sequence P : ∃α : seq,
+  ~~(∃n, α n <> 0) /\ ((∃n, α n <> 0) -> P \/ ~P).
 Proof.
 destruct (BKS (P \/ ~P)) as [π [H1π H2π]].
 exists π; split; auto. apply (nn_imply_nn (P \/ ~P)). auto. apply nnLEM.
 Qed.
 
-(* Now Markov's Principle implies LPO. *)
+(* Using this sequence Markov's Principle implies LPO. *)
 Theorem markov_lpo :
   MarkovsPrinciple -> LPO.
 Proof.
@@ -40,7 +44,7 @@ right; intros n. destruct (eq_dec (β n) 0); auto.
 exfalso; apply H2. exists n; auto.
 Qed.
 
-(* Hence we can contradict Markov's Principle using BCP. *)
+(* Hence Markov's Principle is false under BCP and BKS. *)
 Corollary not_markov : ~MarkovsPrinciple.
 Proof. intros H; apply not_lpo. apply markov_lpo; auto. Qed.
 

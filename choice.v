@@ -77,11 +77,49 @@ End CountableChoice.
 (* Choice on continuous sets. *)
 Section ContinuousChoice.
 
+(*
+To force a continuous choice function f : seq -> nat to be itself continuous,
+we define them in a particular way.
+*)
+Section ContinuousChoiceFunction.
+
+Inductive answer := wait | ready (n : nat).
+Record cfun := CFun {
+  ϕ : fseq -> answer;
+  ϕ_spec : ∀α, ∃n, ϕ ⟨α;n⟩ <> wait;
+}.
+
+Variable φ : cfun.
+Variable α : seq.
+
+Lemma answer_dec : ∀n, {ϕ φ ⟨α;n⟩ <> wait} + {~(ϕ φ ⟨α;n⟩ <> wait)}.
+Proof. intros; destruct (ϕ φ ⟨α;n⟩). now right. now left. Qed.
+
+(* Given such a function, we compute its answer here. *)
+Definition cfun_compute :=
+  let Σn := epsilon_smallest _ answer_dec (ϕ_spec φ α) in
+  let n := proj1_sig Σn in
+  match ϕ φ ⟨α;n⟩ with
+  | ready k => k
+  | wait => 0
+  end.
+
+End ContinuousChoiceFunction.
+
+Notation "φ '∣' α" := (cfun_compute φ α) (at level 50, format "φ '∣' α").
+
 Definition AC_10 := ∀(R : seq -> nat -> Prop),
-  (∀α, ∃n, R α n) -> ∃φ, ∀α, R α (φ α).
+  (∀α, ∃n, R α n) -> ∃φ, ∀α, R α (φ∣α).
 
 Definition AC_11 := ∀(R : seq -> seq -> Prop),
-  (∀α, ∃β, R α β) -> ∃φ, ∀α, R α (φ α).
+  (∀α, ∃β, R α β) -> ∃Φ, ∀α, R α (λ n, Φ n∣α).
+
+(* AC_11 has the a controversial implication. *)
+Theorem AC_11_controversy :
+  AC_11 -> ~∀α, ∃β, (∀n : nat, α n = 0) <-> ∃n : nat, β n <> 0.
+Proof.
+intros AC H. apply AC in H as [Φ HΦ].
+Admitted.
 
 End ContinuousChoice.
 End AxiomsOfChoice.
