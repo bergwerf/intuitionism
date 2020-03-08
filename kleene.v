@@ -160,7 +160,7 @@ Fixpoint check_prefix s i :=
     end
   end.
 
-Lemma check_prefix_n n :
+Lemma αn_01_dec n :
   match α n with
   | 0 => reject e n
   | 1 => accept e n
@@ -174,8 +174,8 @@ destruct (α n) eqn:E; bool_to_Prop.
 - replace n0 with 0 by lia. apply rec. unfold bin_set. lia.
 Qed.
 
-Corollary check_prefix_full n : check_prefix ⟨α;S n⟩ n.
-Proof. induction n; simpl; split; auto; apply check_prefix_n. Qed.
+Corollary check_prefix_pred n : check_prefix ⟨α;n⟩ (pred n).
+Proof. induction n; simpl; split; auto. apply αn_01_dec. Qed.
 
 Lemma check_prefix_unique_length s t i :
   check_prefix s i -> check_prefix t i -> length s = length t -> s = t.
@@ -190,25 +190,32 @@ Qed.
 End CheckPrefix.
 
 (* We use these prefixes to define a bar. The bar name is somewhat random. *)
-Definition good : bar := λ s, ∃ e, length s = S e /\ check_prefix e s e.
+Definition good : bar := λ s,
+  match s with
+  | [] => False
+  | _ :: t => let e := length t in check_prefix e s e
+  end.
 
 (* Each sequence in good has a unique length. *)
 Lemma good_unique_length s t :
   good s -> good t -> length s = length t -> s = t.
 Proof.
-intros [es [sL sP]] [et [tL tP]] HL.
-rewrite HL in sL. rewrite sL in tL. apply eq_add_S in tL; subst.
-eapply check_prefix_unique_length. apply sP. apply tP. easy.
+intros H1 H2 HL. destruct s, t; try easy. simpl in *.
+apply eq_add_S in HL as HL2. rewrite <-HL2 in H2.
+eapply check_prefix_unique_length; auto; simpl. apply H1. apply H2.
 Qed.
 
 (* Diagonalization of a finite bar. *)
 Fixpoint good_diag (b : fbar) n :=
   match b with 
   | [] => 0
-  | s :: t => if length s =? S n then 1 - hd 0 s else good_diag t n
+  | s :: t =>
+    if length s =? n + 1
+    then 1 - hd 0 s
+    else good_diag t n
   end.
 
-(* Given a finite bar, fbar_diag is fully decidable. *)
+(* Given a finite bar, good_diag is fully decidable. *)
 Variable good_diag_solvable : ∀ b, solvable (bin_set (good_diag b)).
 
 (* Hence, good_diag is in Bin_solv. *)
@@ -217,7 +224,7 @@ Lemma good_diag_Bin_solv b :
 Proof.
 split. 2: apply good_diag_solvable.
 intros n; induction n; simpl; repeat bool_to_Prop; auto. clear IHn.
-induction b; simpl. lia. destruct (length a =? S n); auto.
+induction b; simpl. lia. destruct (length a =? n + 1); auto.
 destruct (hd 0 a); lia.
 Qed.
 
@@ -226,22 +233,23 @@ Lemma good_diag_neq b n s :
   Forall good b -> In (n :: s) b -> good_diag b (length s) <> n.
 Proof.
 induction b; simpl; auto. intros Hab [H|H].
-- subst. simpl. rewrite eqb_refl. destruct n; lia.
-- inversion_clear Hab. destruct (length a =? S (length s)) eqn:E; bool_to_Prop.
+- rewrite add_1_r. subst; simpl. rewrite eqb_refl. destruct n; lia.
+- inversion_clear Hab. destruct (length a =? length s + 1) eqn:E; bool_to_Prop.
   + (* Again a = n :: s by the uniqueness of length in diag_bar. *)
     eapply Forall_forall in H1. 2: apply H.
     eapply good_unique_length in H1. 2: apply H0. subst.
-    simpl; destruct n; lia. now rewrite E.
+    simpl; destruct n; lia. now rewrite E, add_1_r.
   + (* Use induction hypothesis. *)
     now apply IHb.
 Qed.
 
-(* good is a bar in Bin_solv. *)
+(* good bars any solvable sequence in Bin_solv. *)
 Theorem barred_Bin_solv_good :
   barred Bin_solv good.
 Proof.
-intros α [Cα [e [e_dec α_rec]]]. unfold good.
-exists (S e), e; split. apply get_length. now apply check_prefix_full.
+intros α [Cα [e [e_dec α_rec]]].
+exists (S e). simpl; rewrite ?get_length; split.
+now apply check_prefix_pred. now apply αn_01_dec.
 Qed.
 
 (* Any finite subset of good is insufficient. *)
@@ -250,8 +258,7 @@ Theorem no_good_fbar (b : fbar) :
 Proof.
 intros H. exists (good_diag b); split. apply good_diag_Bin_solv.
 apply Forall_forall; intros s Hs. destruct s.
-- eapply Forall_forall in H. 2: apply Hs.
-  now unfold good in H; destruct H as [e [He _]].
+- eapply Forall_forall in H. 2: apply Hs. easy.
 - simpl. intros Heq; injection Heq; intros.
   eapply good_diag_neq. apply H. apply Hs. easy.
 Qed.
