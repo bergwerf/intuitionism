@@ -170,7 +170,7 @@ Qed.
 (* A classic proof for the Cantor-Schröder-Bernstein theorem. *)
 (* www.cs.cornell.edu/courses/cs2800/2017fa/lectures/lec14-cantor.html *)
 Module SchröderBernstein.
-Section Proof.
+Section SchröderBernstein.
 
 Variable A B : aset.
 Variable f : dom A -> dom B.
@@ -232,5 +232,5 @@ Admitted.
 Corollary A_equiv_B : A === B.
 Proof. exists h; repeat split. apply h_wd. apply h_inj. apply h_surj. Qed.
 
-End Proof.
+End SchröderBernstein.
 End SchröderBernstein.
