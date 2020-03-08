@@ -11,6 +11,6 @@ classic.v
 bcp.v
 tau.v
 choice.v
+bks.v
 bar.v
 kleene.v
-brouwer.v
