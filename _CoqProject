@@ -10,6 +10,7 @@ classic.v
 
 bcp.v
 tau.v
+choice.v
 bar.v
 kleene.v
 brouwer.v

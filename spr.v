@@ -12,9 +12,7 @@ Record spread := Spr {
 (* Coerce spreads to baire. *)
 Section SpreadBaire.
 
-(* Spread membership *)
 Definition spread_member X α := ∀m, σ X ⟨α;m⟩ = true.
-
 Definition spread_biare (X : spread) := Baire (spread_member X).
 Coercion spread_biare : spread >-> baire.
 
@@ -98,3 +96,7 @@ Qed.
 
 End Retract.
 End Retract.
+
+(* All spreads are inhabited. *)
+Corollary spread_inhabited (X : spread) : inhabited X.
+Proof. exists (Retract.r X (0^ω)). apply Retract.r_image. Qed.

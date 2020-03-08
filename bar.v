@@ -1,6 +1,6 @@
 (* Bar induction and the Fan Theorem *)
 
-From intuitionism Require Import lib set seq spr fan func bcp.
+From intuitionism Require Import lib set seq spr fan func bcp choice.
 
 (* A bar is a proposition on finite sequences. *)
 Definition bar := fseq -> Prop.
@@ -30,6 +30,9 @@ Qed.
 
 Theorem not_barred_weaken X B : not_barred X B -> ~barred X B.
 Proof. intros [α [Hα HB]] H. apply H in Hα as [n Hn]. eapply HB, Hn. Qed.
+
+Theorem spread_not_barred_fbar_nil (X : spread) : not_barred_fbar X [].
+Proof. destruct (spread_inhabited X). exists x; split; auto. Qed.
 
 (* Proof of the Fan Theorem. *)
 Section FanTheorem.
@@ -194,27 +197,75 @@ Qed.
 
 End FanTheorem.
 
-(* The Fan Theorem has implications for functions with a fan domain. *)
+(* The Fan Theorem has implications for functions from or to a fan. *)
 Section FanFunctions.
 
 Variable F : fan.
 
 (* Any function from F to nat has a finite image. *)
 Theorem fan_to_nat_image (f : dom F -> nat) :
-  ∃image, ∀α, In (f α) image.
+  ∃image, ∀α, α ∈ F -> In (f α) image.
 Proof.
 assert(H := BCPext _ _ (fully_defined_aset_dom f)).
 pose(B s := ∃n, ∀β, β ∈ F -> ⟨β;length s⟩ = s -> f β = n).
 assert(HB: barred F B).
-{ intros α Hα. apply H in Hα as [m [n Hmn]]. exists m; exists n; intros.
+{ intros α Hα. apply H in Hα as [m [n Hmn]]. exists m, n; intros.
   apply Hmn; auto. apply eqn_eq_get. now apply get_eq_r in H1. }
 apply fan_theorem in HB as [b [bB Hb]].
-Admitted.
+assert(choiceH: ∀s, In s b -> ∃n, ∀β, β ∈ F -> ⟨β;length s⟩ = s -> f β = n).
+{ intros s Hs. eapply Forall_forall in bB. 2: apply Hs. apply bB. }
+apply fseq_list_choice in choiceH as [c Hc]. 2: apply 0.
+exists (map c b); intros α Hα. apply Hb in Hα as Bα; destruct Bα as [n Hn].
+eapply Hc in Hn as Cn. 2: apply Hα. rewrite Cn; now apply in_map.
+now rewrite get_length.
+Qed.
 
-(* Any function from nat to F has a finite pre-image. *)
+(* Any surjective function from nat to F has a finite pre-image. *)
 Theorem nat_to_fan_preimage (f : nat -> dom F) :
-  ∃image, ∀α, ∃n, In n image /\ f n = α.
+  surjective Nat F f -> ∃pre_image, (∃n, In n pre_image) /\
+    ∀α, α ∈ F -> ∃n, In n pre_image /\ f n = α.
 Proof.
-Admitted.
+pose(B s := ∃n, ∀β, β ∈ F -> ⟨β;length s⟩ = s -> f n = β).
+intros f_surj. assert(HB: barred F B).
+{ intros α Hα. eapply BCPext in f_surj as [m [n Hmn]]. 2: apply Hα. exists m, n.
+  intros. apply Hmn; auto. apply eqn_eq_get. now rewrite <-H0, get_length. }
+apply fan_theorem in HB as [b [bB Hb]].
+assert(choiceH: ∀s, In s b -> ∃n, ∀β, β ∈ F -> ⟨β;length s⟩ = s -> f n = β).
+{ intros s Hs. eapply Forall_forall in bB. 2: apply Hs. apply bB. }
+apply fseq_list_choice in choiceH as [c Hc]. 2: apply 0.
+exists (map c b); split.
+- destruct b; simpl. exfalso. eapply not_barred_weaken.
+  apply not_barred_fbar_weaken. apply spread_not_barred_fbar_nil. apply Hb.
+  exists (c l). now left.
+- intros α Hα. apply Hb in Hα as Bα; destruct Bα as [n Hn].
+  eapply Hc in Hn as Cn. 2: apply Hα. exists (c ⟨α;n⟩); split; auto.
+  now apply in_map. now rewrite get_length.
+Qed.
+
+(* To use these results it is useful to have a max function over lists. *)
+Section Maximum.
+
+Definition upb s := fold_right max 0 s.
+
+Lemma upb_leq s :
+  forall n, In n s -> n <= upb s.
+Proof.
+induction s; simpl. easy. intros n [Hn|Hn].
+subst; lia. apply IHs in Hn. lia.
+Qed.
+
+End Maximum.
+
+(* No fan is denumerable. *)
+Theorem fan_not_denumerable :
+  ~denumerable F.
+Proof.
+intros [f [f_wd [f_inj f_surj]]]. apply injective_weaken in f_inj.
+apply nat_to_fan_preimage in f_surj as [preI [_ Hpre]].
+(* Take a number outside of the given pre-image and contradict f_inj. *)
+pose(N := upb preI + 1). destruct (Hpre (f N)) as [n [H1n H2n]].
+now apply f_wd. apply f_inj in H2n; try easy; subst.
+unfold N in H1n. apply upb_leq in H1n. lia.
+Qed.
 
 End FanFunctions.

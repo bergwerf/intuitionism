@@ -36,7 +36,7 @@ Definition denumerable A := Nat === A.
 Definition uncountable A :=
   ∀f, well_defined Nat A f -> ~surjective Nat A f.
 
-Theorem injective_to_weak A B f :
+Theorem injective_weaken A B f :
   injective A B f -> weak_injective A B f.
 Proof.
 intros H a α Ha Hα Hf. apply apart_spec; intros P.

@@ -13,6 +13,9 @@ Export ListNotations.
 
 Arguments exist {_ _}.
 
+(* Generate boolean equality for lists. *)
+Scheme Equality for list.
+
 (* Some first results in propositional logic. *)
 Section PropositionalLogic.
 

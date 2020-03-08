@@ -63,7 +63,7 @@ Notation "'⟨' α ';' n '⟩'" := (get n α) (at level 0, format "'⟨' α ';' 
 
 (* Apartness set for finite sequences. *)
 Definition FSeq := ASet fseq fullset (dec_apart fseq)
-  (dec_apart_spec fseq (list_eq_dec eq_dec)) (dec_apart_neq fseq)
+  (dec_apart_spec fseq (List.list_eq_dec eq_dec)) (dec_apart_neq fseq)
   (dec_apart_sym fseq).
 
 (* Apartness set of all infinite sequences *)
