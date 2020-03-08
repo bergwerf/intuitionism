@@ -31,7 +31,7 @@ Definition Recklessness := ∀α, ~(∀n, α n = 0) ->
 
 (* A definition of infinity without numbers by Dedekind. *)
 Definition Dedekind_infinite A := ∃x f,
-  x isin A /\ well_defined A A f /\ injective A A f /\ ∀y, f y # x.
+  x ∈ A /\ well_defined A A f /\ injective A A f /\ ∀y, f y # x.
 
 (* LEM is as least as strong as LPO. *)
 Theorem lem_lpo :
@@ -141,11 +141,11 @@ Fixpoint appn {A} f (x : A) n :=
   match n with 0 => x | S m => f (appn f x m) end.
 
 Lemma appn_isin {A : aset} x f n :
-  x isin A -> well_defined A A f -> appn f x n isin A.
+  x ∈ A -> well_defined A A f -> appn f x n ∈ A.
 Proof. intros; induction n; simpl; auto. Qed.
 
 Lemma appn_apart {A : aset} x f m n :
-  x isin A -> well_defined A A f -> injective A A f -> (∀y, f y # x) ->
+  x ∈ A -> well_defined A A f -> injective A A f -> (∀y, f y # x) ->
   appn f x n # appn f x (n + S m).
 Proof.
 intros; induction n; simpl; auto; intros.
@@ -181,7 +181,7 @@ Variable f_inj : injective A B f.
 Variable g_inj : injective B A g.
 
 (* y in B is a chain bottom (there is no x in A s.t. f x = y). *)
-Definition Bbot y := ∀x, x isin A -> f x # y.
+Definition Bbot y := ∀x, x ∈ A -> f x # y.
 
 (* Chain c connects x to y backwards. *)
 Fixpoint Bchain x c y :=
@@ -229,7 +229,7 @@ Theorem h_surj :
 Proof.
 Admitted.
 
-Corollary A_equiv_B : A ≡ B.
+Corollary A_equiv_B : A === B.
 Proof. exists h; repeat split. apply h_wd. apply h_inj. apply h_surj. Qed.
 
 End Proof.

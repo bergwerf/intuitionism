@@ -11,14 +11,14 @@ Definition fbar_bar (B : fbar) : bar := λ s, In s B.
 Coercion fbar_bar : fbar >-> bar.
 
 (* X is barred by B if all sequences in X have a prefix in B. *)
-Definition barred (X : baire) (B : bar) := ∀α, α isin X -> ∃n, B ⟨α;n⟩.
+Definition barred (X : baire) (B : bar) := ∀α, α ∈ X -> ∃n, B ⟨α;n⟩.
 
 (* Positive definition for a failing bar. *)
-Definition not_barred (X : baire) (B : bar) := ∃α, α isin X /\ ∀n, ~B ⟨α;n⟩.
+Definition not_barred (X : baire) (B : bar) := ∃α, α ∈ X /\ ∀n, ~B ⟨α;n⟩.
 
 (* Positive definition for a failing finite bar. *)
 Definition not_barred_fbar (X : baire) (b : fbar) :=
-  ∃α, α isin X /\ Forall (λ s, ⟨α;length s⟩ <> s) b.
+  ∃α, α ∈ X /\ Forall (λ s, ⟨α;length s⟩ <> s) b.
 
 Theorem not_barred_fbar_weaken X b :
   not_barred_fbar X b -> not_barred X b.
@@ -35,7 +35,7 @@ Proof. intros [α [Hα HB]] H. apply H in Hα as [n Hn]. eapply HB, Hn. Qed.
 Section FanTheorem.
 
 (* Define prefix intersection. *)
-Definition isect_member (X : baire) s α := α isin X /\ ⟨α;length s⟩ = s.
+Definition isect_member (X : baire) s α := α ∈ X /\ ⟨α;length s⟩ = s.
 Definition isect X s := Baire (isect_member X s).
 Notation "X '∩' s" := (isect X s) (at level 50).
 
@@ -46,19 +46,19 @@ Variable X : baire.
 Variable Xσ : spread.
 Variable s : fseq.
 
-Lemma isect_nil α : α isin X -> α isin (X ∩ []).
+Lemma isect_nil α : α ∈ X -> α ∈ (X ∩ []).
 Proof. easy. Qed.
 
-Lemma isect_cons n α : α isin (X ∩ (n :: s)) -> α isin (X ∩ s).
+Lemma isect_cons n α : α ∈ (X ∩ (n :: s)) -> α ∈ (X ∩ s).
 Proof. intros [H1 H2]. split; auto. now injection H2. Qed.
 
-Lemma isect_inv α : α isin (X ∩ s) -> α isin X.
+Lemma isect_inv α : α ∈ (X ∩ s) -> α ∈ X.
 Proof. now intros [H _]. Qed.
 
-Lemma isect_σ_false α : α isin (Xσ ∩ s) -> ~(σ Xσ s = false).
+Lemma isect_σ_false α : α ∈ (Xσ ∩ s) -> ~(σ Xσ s = false).
 Proof. intros [H1 H2]. now rewrite <-H2, H1. Qed.
 
-Lemma isect_cons_length α : α isin (X ∩ s) -> α isin (X ∩ (α (length s) :: s)).
+Lemma isect_cons_length α : α ∈ (X ∩ s) -> α ∈ (X ∩ (α (length s) :: s)).
 Proof. intros [H1 H2]. split; auto. simpl. now rewrite H2. Qed.
 
 End Intersection.
@@ -85,7 +85,7 @@ Inductive safe_can (F : fan) (B : bar) s :=
 (* α (length s) is below the given extension upper bound. *)
 Lemma fan_s_extension F s N α :
   (∀n : nat, σ F (n :: s) = true -> n <= N) ->
-  α isin (F ∩ s) -> α (length s) <= N.
+  α ∈ (F ∩ s) -> α (length s) <= N.
 Proof.
 intros H [H1α H2α]. apply H.
 replace (α (length s) :: s) with ⟨α;S (length s)⟩.
@@ -204,7 +204,7 @@ Theorem fan_to_nat_image (f : dom F -> nat) :
   ∃image, ∀α, In (f α) image.
 Proof.
 assert(H := BCPext _ _ (fully_defined_aset_dom f)).
-pose(B s := ∃n, ∀β, β isin F -> ⟨β;length s⟩ = s -> f β = n).
+pose(B s := ∃n, ∀β, β ∈ F -> ⟨β;length s⟩ = s -> f β = n).
 assert(HB: barred F B).
 { intros α Hα. apply H in Hα as [m [n Hmn]]. exists m; exists n; intros.
   apply Hmn; auto. apply eqn_eq_get. now apply get_eq_r in H1. }

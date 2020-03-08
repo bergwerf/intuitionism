@@ -4,19 +4,19 @@ From intuitionism Require Import lib set seq spr fan.
 
 (* A well defined function from A to B. *)
 Definition well_defined A B (f : dom A -> dom B) :=
-  ∀α, α isin A -> f α isin B.
+  ∀α, α ∈ A -> f α ∈ B.
 
 (* Classic injective function. *)
 Definition weak_injective A B (f : dom A -> dom B) :=
-  ∀a α, a isin A -> α isin A -> f a = f α -> a = α.
+  ∀a α, a ∈ A -> α ∈ A -> f a = f α -> a = α.
 
 (* Strong injective function. *)
 Definition injective A B (f : dom A -> dom B) :=
-  ∀a α, a isin A -> α isin A -> a#α -> f a # f α.
+  ∀a α, a ∈ A -> α ∈ A -> a # α -> f a # f α.
 
 (* Surjective function. *)
 Definition surjective A B (f : dom A -> dom B) :=
-  ∀β, β isin B -> ∃α, α isin A /\ f α = β.
+  ∀β, β ∈ B -> ∃α, α ∈ A /\ f α = β.
 
 (* An injective and surjective function is bijective. *)
 Definition bijective A B f := injective A B f /\ surjective A B f.
@@ -27,12 +27,12 @@ Notation "A >-> B" := (preceq A B) (at level 50).
 
 (* Notation for 'there exists a one-to-one mapping between A and B'. *)
 Definition equiv A B := ∃f, well_defined A B f /\ bijective A B f.
-Notation "A ≡ B" := (equiv A B) (at level 50).
+Notation "A === B" := (equiv A B) (at level 50).
 
 (* Cantor-Schröder-Bernstein theorem. *)
-Definition CSBTheorem A B := A >-> B /\ B >-> A -> A ≡ B.
+Definition CSBTheorem A B := A >-> B /\ B >-> A -> A === B.
 
-Definition denumerable A := Nat ≡ A.
+Definition denumerable A := Nat === A.
 Definition uncountable A :=
   ∀f, well_defined Nat A f -> ~surjective Nat A f.
 
@@ -48,7 +48,7 @@ Theorem seq_uncountable :
 Proof.
 intros f f_wd f_surj.
 pose(γ (n : nat) := f n n + 1).
-assert(P: γ isin Seq). apply I.
+assert(P: γ ∈ Seq). apply I.
 apply f_surj in P as [n [Hn Hf]].
 apply equal_f with (x:=n) in Hf.
 unfold γ in Hf. lia.

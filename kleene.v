@@ -128,7 +128,7 @@ We are considering the Turing decidable subspace of the Cantor space. At first
 it may seem that any finite prefix in Bin is also in Bin_solv. However we cannot
 claim both sets are equal due to the Halting problem.
 *)
-Definition is_solvable α := α isin Bin /\ solvable (bin_set α).
+Definition is_solvable α := α ∈ Bin /\ solvable (bin_set α).
 Definition Bin_solv := Baire is_solvable.
 
 (*
@@ -144,7 +144,7 @@ Section CheckPrefix.
 
 Variable α : seq.
 Variable e : nat.
-Variable bin : α isin Bin.
+Variable bin : α ∈ Bin.
 Variable dec : decider e.
 Variable rec : recognizer e (bin_set α).
 
@@ -220,7 +220,7 @@ Variable good_diag_solvable : ∀b, solvable (bin_set (good_diag b)).
 
 (* Hence, good_diag is in Bin_solv. *)
 Lemma good_diag_Bin_solv b :
-  good_diag b isin Bin_solv.
+  good_diag b ∈ Bin_solv.
 Proof.
 split. 2: apply good_diag_solvable.
 intros n; induction n; simpl; repeat bool_to_Prop; auto. clear IHn.

@@ -20,14 +20,14 @@ Record aset := ASet {
 }.
 
 Arguments apart {_}.
-Notation "α 'isin' X" := (member X α) (at level 50).
-Notation "α '#' β" := (apart α β) (at level 50).
+Notation "α '∈' X" := (member X α) (at level 50).
+Notation "α '#' β" := (apart α β) (at level 80).
 
 Definition fullset {T} (x : T) := True.
-Definition inhabited A := ∃x, x isin A.
+Definition inhabited A := ∃x, x ∈ A.
 
 (* The second half of apart_neq is at least always not not true. *)
-Theorem neq_nnapart S (x y : dom S) : x <> y -> ~~x#y.
+Theorem neq_nnapart S (x y : dom S) : x <> y -> ~~(x # y).
 Proof. intros H P; apply (apart_spec S) in P; auto. Qed.
 
 (* Apartness for decidable equality *)

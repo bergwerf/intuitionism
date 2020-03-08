@@ -50,7 +50,7 @@ destruct n; simpl in *. discriminate. inversion_clear E; apply H.
 Qed.
 
 Lemma member_τP α :
-  α isin τ <-> τP α.
+  α ∈ τ <-> τP α.
 Proof.
 split.
 - intros H n; eapply unfold_inspr with (m:=S (S n)) in H; simpl in H.
@@ -60,7 +60,7 @@ Qed.
 
 (* τ is monotone. *)
 Lemma τ_mono α :
-  α isin τ -> ∀i j, i <= j -> α i <= α j.
+  α ∈ τ -> ∀i j, i <= j -> α i <= α j.
 Proof.
 intros. apply le_exists_sub in H0 as [d [Hd _]]. rewrite Hd; clear Hd.
 revert i; induction d; intros; simpl; try lia.
@@ -70,7 +70,7 @@ Qed.
 
 (* Restrict range. *)
 Lemma τ_mono_ext α n i j :
-  α isin τ -> i <= j -> n <= α i -> n <= α j <= lower + range.
+  α ∈ τ -> i <= j -> n <= α i -> n <= α j <= lower + range.
 Proof.
 intros H1 H2 H3; split. transitivity (α i); auto.
 apply τ_mono; auto. apply member_τP; auto.
@@ -88,7 +88,7 @@ Module Tau2.
 
 (* Any element of τ2 is 0 or 1. *)
 Lemma τ2_cases α n :
-  α isin τ2 -> α n = 0 \/ α n = 1.
+  α ∈ τ2 -> α n = 0 \/ α n = 1.
 Proof.
 intros; apply member_τP in H; destruct (α n) eqn:E; auto.
 right; rewrite <-E. assert(D: α n <= 1). apply H. lia.
@@ -96,7 +96,7 @@ Qed.
 
 (* Any function τ2 -> Nat has a finite image. *)
 Theorem τ2_to_Nat_fin_image (f : seq -> nat) :
-  ∃image, ∀α, α isin τ2 -> In (f α) image.
+  ∃image, ∀α, α ∈ τ2 -> In (f α) image.
 Proof.
 (* Number of leading zeros after which f outputs a result. *)
 destruct (BCP _ (fully_defined f) (0^ω)) as [m [n Hbcp]].
@@ -128,7 +128,7 @@ Definition f n :=
   end.
 
 Lemma f_image n :
-  f n isin τ2.
+  f n ∈ τ2.
 Proof.
 apply intro_inspr; intros; apply intro_τP. unfold f; destruct n.
 - intros n; unfold cseq; lia.
@@ -159,9 +159,9 @@ Qed.
 Theorem f_not_surj :
   ~surjective Nat τ2 f.
 Proof.
-assert(P0: 0^ω isin τ2). apply member_τP; intros n; unfold cseq; lia.
+assert(P0: 0^ω ∈ τ2). apply member_τP; intros n; unfold cseq; lia.
 intros H; destruct (BCPext τ2 _ H (0^ω) P0) as [m [n Q]].
-assert(P1: f (S (m + n)) isin τ2). apply f_image. apply Q in P1 as [_ P1].
+assert(P1: f (S (m + n)) ∈ τ2). apply f_image. apply Q in P1 as [_ P1].
 revert P1; destruct n; simpl; intros P1.
 - apply equal_f with (x:=m) in P1; revert P1.
   rewrite add_0_r; rewrite pre_r0.

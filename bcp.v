@@ -41,7 +41,7 @@ Lemma fully_defined {A B} (f : A -> B) :
 Proof. intros; now exists (f a). Qed.
 
 Lemma fully_defined_aset_dom {A B} (f : dom A -> B) :
-  ∀α, α isin A -> ∃b, f α = b.
+  ∀α, α ∈ A -> ∃b, f α = b.
 Proof. intros; now exists (f α). Qed.
 
 (* Continuity of functions. *)
@@ -54,8 +54,8 @@ Qed.
 
 (* BCP generalizes to spreads *)
 Theorem BCPext (X : spread) (R : seq -> nat -> Prop) :
-  (∀α, α isin X -> ∃n, R α n) ->
-  (∀α, α isin X -> ∃m n, ∀β, β isin X -> eqn m α β -> R β n).
+  (∀α, α ∈ X -> ∃n, R α n) ->
+  (∀α, α ∈ X -> ∃m n, ∀β, β ∈ X -> eqn m α β -> R β n).
 Proof.
 intros Rall.
 pose(rσ := (Retract.r X)).

@@ -19,11 +19,11 @@ Definition spread_biare (X : spread) := Baire (spread_member X).
 Coercion spread_biare : spread >-> baire.
 
 Lemma unfold_inspr (X : spread) α :
-  α isin X -> ∀m, σ X ⟨α;m⟩ = true.
+  α ∈ X -> ∀m, σ X ⟨α;m⟩ = true.
 Proof. auto. Qed.
 
 Lemma intro_inspr (X : spread) α :
-  (∀m, σ X ⟨α;m⟩ = true) -> α isin X.
+  (∀m, σ X ⟨α;m⟩ = true) -> α ∈ X.
 Proof. auto. Qed.
 
 End SpreadBaire.
@@ -72,7 +72,7 @@ Qed.
 
 (* ρ does not alter sequences in X. *)
 Lemma ρ_id α n :
-  α isin X -> proj1_sig (ρ ⟨α;n⟩) = ⟨α;n⟩.
+  α ∈ X -> proj1_sig (ρ ⟨α;n⟩) = ⟨α;n⟩.
 Proof.
 intros; induction n; simpl; auto.
 destruct (ρ ⟨α;n⟩); simpl in *; subst.
@@ -82,7 +82,7 @@ Qed.
 
 (* r does not alter sequences in X. *)
 Lemma r_id α :
-  α isin X -> r α = α.
+  α ∈ X -> r α = α.
 Proof.
 intros; apply functional_extensionality; intros n.
 unfold r; rewrite ρ_id; auto. rewrite add_1_r; simpl; auto.
@@ -90,7 +90,7 @@ Qed.
 
 (* The image of r is in X. *)
 Lemma r_image α :
-  (r α) isin X.
+  (r α) ∈ X.
 Proof.
 intros m; rewrite r_eq_ρ.
 destruct (ρ ⟨α;m⟩) as [ρt Hρ]; auto.
