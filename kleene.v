@@ -140,7 +140,7 @@ program to exactly enumerate all possible decider programs.
 *)
 
 (* Compare the prefix of sequence α in Bin to Turing program e. *)
-Section CheckPrefix.
+Section GoodPrefix.
 
 Variable α : seq.
 Variable e : nat.
@@ -149,10 +149,10 @@ Variable dec : decider e.
 Variable rec : recognizer e (bin_set α).
 
 (* s is a prefix of the Turing program e. Note that i must count down. *)
-Fixpoint check_prefix s i :=
+Fixpoint good_prefix s i :=
   match s with
   | [] => True
-  | n :: s' => check_prefix s' (pred i) /\
+  | n :: t => good_prefix t (pred i) /\
     match n with
     | 0 => reject e i
     | 1 => accept e i
@@ -174,11 +174,11 @@ destruct (α n) eqn:E; bool_to_Prop.
 - replace n0 with 0 by lia. apply rec. unfold bin_set. lia.
 Qed.
 
-Corollary check_prefix_pred n : check_prefix ⟨α;n⟩ (pred n).
+Corollary good_prefix_pred n : good_prefix ⟨α;n⟩ (pred n).
 Proof. induction n; simpl; split; auto. apply αn_01_dec. Qed.
 
-Lemma check_prefix_unique_length s t i :
-  check_prefix s i -> check_prefix t i -> length s = length t -> s = t.
+Lemma good_prefix_unique_length s t i :
+  good_prefix s i -> good_prefix t i -> length s = length t -> s = t.
 Proof.
 revert s i; induction t; simpl; intros. now apply length_zero_iff_nil.
 destruct H0. destruct s; simpl in *. easy. destruct H. apply cons_split.
@@ -187,13 +187,13 @@ destruct H0. destruct s; simpl in *. easy. destruct H. apply cons_split.
 - eapply IHt. apply H. apply H0. now apply eq_add_S.
 Qed.
 
-End CheckPrefix.
+End GoodPrefix.
 
 (* We use these prefixes to define a bar. The bar name is somewhat random. *)
 Definition good : bar := λ s,
   match s with
-  | [] => False
-  | _ :: t => let e := length t in check_prefix e s e
+  | _ :: t => let e := length t in good_prefix e s e
+  | _ => False
   end.
 
 (* Each sequence in good has a unique length. *)
@@ -202,7 +202,7 @@ Lemma good_unique_length s t :
 Proof.
 intros H1 H2 HL. destruct s, t; try easy. simpl in *.
 apply eq_add_S in HL as HL2. rewrite <-HL2 in H2.
-eapply check_prefix_unique_length; auto; simpl. apply H1. apply H2.
+eapply good_prefix_unique_length; auto; simpl. apply H1. apply H2.
 Qed.
 
 (* Diagonalization of a finite bar. *)
@@ -249,7 +249,7 @@ Theorem barred_Bin_solv_good :
 Proof.
 intros α [Cα [e [e_dec α_rec]]].
 exists (S e). simpl; rewrite ?get_length; split.
-now apply check_prefix_pred. now apply αn_01_dec.
+now apply good_prefix_pred. now apply αn_01_dec.
 Qed.
 
 (* Any finite subset of good is insufficient. *)
@@ -262,5 +262,16 @@ apply Forall_forall; intros s Hs. destruct s.
 - simpl. intros Heq; injection Heq; intros.
   eapply good_diag_neq. apply H. apply Hs. easy.
 Qed.
+
+(* While good is only algorithmically enumerable, fits is decidable. *)
+Definition fits : bar := λ s, ∃e, e < length s /\
+  ∀i, i < e -> ∃z, z < length s /\ μT e i z /\ U z = true <-> nth i s 0 = 1.
+
+(*
+fits is also a bar in Bin_solv, a finite subset f of fits can be transformed
+into a finite subset g of good such that each g(i) = ⟨f(i);length g(i)⟩.
+Together with no_good_fbar this means f is also not a bar in Bin_solv.
+For more details see fan_theorem.pdf page 7.
+*)
 
 End Kleene.

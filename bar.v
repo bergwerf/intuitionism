@@ -247,11 +247,11 @@ Section Maximum.
 
 Definition upb s := fold_right max 0 s.
 
-Lemma upb_leq s :
-  forall n, In n s -> n <= upb s.
+Lemma upb_leq s n :
+  In n s -> n <= upb s.
 Proof.
-induction s; simpl. easy. intros n [Hn|Hn].
-subst; lia. apply IHs in Hn. lia.
+induction s; simpl. easy. intros [H|H].
+subst; lia. apply IHs in H. lia.
 Qed.
 
 End Maximum.

@@ -197,7 +197,7 @@ Definition g_inv (c : list (dom A * dom B)) y := hd y (map snd c).
 Definition in_Bchain x := {y : dom B & Bbot y & {c | Bchain x c y}}.
 
 (* positive negation of in_Bchain. *)
-Definition notin_Bchain x := forall y, Bbot y -> forall c, ~Bchain x c y.
+Definition notin_Bchain x := ∀y, Bbot y -> ∀c, ~Bchain x c y.
 
 (* We need to decide the chain type for any x. *)
 Inductive chain_type x :=
@@ -205,7 +205,7 @@ Inductive chain_type x :=
   | ChainTypeB (H : in_Bchain x).
 
 (* We need to be able to decide the chain type. This is stronger than LEM. *)
-Variable in_Bchain_dec : forall x, chain_type x.
+Variable in_Bchain_dec : ∀x, chain_type x.
 
 (* We define the bijective function h using in_Bchain_dec. *)
 Definition h x :=
