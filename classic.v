@@ -170,8 +170,69 @@ exists (appn f x); split.
 Qed.
 
 (* A classic proof for the Cantor-Schröder-Bernstein theorem. *)
-Theorem schroder_bernstein :
-  LEM -> CSBTheorem.
-Proof.
 (* www.cs.cornell.edu/courses/cs2800/2017fa/lectures/lec14-cantor.html *)
-Admitted. 
+Module SchröderBernstein.
+Section Proof.
+
+Variable A B : aset.
+Variable f : dom A -> dom B.
+Variable g : dom B -> dom A.
+Variable f_wd : well_defined A B f.
+Variable g_wd : well_defined B A g.
+Variable f_inj : injective A B f.
+Variable g_inj : injective B A g.
+
+(* y in B is a chain bottom (there is no x in A s.t. f x = y). *)
+Definition Bbot y := ∀ x, x isin A -> f x # y.
+
+(* Chain c connects x to y backwards. *)
+Fixpoint Bchain x c y :=
+  match c with
+  | [] => g y = x
+  | (a, b) :: cc => g b = x /\ f a = b /\ Bchain a cc y
+  end.
+
+(* Get inverse of x given that (Bchain x c y). *)
+Definition g_inv (c : list (dom A * dom B)) y := hd y (map snd c).
+
+(* x is in a chain with a bottom in B. *)
+Definition in_Bchain x := {y : dom B & Bbot y & {c | Bchain x c y}}.
+
+(* positive negation of in_Bchain. *)
+Definition notin_Bchain x := forall y, Bbot y -> forall c, ~Bchain x c y.
+
+(* We need to decide the chain type for any x. *)
+Inductive chain_type x :=
+  | ChainTypeA (H : notin_Bchain x)
+  | ChainTypeB (H : in_Bchain x).
+
+(* We need to be able to decide the chain type. This is stronger than LEM. *)
+Variable in_Bchain_dec : forall x, chain_type x.
+
+(* We define the bijective function h using in_Bchain_dec. *)
+Definition h x :=
+  match in_Bchain_dec x with
+  | ChainTypeA _ _ => f x
+  | ChainTypeB _ (existT2 _ _ y _ (exist c _)) => g_inv c y
+  end.
+
+Theorem h_wd :
+  well_defined A B h.
+Proof.
+Admitted.
+
+Theorem h_inj :
+  injective A B h.
+Proof.
+Admitted.
+
+Theorem h_surj :
+  surjective A B h.
+Proof.
+Admitted.
+
+Corollary A_equiv_B : A ≡ B.
+Proof. exists h; repeat split. apply h_wd. apply h_inj. apply h_surj. Qed.
+
+End Proof.
+End SchröderBernstein.
