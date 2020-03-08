@@ -14,26 +14,26 @@ Section Kleene.
 Variable T : nat -> nat -> nat -> Prop.
 
 (* The T-predicate is decidable. *)
-Variable T_dec : ∀ e n z, {T e n z} + {~T e n z}.
+Variable T_dec : ∀e n z, {T e n z} + {~T e n z}.
 
 (* Retrieve the output of the computation tree encoded by z. *)
 Variable U : nat -> bool.
 
 (* Least valid computation tree *)
-Definition μT e n z := (∀ w, w < z -> ~T e n w) /\ T e n z.
+Definition μT e n z := (∀w, w < z -> ~T e n w) /\ T e n z.
 
 (* Define the output of program e as a predicate. *)
-Definition accept e n := ∃ z, μT e n z /\ U z = true.
-Definition reject e n := ∃ z, μT e n z /\ U z = false.
+Definition accept e n := ∃z, μT e n z /\ U z = true.
+Definition reject e n := ∃z, μT e n z /\ U z = false.
 
 (* A program is a decider if it is decidable on all inputs. *)
-Definition decider e := ∀ n, accept e n \/ reject e n.
+Definition decider e := ∀n, accept e n \/ reject e n.
 
 (* A program recognizes the set P if this holds. *)
-Definition recognizer e P := ∀ n, P n <-> accept e n.
+Definition recognizer e P := ∀n, P n <-> accept e n.
 
 (* P is solvable if there exists a decidable recognizer. *)
-Definition solvable (P : nat -> Prop) := ∃ e, decider e /\ recognizer e P.
+Definition solvable (P : nat -> Prop) := ∃e, decider e /\ recognizer e P.
 
 (* Some useful lemmas *)
 Section Lemmas.
@@ -42,7 +42,7 @@ Variable e : nat.
 Variable n : nat.
 
 Lemma T_μT :
-  (∃ z, T e n z) -> ∃ z, μT e n z.
+  (∃z, T e n z) -> ∃z, μT e n z.
 Proof.
 intros. destruct (epsilon_smallest _ (T_dec e n) H) as [z [H1z H2z]].
 exists z; now split.
@@ -84,7 +84,7 @@ End Lemmas.
 Section HaltingProblem.
 
 (* The Halting problem for program e with input e *)
-Definition HALT e := ∃ z, T e e z.
+Definition HALT e := ∃z, T e e z.
 
 (*
 To prove the Halting problem is unsolvable we use diagonalization. Given the
@@ -97,8 +97,8 @@ Definition HALTdiag e n := accept e n /\ reject n n.
 In general (for any e), HALTdiag has a Turing program (a recognizer).
 If e is a decider for HALT, then HALTdiag is also solvable.
 *)
-Variable HALTdiag_solvable : ∀ e,
-  decider e -> recognizer e HALT -> solvable (HALTdiag e).
+Variable HALTdiag_solvable :
+  ∀e, decider e -> recognizer e HALT -> solvable (HALTdiag e).
 
 (* The Halting problem is unsolvable. *)
 Theorem HALT_unsolvable :
@@ -216,7 +216,7 @@ Fixpoint good_diag (b : fbar) n :=
   end.
 
 (* Given a finite bar, good_diag is fully decidable. *)
-Variable good_diag_solvable : ∀ b, solvable (bin_set (good_diag b)).
+Variable good_diag_solvable : ∀b, solvable (bin_set (good_diag b)).
 
 (* Hence, good_diag is in Bin_solv. *)
 Lemma good_diag_Bin_solv b :

@@ -11,14 +11,14 @@ Definition fbar_bar (B : fbar) : bar := λ s, In s B.
 Coercion fbar_bar : fbar >-> bar.
 
 (* X is barred by B if all sequences in X have a prefix in B. *)
-Definition barred (X : baire) (B : bar) := ∀ α, α isin X -> ∃ n, B ⟨α;n⟩.
+Definition barred (X : baire) (B : bar) := ∀α, α isin X -> ∃n, B ⟨α;n⟩.
 
 (* Positive definition for a failing bar. *)
-Definition not_barred (X : baire) (B : bar) := ∃ α, α isin X /\ ∀ n, ~B ⟨α;n⟩.
+Definition not_barred (X : baire) (B : bar) := ∃α, α isin X /\ ∀n, ~B ⟨α;n⟩.
 
 (* Positive definition for a failing finite bar. *)
 Definition not_barred_fbar (X : baire) (b : fbar) :=
-  ∃ α, α isin X /\ Forall (λ s, ⟨α;length s⟩ <> s) b.
+  ∃α, α isin X /\ Forall (λ s, ⟨α;length s⟩ <> s) b.
 
 Theorem not_barred_fbar_weaken X b :
   not_barred_fbar X b -> not_barred X b.
@@ -75,8 +75,8 @@ Inductive safe_can (F : fan) (B : bar) s :=
   | safe_skip (H1 : σ F s = false)
   | safe_intro (H1 : σ F s = true) (H2 : B s)
   | safe_forward N
-    (H1 : ∀ n, σ F (n :: s) = true -> n <= N)
-    (H2 : ∀ n, n <= N -> safe_can F B (n :: s))
+    (H1 : ∀n, σ F (n :: s) = true -> n <= N)
+    (H2 : ∀n, n <= N -> safe_can F B (n :: s))
   | safe_backward n t
     (H1 : s = n :: t)
     (H2 : σ F s = true)
@@ -84,7 +84,7 @@ Inductive safe_can (F : fan) (B : bar) s :=
 
 (* α (length s) is below the given extension upper bound. *)
 Lemma fan_s_extension F s N α :
-  (∀ n : nat, σ F (n :: s) = true -> n <= N) ->
+  (∀n : nat, σ F (n :: s) = true -> n <= N) ->
   α isin (F ∩ s) -> α (length s) <= N.
 Proof.
 intros H [H1α H2α]. apply H.
@@ -114,7 +114,7 @@ Variable F : fan.
 Variable B : bar.
 Variable s : fseq.
 Variable N : nat.
-Variable Hsupersafe : ∀ n : nat, n <= N -> supersafe F B (n :: s).
+Variable Hsupersafe : ∀n : nat, n <= N -> supersafe F B (n :: s).
 
 Definition fbar_union_nth n :=
   match le_dec n N with
@@ -125,7 +125,7 @@ Definition fbar_union_nth n :=
 Definition fbar_union : fbar := flat_map fbar_union_nth (0..N).
 
 Lemma in_flat_map {X Y} (f : X -> list Y) xs y :
-  In y (flat_map f xs) <-> ∃ x, In x xs /\ In y (f x).
+  In y (flat_map f xs) <-> ∃x, In x xs /\ In y (f x).
 Proof.
 induction xs; simpl; split.
 - intros H; now exfalso.
@@ -181,11 +181,11 @@ intros can; induction can.
 Qed.
 
 (* Let us assume the existence of a canonical proof for arbitrary fans. *)
-Axiom safe_can_ex : ∀ F B s, safe F B s -> safe_can F B s.
+Axiom safe_can_ex : ∀F B s, safe F B s -> safe_can F B s.
 
 (* We can remove safe to obtain the final Fan Theorem. *)
 Theorem fan_theorem (F : fan) B :
-  barred F B -> ∃ b : fbar, Forall B b /\ barred F b.
+  barred F B -> ∃b : fbar, Forall B b /\ barred F b.
 Proof.
 intros. apply safe_nil in H. apply safe_can_ex in H.
 apply safe_can_supersafe in H as [b [Bb b_safe]].
@@ -201,10 +201,10 @@ Variable F : fan.
 
 (* Any function from F to nat has a finite image. *)
 Theorem fan_to_nat_image (f : dom F -> nat) :
-  ∃ image : fseq, ∀ α, In (f α) image.
+  ∃image, ∀α, In (f α) image.
 Proof.
 assert(H := BCPext _ _ (fully_defined_aset_dom f)).
-pose(B s := ∃ n, ∀ β, β isin F -> ⟨β;length s⟩ = s -> f β = n).
+pose(B s := ∃n, ∀β, β isin F -> ⟨β;length s⟩ = s -> f β = n).
 assert(HB: barred F B).
 { intros α Hα. apply H in Hα as [m [n Hmn]]. exists m; exists n; intros.
   apply Hmn; auto. apply eqn_eq_get. now apply get_eq_r in H1. }
@@ -213,7 +213,7 @@ Admitted.
 
 (* Any function from nat to F has a finite pre-image. *)
 Theorem nat_to_fan_preimage (f : nat -> dom F) :
-  ∃ image : fseq, ∀ α, ∃ n, In n image /\ f n = α.
+  ∃image, ∀α, ∃n, In n image /\ f n = α.
 Proof.
 Admitted.
 

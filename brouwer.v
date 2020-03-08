@@ -22,11 +22,11 @@ Section CreatingSubject.
 Variable P : Prop.
 
 (* α describes a proof search for P. If α is 1 then a proof of P is found. *)
-Definition proof_search (α : seq) := ∀ n, α n <> 0 -> P.
+Definition proof_search (α : seq) := ∀n, α n <> 0 -> P.
 
 (* Brouwer insists to only accept P as true if he ever wrote down a proof. *)
 Definition creating_subject :=
-  ∃ π, proof_search π /\ (P -> ∃ n, π n <> 0).
+  ∃π, proof_search π /\ (P -> ∃n, π n <> 0).
 
 (* The Principle of Omniscience has immediate knowledge. *)
 Theorem lem_creating_subject : LEM -> creating_subject.
@@ -47,8 +47,8 @@ End CreatingSubject.
 There now exists a sequence s.t. it impossible it is not apart from zero, but
 for which apartness from zero is reckless.
 *)
-Theorem brouwers_sequence P : ∃ β : seq,
-  ~~(∃ n, β n <> 0) /\ ((∃ n, β n <> 0) -> P \/ ~P).
+Theorem brouwers_sequence P : ∃β : seq,
+  ~~(∃n, β n <> 0) /\ ((∃n, β n <> 0) -> P \/ ~P).
 Proof.
 destruct (internal_truth (P \/ ~P)) as [π [H1π H2π]].
 exists π; split. apply (nn_imply_nn (P \/ ~P)). auto. apply nnLEM.
@@ -60,8 +60,8 @@ Theorem markov_lpo :
   MarkovsPrinciple -> LPO.
 Proof.
 unfold MarkovsPrinciple; intros MP β.
-destruct (brouwers_sequence (∃ n, β n <> 0)) as [γ [H1γ H2γ]].
-assert(MPH: ~∀ n, γ n = 0). { intros H. apply H1γ; intros [n Hn]; auto. }
+destruct (brouwers_sequence (∃n, β n <> 0)) as [γ [H1γ H2γ]].
+assert(MPH: ~∀n, γ n = 0). { intros H. apply H1γ; intros [n Hn]; auto. }
 apply MP in MPH. apply H2γ in MPH as [H1|H2]. left; auto.
 right; intros n. destruct (eq_dec (β n) 0); auto.
 exfalso; apply H2. exists n; auto.

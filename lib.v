@@ -42,17 +42,17 @@ Section PredicateLogic.
 Variable T : Type.
 Variable P : T -> Prop.
 
-Lemma forall_nn : (~~∀ x, P x) -> ∀ x, ~~(P x).
+Lemma forall_nn : (~~∀x, P x) -> ∀x, ~~(P x).
 Proof. unfold not; auto. Qed.
 
-Lemma not_forall_not : (∃ x, P x) -> ~∀ x, ~P x.
+Lemma not_forall_not : (∃x, P x) -> ~∀x, ~P x.
 Proof. intros [x Hx] H. eapply H; apply Hx. Qed.
 
-Lemma forall_not : (~∃ x, P x) -> ∀ x, ~P x.
+Lemma forall_not : (~∃x, P x) -> ∀x, ~P x.
 Proof. intros H1 n H2. apply H1; exists n; auto. Qed.
 
 Lemma nn_exists (Q : T -> Prop) :
-  ~~(∃ x, P x) -> (∀ x, P x -> Q x) -> ~~(∃ x, Q x).
+  ~~(∃x, P x) -> (∀x, P x -> Q x) -> ~~(∃x, Q x).
 Proof.
 intros nnEx PQ nH. apply nnEx; intros [x Px].
 apply nH; exists x. now apply PQ.

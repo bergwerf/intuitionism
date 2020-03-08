@@ -4,37 +4,37 @@ From intuitionism Require Import lib set seq spr fan.
 
 (* A well defined function from A to B. *)
 Definition well_defined A B (f : dom A -> dom B) :=
-  ∀ α, α isin A -> f α isin B.
+  ∀α, α isin A -> f α isin B.
 
 (* Classic injective function. *)
 Definition weak_injective A B (f : dom A -> dom B) :=
-  ∀ a α, a isin A -> α isin A -> f a = f α -> a = α.
+  ∀a α, a isin A -> α isin A -> f a = f α -> a = α.
 
 (* Strong injective function. *)
 Definition injective A B (f : dom A -> dom B) :=
-  ∀ a α, a isin A -> α isin A -> a#α -> f a # f α.
+  ∀a α, a isin A -> α isin A -> a#α -> f a # f α.
 
 (* Surjective function. *)
 Definition surjective A B (f : dom A -> dom B) :=
-  ∀ β, β isin B -> ∃ α, α isin A /\ f α = β.
+  ∀β, β isin B -> ∃α, α isin A /\ f α = β.
 
 (* An injective and surjective function is bijective. *)
 Definition bijective A B f := injective A B f /\ surjective A B f.
 
 (* Notation for 'there exists an injective mapping from A to B'. *)
-Definition preceq A B := ∃ f, well_defined A B f /\ injective A B f.
+Definition preceq A B := ∃f, well_defined A B f /\ injective A B f.
 Notation "A >-> B" := (preceq A B) (at level 50).
 
 (* Notation for 'there exists a one-to-one mapping between A and B'. *)
-Definition equiv A B := ∃ f, well_defined A B f /\ bijective A B f.
+Definition equiv A B := ∃f, well_defined A B f /\ bijective A B f.
 Notation "A ≡ B" := (equiv A B) (at level 50).
 
 (* Cantor-Schröder-Bernstein theorem. *)
-Definition CSBTheorem := ∀ A B, A >-> B /\ B >-> A -> A ≡ B.
+Definition CSBTheorem A B := A >-> B /\ B >-> A -> A ≡ B.
 
 Definition denumerable A := Nat ≡ A.
 Definition uncountable A :=
-  ∀ f, well_defined Nat A f -> ~surjective Nat A f.
+  ∀f, well_defined Nat A f -> ~surjective Nat A f.
 
 Theorem injective_to_weak A B f :
   injective A B f -> weak_injective A B f.

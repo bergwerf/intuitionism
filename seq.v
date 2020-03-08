@@ -16,10 +16,10 @@ Definition cseq (c i : nat) := c.
 Definition cfseq (c n : nat) := repeat c n.
 
 (* The first n elements of α and β coincide. *)
-Definition eqn n (α β : seq) := ∀ i, i < n -> α i = β i.
+Definition eqn n (α β : seq) := ∀i, i < n -> α i = β i.
 
 (* Apartness relation. *)
-Definition seq_apart (α β : seq) := ∃ n, α n <> β n.
+Definition seq_apart (α β : seq) := ∃n, α n <> β n.
 
 (* Delete first n elements. *)
 Definition del n (α : seq) i := α (n + i).
@@ -199,7 +199,7 @@ revert α. induction n, m; simpl; intros; auto.
 - rewrite add_0_r; auto.
 - apply cons_split.
   + unfold del. replace (n + S m) with (S n + m) by lia. auto.
-  + assert(R: ∀ x (v w : fseq), v ++ x :: w = (v ++ [x]) ++ w).
+  + assert(R: ∀x (v w : fseq), v ++ x :: w = (v ++ [x]) ++ w).
     { intros; induction v; simpl; auto. rewrite IHv; auto. }
     rewrite R, del_app_S, <-IHn; auto.
 Qed.
@@ -254,13 +254,13 @@ Section SeqProp.
 Variable P : nat -> Prop.
 
 Lemma cseq_prop c :
-  P c -> ∀ n, P (c^ω n).
+  P c -> ∀n, P (c^ω n).
 Proof. unfold cseq; intros; auto. Qed.
 
 Lemma pre_prop n α β :
-  (∀ i, P (α i))
-  -> (∀ i, P (β i))
-  -> (∀ i, P (pre n α β i)).
+  (∀i, P (α i))
+  -> (∀i, P (β i))
+  -> (∀i, P (pre n α β i)).
 Proof.
 intros Hα Hβ i; unfold pre, replace, fill.
 destruct (i <? n); auto.
