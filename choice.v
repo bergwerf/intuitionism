@@ -130,7 +130,13 @@ Theorem AC_11_controversy :
   AC_11 -> ~∀α, ∃β, (∀n : nat, α n = 0) <-> ∃n : nat, β n <> 0.
 Proof.
 intros AC H. apply AC in H as [Φ HΦ].
-Admitted.
+destruct (proj1 (HΦ (0^ω))) as [n Hn]. easy.
+destruct (cfun_eqn (Φ n) (0^ω)) as [m Hm].
+pose(β := pre m (0^ω) (1^ω)). assert(Hβ : eqn m (0^ω) β) by apply eqn_pre_n.
+apply Hm in Hβ. assert(H: ∃n, Φ n∣β <> 0) by (exists n; lia).
+eapply HΦ with(n:=m) in H. unfold β, cseq in H.
+rewrite pre_r0 in H. discriminate.
+Qed.
 
 End ContinuousChoice.
 End AxiomsOfChoice.
