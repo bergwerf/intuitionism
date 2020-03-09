@@ -74,12 +74,9 @@ Definition AC_01 := ∀(R : nat -> seq -> Prop),
 
 End CountableChoice.
 
-(* Choice on continuous sets. *)
-Section ContinuousChoice.
-
 (*
-To force a continuous choice function f : seq -> nat to be itself continuous,
-we define them in a particular way.
+We first define an encoding for a continuous choice function f : seq -> nat such
+that f is itself continuous.
 *)
 Section ContinuousChoiceFunction.
 
@@ -95,10 +92,9 @@ Variable α : seq.
 Lemma answer_dec : ∀n, {ϕ φ ⟨α;n⟩ <> CFContinue} + {~(ϕ φ ⟨α;n⟩ <> CFContinue)}.
 Proof. intros; destruct (ϕ φ ⟨α;n⟩). now right. now left. Qed.
 
-(* Given such a function, we compute its answer here. *)
+Definition ϕ_termination_N := epsilon_smallest _ answer_dec (ϕ_terminate φ α).
 Definition cfun_compute :=
-  let Σn := epsilon_smallest _ answer_dec (ϕ_terminate φ α) in
-  let n := proj1_sig Σn in
+  let n := proj1_sig ϕ_termination_N in
   match ϕ φ ⟨α;n⟩ with
   | CFDecide k => k
   | CFContinue => 0
@@ -111,7 +107,17 @@ Notation "φ '∣' α" := (cfun_compute φ α) (at level 50, format "φ '∣' α
 Lemma cfun_eqn φ α :
   ∃m, ∀β, eqn m α β -> φ∣α = φ∣β.
 Proof.
-Admitted.
+unfold cfun_compute. destruct (ϕ_termination_N φ α) as [Nα [H1 H2]]; simpl.
+exists Nα; intros. destruct (ϕ_termination_N φ β) as [Nβ [H3 H4]]; simpl.
+apply eqn_eq_get in H. replace Nβ with Nα. now rewrite H.
+apply eq_dne; intros E. apply not_eq in E as [E|E].
+- apply H4 in E; apply E. now rewrite <-H.
+- apply eqn_eq_get in H. replace Nα with (Nβ + (Nα - Nβ)) in H by lia.
+  apply eqn_leq, eqn_eq_get in H. apply H2 in E; apply E. now rewrite H.
+Qed.
+
+(* Choice on continuous sets. *)
+Section ContinuousChoice.
 
 Definition AC_10 := ∀(R : seq -> nat -> Prop),
   (∀α, ∃n, R α n) -> ∃φ, ∀α, R α (φ∣α).
@@ -119,7 +125,7 @@ Definition AC_10 := ∀(R : seq -> nat -> Prop),
 Definition AC_11 := ∀(R : seq -> seq -> Prop),
   (∀α, ∃β, R α β) -> ∃Φ, ∀α, R α (λ n, Φ n∣α).
 
-(* AC_11 has the a controversial implication. *)
+(* AC_11 has a controversial implication. *)
 Theorem AC_11_controversy :
   AC_11 -> ~∀α, ∃β, (∀n : nat, α n = 0) <-> ∃n : nat, β n <> 0.
 Proof.
