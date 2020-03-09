@@ -83,30 +83,35 @@ we define them in a particular way.
 *)
 Section ContinuousChoiceFunction.
 
-Inductive answer := wait | ready (n : nat).
+Inductive cfun_answer := CFContinue | CFDecide (n : nat).
 Record cfun := CFun {
-  ϕ : fseq -> answer;
-  ϕ_spec : ∀α, ∃n, ϕ ⟨α;n⟩ <> wait;
+  ϕ : fseq -> cfun_answer;
+  ϕ_terminate : ∀α, ∃n, ϕ ⟨α;n⟩ <> CFContinue;
 }.
 
 Variable φ : cfun.
 Variable α : seq.
 
-Lemma answer_dec : ∀n, {ϕ φ ⟨α;n⟩ <> wait} + {~(ϕ φ ⟨α;n⟩ <> wait)}.
+Lemma answer_dec : ∀n, {ϕ φ ⟨α;n⟩ <> CFContinue} + {~(ϕ φ ⟨α;n⟩ <> CFContinue)}.
 Proof. intros; destruct (ϕ φ ⟨α;n⟩). now right. now left. Qed.
 
 (* Given such a function, we compute its answer here. *)
 Definition cfun_compute :=
-  let Σn := epsilon_smallest _ answer_dec (ϕ_spec φ α) in
+  let Σn := epsilon_smallest _ answer_dec (ϕ_terminate φ α) in
   let n := proj1_sig Σn in
   match ϕ φ ⟨α;n⟩ with
-  | ready k => k
-  | wait => 0
+  | CFDecide k => k
+  | CFContinue => 0
   end.
 
 End ContinuousChoiceFunction.
 
 Notation "φ '∣' α" := (cfun_compute φ α) (at level 50, format "φ '∣' α").
+
+Lemma cfun_eqn φ α :
+  ∃m, ∀β, eqn m α β -> φ∣α = φ∣β.
+Proof.
+Admitted.
 
 Definition AC_10 := ∀(R : seq -> nat -> Prop),
   (∀α, ∃n, R α n) -> ∃φ, ∀α, R α (φ∣α).
