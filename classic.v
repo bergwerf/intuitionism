@@ -17,21 +17,14 @@ Definition LLPO := ∀(α : seq),
 Definition MarkovsPrinciple := ∀α : seq, ~(∀n, α n = 0) -> ∃n, α n <> 0.
 
 (*
-Some statements do not directly imply LPO or LLPO, yet intuitionists still do
-not want to consider them as true. In particular these are statements that can
-prove properties about a number which is still unknown to mathematics and that
-might not even exist at all. An example is the length of the first cycle in a
-a Collatz sequence that does not contain 1, or the first position at which the
-decimal expansion of π contains 99 consecutive nines. This notion is embodied by
-Recklessness; a weaker version of LLPO.
+Some statements are weaker than the previous principles, yet intuitionists still
+do not want to consider them as true. In particular these are statements that
+can prove properties about a number which is still unknown to mathematics and
+that might not even exist at all. An example is the length of the first cycle in
+a a Collatz sequence that does not contain 1, or the first position at which the
+decimal expansion of π contains 99 consecutive nines. Such statements are then
+called reckless ('vermetel' in Dutch). I do not have a good formalization yet.
 *)
-Definition Recklessness := ∀α, ~(∀n, α n = 0) ->
-  (∀k, ((∀i, i < k -> α i = 0) /\ α k <> 0) -> Even k) \/
-  (∀k, ((∀i, i < k -> α i = 0) /\ α k <> 0) -> Odd k).
-
-(* A definition of infinity without numbers by Dedekind. *)
-Definition Dedekind_infinite A := ∃x f,
-  x ∈ A /\ well_defined A A f /\ injective A A f /\ ∀y, f y # x.
 
 (* LEM is as least as strong as LPO. *)
 Theorem lem_lpo :
@@ -74,21 +67,6 @@ Proof.
 intros LPO α H. destruct (LPO α).
 - destruct H0 as [n Hn]; exists n; auto.
 - exfalso; apply H; auto.
-Qed.
-
-(* Markov's Principle is reckless. *)
-Theorem markov_reckless :
-  MarkovsPrinciple -> Recklessness.
-Proof.
-intros SR α Hα. apply (SR α) in Hα.
-assert(n0 := epsilon_smallest _ (neq0_dec α) Hα);
-destruct n0 as [n0 [H1 H2]]; destruct (even n0) eqn:E.
-1: apply even_spec in E; left.
-2: apply even_false_odd in E; right.
-all: intros n [Hn1 Hn2]; replace n with n0; auto.
-all: apply nat_nltgt_eq; intros P.
-all: try apply H2 in P; auto.
-all: apply Hn1 in P; rewrite H1 in P; discriminate.
 Qed.
 
 (* Some results related to apartness of sequences. *)
@@ -167,10 +145,10 @@ exists (appn f x); split.
   now apply appn_apart.
 Qed.
 
-(* A classic proof for the Cantor-Schröder-Bernstein theorem. *)
+(* A classic proof for the Equivalence theorem. *)
 (* www.cs.cornell.edu/courses/cs2800/2017fa/lectures/lec14-cantor.html *)
-Module SchröderBernstein.
-Section SchröderBernstein.
+Module EquivThm.
+Section EquivThm.
 
 Variable A B : aset.
 Variable f : dom A -> dom B.
@@ -229,8 +207,8 @@ Theorem h_surj :
 Proof.
 Admitted.
 
-Corollary A_equiv_B : A === B.
+Corollary A_equivalent_B : A === B.
 Proof. exists h; repeat split. apply h_wd. apply h_inj. apply h_surj. Qed.
 
-End SchröderBernstein.
-End SchröderBernstein.
+End EquivThm.
+End EquivThm.

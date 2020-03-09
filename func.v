@@ -26,15 +26,19 @@ Definition preceq A B := ∃f, well_defined A B f /\ injective A B f.
 Notation "A >-> B" := (preceq A B) (at level 50).
 
 (* Notation for 'there exists a one-to-one mapping between A and B'. *)
-Definition equiv A B := ∃f, well_defined A B f /\ bijective A B f.
-Notation "A === B" := (equiv A B) (at level 50).
+Definition equivalent A B := ∃f, well_defined A B f /\ bijective A B f.
+Notation "A === B" := (equivalent A B) (at level 50).
 
-(* Cantor-Schröder-Bernstein theorem. *)
-Definition CSBTheorem A B := A >-> B /\ B >-> A -> A === B.
+(* The EquivalenceTheorem for the sets A and B. *)
+Definition EquivalenceTheorem A B := A >-> B /\ B >-> A -> A === B.
 
+(* Definition of denumerable and uncountable sets. *)
 Definition denumerable A := Nat === A.
-Definition uncountable A :=
-  ∀f, well_defined Nat A f -> ~surjective Nat A f.
+Definition uncountable A := ∀f, well_defined Nat A f -> ~surjective Nat A f.
+
+(* A definition of infinity without natural numbers by Dedekind. *)
+Definition Dedekind_infinite A :=
+  ∃x f, x ∈ A /\ well_defined A A f /\ injective A A f /\ ∀y, f y # x.
 
 Theorem injective_weaken A B f :
   injective A B f -> weak_injective A B f.

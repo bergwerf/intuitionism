@@ -1,6 +1,6 @@
 (* Kleene's alternative to the Fan Theorem *)
 
-From intuitionism Require Import lib set seq spr fan func bar.
+From intuitionism Require Import lib set seq spr fan func classic bar.
 
 (*
 If we assume every sequence α is given by a Turing program, then the Fan Theorem
@@ -121,32 +121,35 @@ Qed.
 End HaltingProblem.
 
 (* Set corresponding to a binary mapping. *)
-Definition bin_set (α : seq) := λ n, α n = 1.
+Definition bset (α : seq) := λ n, α n = 1.
 
-(*
-We are considering the Turing decidable subspace of the Cantor space. At first
-it may seem that any finite prefix in Bin is also in Bin_solv. However we cannot
-claim both sets are equal due to the Halting problem.
-*)
-Definition is_solvable α := α ∈ Bin /\ solvable (bin_set α).
+(* We are considering the Turing decidable subspace of the Cantor space. *)
+Definition is_solvable α := α ∈ Bin /\ solvable (bset α).
 Definition Bin_solv := Baire is_solvable.
 
 (*
-We will construct a bar for which any finite bar fails. If we accept Bin_solv as
-a fan, then this contradicts the Fan Theorem. If it is possible to enumerate
-all solvable sets using a Turing program, then Bin_solv would indeed be a fan.
-However as we learned from the Halting problem, it is not possible for a Turing
-program to exactly enumerate all possible decider programs.
+Since HALT is not solvable, it is not in Bin_solv. At first glance it appears
+that HALT should be in Bin since Bin accepts all binary sequences. However this
+is not true. If Bin_solv were a fan it would contain exactly the same elements
+as Bin (since its fan law would have to accept any finite binary sequence). The
+difficulty in the bar proof below would be to find a suitable program e that
+matches a given sequence (which is given right away by [H: α ∈ Bin_solv]).
+
+For HALT to be in Bin we must have a proof that the fan law of Bin accepts any
+finite prefix of HALT. This is not something we can prove since the Halting
+problem is not only algorithmically undecidable, but cannot be determined in all
+points without absolute knowledge of mathematics (for example, does the program
+e corresponding to the Collatz conjecture halt?). Hence it would be reckless to
+say that HALT ∈ Bin.
+
+We will now construct a bar for which any finite bar fails. If we accept
+Bin_solv as a fan, then this contradicts the Fan Theorem.
 *)
 
 (* Compare the prefix of sequence α in Bin to Turing program e. *)
 Section GoodPrefix.
 
-Variable α : seq.
 Variable e : nat.
-Variable bin : α ∈ Bin.
-Variable dec : decider e.
-Variable rec : recognizer e (bin_set α).
 
 (* s is a prefix of the Turing program e. Note that i must count down. *)
 Fixpoint good_prefix s i :=
@@ -160,6 +163,11 @@ Fixpoint good_prefix s i :=
     end
   end.
 
+Variable α : seq.
+Variable bin : α ∈ Bin.
+Variable dec : decider e.
+Variable rec : recognizer e (bset α).
+
 Lemma αn_01_dec n :
   match α n with
   | 0 => reject e n
@@ -170,8 +178,8 @@ Proof.
 apply isin_pointspace with (n:=n) in bin.
 destruct (α n) eqn:E; bool_to_Prop.
 - apply not_accept_reject; auto; intros H. apply rec in H.
-  unfold bin_set in H; now rewrite E in H.
-- replace n0 with 0 by lia. apply rec. unfold bin_set. lia.
+  unfold bset in H; now rewrite E in H.
+- replace n0 with 0 by lia. apply rec. unfold bset. lia.
 Qed.
 
 Corollary good_prefix_pred n : good_prefix ⟨α;n⟩ (pred n).
@@ -216,7 +224,7 @@ Fixpoint good_diag (b : fbar) n :=
   end.
 
 (* Given a finite bar, good_diag is fully decidable. *)
-Variable good_diag_solvable : ∀b, solvable (bin_set (good_diag b)).
+Variable good_diag_solvable : ∀b, solvable (bset (good_diag b)).
 
 (* Hence, good_diag is in Bin_solv. *)
 Lemma good_diag_Bin_solv b :
@@ -243,7 +251,7 @@ induction b; simpl; auto. intros Hab [H|H].
     now apply IHb.
 Qed.
 
-(* good bars any solvable sequence in Bin_solv. *)
+(* Bin_solv is barred by good. *)
 Theorem barred_Bin_solv_good :
   barred Bin_solv good.
 Proof.
