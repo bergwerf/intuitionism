@@ -23,12 +23,12 @@ assert(P: ∀α : seq, ∃i,
 { intros; destruct (LPO α). exists 0; left; auto. exists 1; right; auto. }
 destruct (BCP _ P (0^ω)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
 - assert(Hα : eqn m (0^ω) (0^ω)). apply eqn_refl.
-  apply H in Hα as [[_ [i E]]|[n1 _]]; try omega.
+  apply H in Hα as [[_ [i E]]|[n1 _]]; try lia.
   apply E; auto.
 - pose(β := pre m (0^ω) (1^ω)).
   assert(Hβ: eqn m (0^ω) β). apply eqn_pre_n.
-  apply H in Hβ as [[n0 _]|[_ A]]; try omega.
-  assert(Hβ1: β (m + 1) <> 0). unfold β, cseq; rewrite pre_r; omega.
+  apply H in Hβ as [[n0 _]|[_ A]]; try lia.
+  assert(Hβ1: β (m + 1) <> 0). unfold β; now rewrite pre_r.
   auto.
 Qed.
 
@@ -95,11 +95,11 @@ assert(L1: ∀f β, eqn (M f) (0^ω) β -> f (0^ω) = f β).
 (* We now construct a function f that is not continuous. *)
 pose(m := M (λ _, 0)).
 pose(f β := M (λ α, β (α m))).
-assert(f0: f (0^ω) = m). { unfold f, cseq, m; auto. }
+assert(f0: f (0^ω) = m) by easy.
 assert(L2a: ∀β, eqn (M f) (0^ω) β -> f β = m).
 { intros. rewrite <-f0. symmetry; apply L1; auto. }
 assert(L2b: ∀β α, eqn (f β) (0^ω) α -> β 0 = β (α m)).
-{ intros. unfold f in H. apply L1 in H. unfold cseq in H; auto. }
+{ intros. unfold f in H. now apply L1 in H. }
 pose(β := pre (M f + 1) (0^ω) (1^ω)).
 assert(Hβ: ∀α, eqn m (0^ω) α -> β 0 = β (α m)).
 { intros. apply L2b. rewrite L2a; auto. apply eqn_pre. }
@@ -108,8 +108,8 @@ assert(H1α: α m = M f + 1). { unfold α. rewrite pre_r0; auto. }
 assert(H2α: β 0 = β (α m)). { apply Hβ. apply eqn_pre_n. }
 (* We are ready to show 0 = 1. *)
 replace 1 with (β (M f + 1)). rewrite <-H1α, <-H2α. unfold β.
-replace (M f + 1) with (0 + S (M f)) by omega. rewrite pre_l. auto.
-unfold β. replace (M f + 1) with ((M f + 1) + 0) at 2 by omega.
+replace (M f + 1) with (0 + S (M f)) by lia. rewrite pre_l. auto.
+unfold β. replace (M f + 1) with ((M f + 1) + 0) at 2 by lia.
 rewrite pre_r; auto.
 Qed.
 

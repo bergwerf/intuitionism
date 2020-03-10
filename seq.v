@@ -253,10 +253,6 @@ Section SeqProp.
 
 Variable P : nat -> Prop.
 
-Lemma cseq_prop c :
-  P c -> ∀n, P (c^ω n).
-Proof. unfold cseq; intros; auto. Qed.
-
 Lemma pre_prop n α β :
   (∀i, P (α i))
   -> (∀i, P (β i))

@@ -85,22 +85,60 @@ intros LPO α H. destruct (LPO α).
 - exfalso; apply H; auto.
 Qed.
 
+(* Relation between Dedekind-infinity and ω-infinity. *)
+Section DedekindInfinity.
+
+(* Vpply f n times to x. *)
+Fixpoint applyn {V} f (x : V) n :=
+  match n with 0 => x | S m => f (applyn f x m) end.
+
+Lemma applyn_isin {V : aset} x f n :
+  x ∈ V -> well_defined V V f -> applyn f x n ∈ V.
+Proof. intros; induction n; simpl; auto. Qed.
+
+Lemma applyn_apart {V : aset} x f m n :
+  x ∈ V -> well_defined V V f -> injective V V f -> (∀y, f y # x) ->
+  applyn f x n # applyn f x (n + S m).
+Proof.
+intros; induction n; simpl; auto; intros.
+- induction m; simpl; apply apart_sym; auto.
+- apply H1; auto; apply applyn_isin; auto.
+Qed.
+
+(* If V is Dedekind infinite, then V is as least as big as Nat. *)
+Theorem dedekind_ω_inifinite V :
+  Dedekind_infinite V -> Nat >-> V.
+Proof.
+intros [x [f [Vx [f_wd [f_inj f_y]]]]].
+(* We define an injection by repeated application of f. *)
+exists (applyn f x); split.
+- intros n _. clear f_y; revert Vx; revert x. induction n; simpl; auto.
+- intros n m _ _. simpl; intros Hnm. apply not_eq in Hnm; destruct Hnm.
+  replace m with (n + S (m - n - 1)) by lia; now apply applyn_apart.
+  apply apart_sym. replace n with (m + S (n - m - 1)) by lia;
+  now apply applyn_apart.
+Qed.
+
+(*
+The converse can be proved classically, but is considered reckless by
+intuitionists. To see this, suppose we have a sequence (R n) of reckless
+statements. We will construct an ω-infinite subset of the Baire space using R
+such that Dedekind-infinity a reckless statement based on R.
+*)
+Theorem ω_infinite_dedekind_reckless (R : nat -> Prop) :
+  (∀V, Nat >-> V -> Dedekind_infinite V) -> (∃n, R n) \/ (∃n m, R n -> R m).
+Proof.
+pose(inV α := del 1 α = 0^ω \/ R (α 0)).
+pose(V := Baire inV). assert(Hω: Nat >-> V).
+{ exists (λ n, pre 1 (n^ω) (0^ω)); split.
+  - intros n _; simpl; left. extensionality i. now rewrite del_access, pre_r.
+  - intros m n _ _ Hmn. exists 0. rewrite <-(add_0_l 1), ?pre_l. admit. }
+Admitted.
+
+End DedekindInfinity.
+
 (* Some results related to apartness of sequences. *)
 Section Apartness.
-
-(* Under LPO sequence apartness is equivalent to inequality. *)
-Theorem lpo_seq_apart_if_neq α β :
-  LPO -> α <> β -> seq_apart α β.
-Proof.
-(* Define a sequence which is non-zero where α anb β are not equal. *)
-pose(γ n := if α n =? β n then 0 else 1).
-assert(Hγ: ∀n, γ n = 0 -> α n = β n).
-{ unfold γ; intros n. destruct (α n =? β n) eqn:H; bool_lia. }
-intros LPO H; destruct (LPO γ) as [[n Hn]|Hn].
-- exists n; intros P; revert Hn; unfold γ.
-  replace (α n =? β n) with true by bool_lia; auto.
-- exfalso; apply H; extensionality n. apply Hγ; auto.
-Qed.
 
 (* Under LEM apartness is equivalent to inequality. *)
 Theorem lem_apart_if_neq {A} (α : dom A) (β : dom A) :
@@ -108,6 +146,19 @@ Theorem lem_apart_if_neq {A} (α : dom A) (β : dom A) :
 Proof.
 intros. apply lem_pdn; auto.
 intros Hna. now apply apart_spec in Hna.
+Qed.
+
+(* Under LPO sequence apartness is equivalent to inequality. *)
+Theorem lpo_seq_apart_if_neq α β :
+  LPO -> α <> β -> seq_apart α β.
+Proof.
+pose(γ n := if α n =? β n then 0 else 1).
+assert(Hγ: ∀n, γ n = 0 -> α n = β n).
+{ unfold γ; intros n. destruct (α n =? β n) eqn:H; bool_lia. }
+intros LPO H; destruct (LPO γ) as [[n Hn]|Hn].
+- exists n; intros P; revert Hn; unfold γ.
+  replace (α n =? β n) with true by bool_lia; auto.
+- exfalso; apply H; extensionality n. apply Hγ; auto.
 Qed.
 
 (* If sequence inequality implies apartness, then we have Markov's Principle. *)
@@ -128,7 +179,7 @@ intros WIS α Hα.
 pose(f (b : bool) := if b then α else (0^ω)).
 assert(weak_inj: weak_injective Bool Seq f).
 { intros a b _ _ H. destruct a, b; auto; exfalso; apply Hα; intros.
-  all: simpl in H; eapply equal_f in H; unfold cseq in H.
+  all: simpl in H; eapply equal_f in H.
   apply H. symmetry; apply H. }
 assert(apartness: @apart Bool true false).
 { simpl; unfold dec_apart. discriminate. }
@@ -137,37 +188,6 @@ apply inj in apartness; auto; apply I.
 Qed.
 
 End Apartness.
-
-(* Apply f n times to x. *)
-Fixpoint applyn {A} f (x : A) n :=
-  match n with 0 => x | S m => f (applyn f x m) end.
-
-Lemma applyn_isin {A : aset} x f n :
-  x ∈ A -> well_defined A A f -> applyn f x n ∈ A.
-Proof. intros; induction n; simpl; auto. Qed.
-
-Lemma applyn_apart {A : aset} x f m n :
-  x ∈ A -> well_defined A A f -> injective A A f -> (∀y, f y # x) ->
-  applyn f x n # applyn f x (n + S m).
-Proof.
-intros; induction n; simpl; auto; intros.
-- induction m; simpl; apply apart_sym; auto.
-- apply H1; auto; apply applyn_isin; auto.
-Qed.
-
-(* If A is Dedekind infinite, then A is as least as big as Nat. *)
-Theorem dedekind_ω_inifinite A :
-  Dedekind_infinite A -> Nat >-> A.
-Proof.
-intros [x [f [Ax [f_wd [f_inj f_y]]]]].
-(* We define an injection by repeated application of f. *)
-exists (applyn f x); split.
-- intros n _. clear f_y; revert Ax; revert x. induction n; simpl; auto.
-- intros n m _ _. simpl; intros Hnm. apply not_eq in Hnm; destruct Hnm.
-  replace m with (n + S (m - n - 1)) by lia; now apply applyn_apart.
-  apply apart_sym. replace n with (m + S (n - m - 1)) by lia;
-  now apply applyn_apart.
-Qed.
 
 (* A classic proof for the Equivalence theorem. *)
 (* www.cs.cornell.edu/courses/cs2800/2017fa/lectures/lec14-cantor.html *)

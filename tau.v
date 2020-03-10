@@ -110,11 +110,11 @@ apply in_map_iff. exists k; split.
 - rewrite e in *; clear e. rewrite Hbcp. symmetry; apply Hbcp.
   now apply eqn_sym. apply eqn_pre_n.
 - apply f_equal. extensionality i. unfold pre, replace, fill.
-  destruct (i <? k) eqn:E; bool_to_Prop; unfold cseq; symmetry.
-  apply Hk; lia. destruct (τ2_cases α i); auto. exfalso.
+  destruct (i <? k) eqn:E; bool_to_Prop; symmetry. now apply Hk.
+  destruct (τ2_cases α i); auto. exfalso.
   assert(Hlt: k < m). lia. assert(Heqk: k = compare m α (0^ω)). auto.
   apply compare_lt in Hlt. rewrite <-Heqk in Hlt.
-  apply Hlt; unfold cseq. apply (τ_mono _ _ α) in E; auto. lia.
+  apply Hlt. apply (τ_mono _ _ α) in E; auto. unfold cseq; lia.
 Qed.
 
 (*
@@ -143,8 +143,7 @@ Theorem f_inj :
 Proof.
 intros n m _ _; simpl; unfold dec_apart; intros H.
 assert(C: n < m \/ m < n). lia. destruct C, n, m; try lia; simpl.
-- exists m. rewrite <-(add_0_r m) at 3; rewrite pre_r.
-  unfold cseq; lia.
+- exists m. rewrite <-(add_0_r m) at 3; rewrite pre_r. unfold cseq; lia.
 - exists n. apply le_exists_sub in H0 as [k [Hk _]].
   replace m with (n + S k) by lia. rewrite pre_l.
   rewrite <-(add_0_r n) at 2; rewrite pre_r. unfold cseq; lia.
@@ -164,11 +163,9 @@ intros H; destruct (BCPext τ2 _ H (0^ω) P0) as [m [n Q]].
 assert(P1: f (S (m + n)) ∈ τ2). apply f_image. apply Q in P1 as [_ P1].
 revert P1; destruct n; simpl; intros P1.
 - apply equal_f with (x:=m) in P1; revert P1.
-  rewrite add_0_r; rewrite pre_r0.
-  unfold cseq; intros; lia.
+  rewrite add_0_r; rewrite pre_r0. unfold cseq; lia.
 - apply equal_f with (x:=n) in P1; revert P1. rewrite pre_r0.
-  replace (m + S n) with (n + S m) by lia. rewrite pre_l.
-  unfold cseq; intros; lia.
+  replace (m + S n) with (n + S m) by lia. rewrite pre_l. unfold cseq; lia.
 - intros i Hi; unfold f. unfold pre, replace, fill.
   replace (i <? m + n) with true by bool_lia. lia.
 Qed.
