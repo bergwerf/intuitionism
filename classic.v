@@ -197,21 +197,18 @@ Definition h x :=
   | BChain _ (existT2 _ _ y _ (exist n _)) => stepn y n
   end.
 
+Lemma g_stepn_isin y n :
+  y ∈ B -> g (stepn y n) ∈ A.
+Proof.
+intros; apply g_wd, applyn_isin; auto.
+intros b Hb; now apply f_wd, g_wd.
+Qed.
+
 Theorem h_wd :
   well_defined A B h.
 Proof.
 intros x Hx. unfold h; destruct (chain_dec x). now apply f_wd.
 destruct H as [y [Hy _] [n _]]. apply applyn_isin. easy.
-intros b Hb. now apply f_wd, g_wd.
-Qed.
-
-Lemma stepn_S y n : stepn y (S n) = f (g (stepn y n)).
-Proof. easy. Qed.
-
-Lemma g_stepn_isin y n :
-  y ∈ B -> g (stepn y n) ∈ A.
-Proof.
-intros. apply g_wd. apply applyn_isin; auto.
 intros b Hb. now apply f_wd, g_wd.
 Qed.
 
@@ -221,16 +218,16 @@ Proof.
 intros x1 x2 Hx1 Hx2 Hx12.
 unfold h; destruct (chain_dec x1), (chain_dec x2);
 try destruct H as [y Hy [n Hn]].
-- (* Both not in an A-chain. *)
+- (* Both in an A-chain. *)
   now apply f_inj.
 - (* Both in a different chain. *)
   destruct n. now apply Hy.
-  rewrite stepn_S. apply f_inj; auto.
-  apply g_stepn_isin; apply Hy.
+  replace (stepn y (S n)) with (f (g (stepn y n))) by easy.
+  apply f_inj; auto. apply g_stepn_isin; apply Hy.
 - (* Both in a different chain. *)
   apply apart_sym. destruct n. now apply Hy.
-  rewrite stepn_S. apply f_inj; auto.
-  apply g_stepn_isin; apply Hy.
+  replace (stepn y (S n)) with (f (g (stepn y n))) by easy.
+  apply f_inj; auto. apply g_stepn_isin; apply Hy.
 - (* Both in a B-chain. *)
   destruct H0 as [y' Hy' [n' Hn']]; subst.
   now apply g_ext.
