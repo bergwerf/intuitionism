@@ -8,7 +8,7 @@ Definition well_defined A B (f : dom A -> dom B) :=
 
 (* Strong converse of a = b -> f a = f b. *)
 Definition strong_extensional A B (f : dom A -> dom B) :=
-  ∀α β, f α # f β -> α # β.
+  ∀α β, α ∈ A -> β ∈ A -> f α # f β -> α # β.
 
 (* Classic injective function. *)
 Definition weak_injective A B (f : dom A -> dom B) :=
@@ -27,11 +27,11 @@ Definition bijective A B f := injective A B f /\ surjective A B f.
 
 (* Notation for 'there exists an injective mapping from A to B'. *)
 Definition preceq A B f := well_defined A B f /\ injective A B f.
-Notation "A >-> B" := (∃f, preceq A B f) (at level 50).
+Notation "A ⪯ B" := (∃f, preceq A B f) (at level 50).
 
 (* Notation for 'there exists an extensional injective mapping from A to B'. *)
 Definition preceqext A B f := preceq A B f /\ strong_extensional A B f.
-Notation "A >->* B" := (∃f, preceqext A B f) (at level 50).
+Notation "A ⪯' B" := (∃f, preceqext A B f) (at level 50).
 
 (* Notation for 'there exists a one-to-one mapping between A and B'. *)
 Definition equivalent A B := ∃f, well_defined A B f /\ bijective A B f.
@@ -126,13 +126,13 @@ Section InjSeqBin.
 
 (* Trivial direction *)
 Theorem bin_preceq_seq :
-  Bin >-> Seq.
+  Bin ⪯' Seq.
 Proof.
-pose(f (α : seq) := α). exists f; split.
-- intros α Hα; apply I.
-- intros α β Hα Hβ. now unfold f.
+pose(f (α : seq) := α). exists f; repeat split.
+intros α β Hα Hβ. now unfold f. easy.
 Qed.
 
+(* Hard direction *)
 Fixpoint pos_to_list (p : positive) :=
   match p with
   | xI q => 1 :: pos_to_list q
@@ -142,15 +142,16 @@ Fixpoint pos_to_list (p : positive) :=
 
 Definition seq_to_bin α n := nth n (rev (pos_to_list (fseq_to_pos ⟨α;n⟩))) 0.
 
-(* Hard direction *)
 Theorem seq_preceq_bin :
-  Seq >-> Bin.
+  Seq ⪯' Bin.
 Proof.
-exists seq_to_bin; split.
+exists seq_to_bin; repeat split.
 - intros α Hα. admit.
-- intros α β _ _ Hαβ. admit.
-  (* We need the smallest n at which α an β are apart. *)
+- intros α β _ _ Hαβ.
+  apply epsilon_smallest in Hαβ as [n Hn].
   (* We then find the first location at which the image is apart. *)
+  admit. admit.
+- admit.
 Admitted.
 
 End InjSeqBin.

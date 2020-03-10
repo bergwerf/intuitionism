@@ -21,7 +21,7 @@ The Equivalence theorem (often called the Cantor–Schröder–Bernstein theorem
 the sets A and B with strong requirements. A proof that relies on decidability
 of the chain type for any x in A is included in this file.
 *)
-Definition EquivalenceTheorem A B := A >-> B /\ B >->* A -> A === B.
+Definition EquivalenceTheorem A B := A ⪯ B /\ B ⪯' A -> A === B.
 
 (*
 Some statements are weaker than the previous principles, yet intuitionists still
@@ -51,8 +51,8 @@ right; intros n; destruct (eq_dec (α n) 0); auto.
 exfalso; apply H; exists n; auto.
 Qed.
 
-Lemma neq0_dec (α : seq) n : {α n <> 0} + {~(α n <> 0)}.
-Proof. intros; destruct (eq_dec (α n) 0). right; lia. left; lia. Qed.
+Lemma neq_dec (n m : nat) : {n <> m} + {~(n <> m)}.
+Proof. intros; destruct (eq_dec n m). now right. now left. Qed.
 
 Lemma nat_nltgt_eq n m : ~(n < m) -> ~(n > m) -> n = m.
 Proof. lia. Qed.
@@ -65,7 +65,7 @@ Theorem lpo_llpo :
   LPO -> LLPO.
 Proof.
 intros LPO α. destruct (LPO α).
-- destruct (epsilon_smallest _ (neq0_dec α) H) as [l [L1 L2]].
+- apply epsilon_smallest in H as [l [L1 L2]]. 2: intros; apply neq_dec.
   destruct (even l) eqn:E.
   1: apply even_spec in E; left.
   2: apply even_false_odd in E; right.
@@ -107,7 +107,7 @@ Qed.
 
 (* If V is Dedekind infinite, then V is as least as big as Nat. *)
 Theorem dedekind_ω_inifinite V :
-  Dedekind_infinite V -> Nat >-> V.
+  Dedekind_infinite V -> Nat ⪯ V.
 Proof.
 intros [x [f [Vx [f_wd [f_inj f_y]]]]].
 (* We define an injection by repeated application of f. *)
@@ -240,12 +240,15 @@ Definition h x :=
   | BChain _ (existT2 _ _ y _ (exist n _)) => stepn y n
   end.
 
-Lemma g_stepn_isin y n :
-  y ∈ B -> g (stepn y n) ∈ A.
+Lemma stepn_isin y n :
+  y ∈ B -> stepn y n ∈ B.
 Proof.
-intros; apply g_wd, applyn_isin; auto.
+intros; apply applyn_isin; auto.
 intros b Hb; now apply f_wd, g_wd.
 Qed.
+
+Corollary g_stepn_isin y n : y ∈ B -> g (stepn y n) ∈ A.
+Proof. intros; now apply g_wd, stepn_isin. Qed.
 
 Theorem h_wd :
   well_defined A B h.
@@ -273,7 +276,7 @@ try destruct H as [y Hy [n Hn]].
   apply f_inj; auto. apply g_stepn_isin; apply Hy.
 - (* Both in a B-chain. *)
   destruct H0 as [y' Hy' [n' Hn']]; subst.
-  now apply g_ext.
+  apply g_ext; auto. apply stepn_isin; apply Hy. apply stepn_isin; apply Hy'.
 Qed.
 
 Theorem h_surj :

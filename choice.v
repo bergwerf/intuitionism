@@ -82,20 +82,21 @@ Section ContinuousChoiceFunction.
 
 Inductive cfun_answer := CFContinue | CFDecide (n : nat).
 Record cfun := CFun {
-  ϕ : fseq -> cfun_answer;
-  ϕ_terminate : ∀α, ∃n, ϕ ⟨α;n⟩ <> CFContinue;
+  cfun_σ : fseq -> cfun_answer;
+  cfun_terminate : ∀α, ∃n, cfun_σ ⟨α;n⟩ <> CFContinue;
 }.
 
 Variable φ : cfun.
 Variable α : seq.
 
-Lemma answer_dec : ∀n, {ϕ φ ⟨α;n⟩ <> CFContinue} + {~(ϕ φ ⟨α;n⟩ <> CFContinue)}.
-Proof. intros; destruct (ϕ φ ⟨α;n⟩). now right. now left. Qed.
+Lemma answer_dec :
+  ∀n, {cfun_σ φ ⟨α;n⟩ <> CFContinue} + {~(cfun_σ φ ⟨α;n⟩ <> CFContinue)}.
+Proof. intros; destruct (cfun_σ φ ⟨α;n⟩). now right. now left. Qed.
 
-Definition ϕ_termination_N := epsilon_smallest _ answer_dec (ϕ_terminate φ α).
+Definition cfun_time := epsilon_smallest _ answer_dec (cfun_terminate φ α).
 Definition cfun_compute :=
-  let n := proj1_sig ϕ_termination_N in
-  match ϕ φ ⟨α;n⟩ with
+  let n := proj1_sig cfun_time in
+  match cfun_σ φ ⟨α;n⟩ with
   | CFDecide k => k
   | CFContinue => 0
   end.
@@ -107,8 +108,8 @@ Notation "φ '∣' α" := (cfun_compute φ α) (at level 50, format "φ '∣' α
 Lemma cfun_eqn φ α :
   ∃m, ∀β, eqn m α β -> φ∣α = φ∣β.
 Proof.
-unfold cfun_compute. destruct (ϕ_termination_N φ α) as [Nα [H1 H2]]; simpl.
-exists Nα; intros. destruct (ϕ_termination_N φ β) as [Nβ [H3 H4]]; simpl.
+unfold cfun_compute. destruct (cfun_time φ α) as [Nα [H1 H2]]; simpl.
+exists Nα; intros. destruct (cfun_time φ β) as [Nβ [H3 H4]]; simpl.
 apply eqn_eq_get in H. replace Nβ with Nα. now rewrite H.
 apply eq_dne; intros E. apply not_eq in E as [E|E].
 - apply H4 in E; apply E. now rewrite <-H.

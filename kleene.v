@@ -44,8 +44,8 @@ Variable n : nat.
 Lemma T_μT :
   (∃z, T e n z) -> ∃z, μT e n z.
 Proof.
-intros. destruct (epsilon_smallest _ (T_dec e n) H) as [z [H1z H2z]].
-exists z; now split.
+intros. apply epsilon_smallest in H as [z [H1z H2z]].
+exists z; now split. apply T_dec.
 Qed.
 
 Lemma μT_nlt z1 z2 : μT e n z1 -> μT e n z2 -> ~(z1 < z2).
