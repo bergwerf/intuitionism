@@ -17,6 +17,13 @@ Definition LLPO := ∀(α : seq),
 Definition MarkovsPrinciple := ∀α : seq, ~(∀n, α n = 0) -> ∃n, α n <> 0.
 
 (*
+The Equivalence theorem (often called the Cantor–Schröder–Bernstein theorem) for
+the sets A and B with strong requirements. A proof that relies on decidability
+of the chain type for any x in A is included in this file.
+*)
+Definition EquivalenceTheorem A B := A >-> B /\ B >->* A -> A === B.
+
+(*
 Some statements are weaker than the previous principles, yet intuitionists still
 do not want to consider them as true. In particular these are statements that
 can prove properties about a number which is still unknown to mathematics and
@@ -115,20 +122,20 @@ Qed.
 End Apartness.
 
 (* Apply f n times to x. *)
-Fixpoint appn {A} f (x : A) n :=
-  match n with 0 => x | S m => f (appn f x m) end.
+Fixpoint applyn {A} f (x : A) n :=
+  match n with 0 => x | S m => f (applyn f x m) end.
 
-Lemma appn_isin {A : aset} x f n :
-  x ∈ A -> well_defined A A f -> appn f x n ∈ A.
+Lemma applyn_isin {A : aset} x f n :
+  x ∈ A -> well_defined A A f -> applyn f x n ∈ A.
 Proof. intros; induction n; simpl; auto. Qed.
 
-Lemma appn_apart {A : aset} x f m n :
+Lemma applyn_apart {A : aset} x f m n :
   x ∈ A -> well_defined A A f -> injective A A f -> (∀y, f y # x) ->
-  appn f x n # appn f x (n + S m).
+  applyn f x n # applyn f x (n + S m).
 Proof.
 intros; induction n; simpl; auto; intros.
 - induction m; simpl; apply apart_sym; auto.
-- apply H1; auto; apply appn_isin; auto.
+- apply H1; auto; apply applyn_isin; auto.
 Qed.
 
 (* If A is Dedekind infinite, then A is as least as big as Nat. *)
@@ -137,12 +144,12 @@ Theorem dedekind_ω_inifinite A :
 Proof.
 intros [x [f [Ax [f_wd [f_inj f_y]]]]].
 (* We define an injection by repeated application of f. *)
-exists (appn f x); split.
+exists (applyn f x); split.
 - intros n _. clear f_y; revert Ax; revert x. induction n; simpl; auto.
 - intros n m _ _. simpl; intros Hnm. apply not_eq in Hnm; destruct Hnm.
-  replace m with (n + S (m - n - 1)) by lia; now apply appn_apart.
+  replace m with (n + S (m - n - 1)) by lia; now apply applyn_apart.
   apply apart_sym. replace n with (m + S (n - m - 1)) by lia;
-  now apply appn_apart.
+  now apply applyn_apart.
 Qed.
 
 (* A classic proof for the Equivalence theorem. *)
@@ -155,60 +162,110 @@ Variable f : dom A -> dom B.
 Variable g : dom B -> dom A.
 Variable f_wd : well_defined A B f.
 Variable g_wd : well_defined B A g.
+Variable g_ext : strong_extensional B A g.
 Variable f_inj : injective A B f.
 Variable g_inj : injective B A g.
 
 (* y in B is a chain bottom (there is no x in A s.t. f x = y). *)
-Definition Bbot y := ∀x, x ∈ A -> f x # y.
+Definition Bbot y := y ∈ B /\ ∀x, x ∈ A -> f x # y.
 
-(* Chain c connects x to y backwards. *)
-Fixpoint Bchain x c y :=
-  match c with
-  | [] => g y = x
-  | (a, b) :: cc => g b = x /\ f a = b /\ Bchain a cc y
-  end.
-
-(* Get inverse of x given that (Bchain x c y). *)
-Definition g_inv (c : list (dom A * dom B)) y := hd y (map snd c).
+(* Apply (f ∘ g) n times to y. *)
+Definition stepn := applyn (λ y, f (g y)).
 
 (* x is in a chain with a bottom in B. *)
-Definition in_Bchain x := {y : dom B & Bbot y & {c | Bchain x c y}}.
+Definition B_chain x := {y : dom B & Bbot y & {n | g (stepn y n) = x}}.
 
-(* positive negation of in_Bchain. *)
-Definition notin_Bchain x := ∀y, Bbot y -> ∀c, ~Bchain x c y.
+(* x is apart from any B-chain (needed for injectivity). *)
+Definition A_chain_apart x := ∀y, Bbot y -> ∀n, x # g (stepn y n).
+
+(* If y steps to x it is not a B-chain bottom (needed for surjectivity). *)
+Definition A_chain_no_Bbot x :=
+  ∀y, (y ∈ B /\ ∃n, g (stepn y n) = x) -> ∃z, z ∈ A /\ f z = y.
 
 (* We need to decide the chain type for any x. *)
-Inductive chain_type x :=
-  | ChainTypeA (H : notin_Bchain x)
-  | ChainTypeB (H : in_Bchain x).
+Inductive chain x :=
+  | AChain (H1 : A_chain_apart x) (H2 : A_chain_no_Bbot x)
+  | BChain (H : B_chain x).
 
 (* We need to be able to decide the chain type. This is stronger than LEM. *)
-Variable in_Bchain_dec : ∀x, chain_type x.
+Variable chain_dec : ∀x, chain x.
 
 (* We define the bijective function h using in_Bchain_dec. *)
 Definition h x :=
-  match in_Bchain_dec x with
-  | ChainTypeA _ _ => f x
-  | ChainTypeB _ (existT2 _ _ y _ (exist c _)) => g_inv c y
+  match chain_dec x with
+  | AChain _ _ _ => f x
+  | BChain _ (existT2 _ _ y _ (exist n _)) => stepn y n
   end.
 
 Theorem h_wd :
   well_defined A B h.
 Proof.
-Admitted.
+intros x Hx. unfold h; destruct (chain_dec x). now apply f_wd.
+destruct H as [y [Hy _] [n _]]. apply applyn_isin. easy.
+intros b Hb. now apply f_wd, g_wd.
+Qed.
+
+Lemma stepn_S y n : stepn y (S n) = f (g (stepn y n)).
+Proof. easy. Qed.
+
+Lemma g_stepn_isin y n :
+  y ∈ B -> g (stepn y n) ∈ A.
+Proof.
+intros. apply g_wd. apply applyn_isin; auto.
+intros b Hb. now apply f_wd, g_wd.
+Qed.
 
 Theorem h_inj :
   injective A B h.
 Proof.
-Admitted.
+intros x1 x2 Hx1 Hx2 Hx12.
+unfold h; destruct (chain_dec x1), (chain_dec x2);
+try destruct H as [y Hy [n Hn]].
+- (* Both not in an A-chain. *)
+  now apply f_inj.
+- (* Both in a different chain. *)
+  destruct n. now apply Hy.
+  rewrite stepn_S. apply f_inj; auto.
+  apply g_stepn_isin; apply Hy.
+- (* Both in a different chain. *)
+  apply apart_sym. destruct n. now apply Hy.
+  rewrite stepn_S. apply f_inj; auto.
+  apply g_stepn_isin; apply Hy.
+- (* Both in a B-chain. *)
+  destruct H0 as [y' Hy' [n' Hn']]; subst.
+  now apply g_ext.
+Qed.
 
 Theorem h_surj :
   surjective A B h.
 Proof.
-Admitted.
+intros y Hy. destruct (chain_dec (g y)) eqn:E.
+- (* A chain: we need to invert g. *)
+  destruct (H2 y) as [yinv [H1y H2y]]. split; auto. now exists 0.
+  exists yinv; split; auto. unfold h; destruct (chain_dec yinv); auto.
+  (* yinv cannot be in a B-chain.  *)
+  exfalso. destruct H as [bot [B1 B2] [n Hn]].
+  destruct (H2 bot) as [z [H1z H2z]]. split; auto. exists (S n).
+  unfold stepn in *; simpl; now rewrite Hn, H2y.
+  apply (B2 z) in H1z. now apply apart_spec in H2z.
+- (* B chain: f (g y) is mapped to y. *)
+  exists (g y); split. now apply g_wd. unfold h; rewrite E; clear E.
+  destruct H as [y' [Hy' _] [n Hn]]. apply injective_weaken in g_inj.
+  apply g_inj in Hn; auto. apply applyn_isin; auto.
+  intros b Hb. now apply f_wd, g_wd.
+Qed.
 
-Corollary A_equivalent_B : A === B.
+Corollary equivalent : A === B.
 Proof. exists h; repeat split. apply h_wd. apply h_inj. apply h_surj. Qed.
 
 End EquivThm.
 End EquivThm.
+
+(* Final Equivalence theorem *)
+Theorem equivalence_theorem A B :
+  (∀f g, ∀x, EquivThm.chain A B f g x) ->
+  EquivalenceTheorem A B.
+Proof.
+intros C [[f [f_wd f_inj]] [g [[g_wd g_inj] g_ext]]].
+now apply EquivThm.equivalent with (f:=f)(g:=g).
+Qed.

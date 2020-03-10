@@ -6,6 +6,10 @@ From intuitionism Require Import lib set seq spr fan.
 Definition well_defined A B (f : dom A -> dom B) :=
   ∀α, α ∈ A -> f α ∈ B.
 
+(* Strong converse of a = b -> f a = f b. *)
+Definition strong_extensional A B (f : dom A -> dom B) :=
+  ∀α β, f α # f β -> α # β.
+
 (* Classic injective function. *)
 Definition weak_injective A B (f : dom A -> dom B) :=
   ∀a α, a ∈ A -> α ∈ A -> f a = f α -> a = α.
@@ -22,15 +26,16 @@ Definition surjective A B (f : dom A -> dom B) :=
 Definition bijective A B f := injective A B f /\ surjective A B f.
 
 (* Notation for 'there exists an injective mapping from A to B'. *)
-Definition preceq A B := ∃f, well_defined A B f /\ injective A B f.
-Notation "A >-> B" := (preceq A B) (at level 50).
+Definition preceq A B f := well_defined A B f /\ injective A B f.
+Notation "A >-> B" := (∃f, preceq A B f) (at level 50).
+
+(* Notation for 'there exists an extensional injective mapping from A to B'. *)
+Definition preceqext A B f := preceq A B f /\ strong_extensional A B f.
+Notation "A >->* B" := (∃f, preceqext A B f) (at level 50).
 
 (* Notation for 'there exists a one-to-one mapping between A and B'. *)
 Definition equivalent A B := ∃f, well_defined A B f /\ bijective A B f.
 Notation "A === B" := (equivalent A B) (at level 50).
-
-(* The EquivalenceTheorem for the sets A and B. *)
-Definition EquivalenceTheorem A B := A >-> B /\ B >-> A -> A === B.
 
 (* Definition of denumerable and uncountable sets. *)
 Definition denumerable A := Nat === A.
