@@ -347,6 +347,9 @@ replace (n + m - n) with m by lia.
 auto.
 Qed.
 
+Corollary pre_l0 n α β : (pre (S n) α β) 0 = α 0.
+Proof. rewrite <-(add_0_l (S n)). apply pre_l. Qed.
+
 Corollary pre_r0 n α β : (pre n α β) n = β 0.
 Proof. rewrite <-(add_0_r n) at 2. apply pre_r. Qed.
 

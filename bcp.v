@@ -1,40 +1,11 @@
 (* Brouwer's Continuity Principle (BCP) and related notions. *)
 
-From intuitionism Require Import lib set seq spr classic.
-
-Require Import Coq.Arith.PeanoNat.
-Require Import Coq.Logic.ConstructiveEpsilon.
-Require Import Omega.
-Import Nat.
+From intuitionism Require Import lib set seq spr func classic.
 
 (* Brouwers Continuity Principle *)
 Axiom BCP : ∀(R : seq -> nat -> Prop),
   (∀α, ∃n, R α n) ->
   (∀α, ∃m n, ∀β, eqn m α β -> R β n).
-
-(* We find that intuitionistic logic is *not* a subset of classical logic. *)
-Theorem not_lpo :
-  ~LPO.
-Proof.
-intros LPO.
-assert(P: ∀α : seq, ∃i,
-  (i = 0 /\ ∃n, α n <> 0) \/
-  (i > 0 /\ ∀n, α n = 0)).
-{ intros; destruct (LPO α). exists 0; left; auto. exists 1; right; auto. }
-destruct (BCP _ P (0^ω)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
-- assert(Hα : eqn m (0^ω) (0^ω)). apply eqn_refl.
-  apply H in Hα as [[_ [i E]]|[n1 _]]; try lia.
-  apply E; auto.
-- pose(β := pre m (0^ω) (1^ω)).
-  assert(Hβ: eqn m (0^ω) β). apply eqn_pre_n.
-  apply H in Hβ as [[n0 _]|[_ A]]; try lia.
-  assert(Hβ1: β (m + 1) <> 0). unfold β; now rewrite pre_r.
-  auto.
-Qed.
-
-(* And indeed the law of excluded middle does not hold under BCP. *)
-Corollary not_lem : ~LEM.
-Proof. intros H; apply not_lpo; apply lem_lpo; auto. Qed.
 
 Lemma fully_defined {A B} (f : A -> B) :
   ∀a, ∃b, f a = b.
@@ -67,23 +38,90 @@ assert(HT: ∀α, ∃n, T α n).
   apply P in H1; unfold T, rσ in H1; rewrite Retract.r_id in H1; auto.
 Qed.
 
+(* Some initial contradictions with classical logic. *)
+Section ClassicContradictions.
+
+(* LPO is provably incorrect. *)
+Theorem not_lpo :
+  ~LPO.
+Proof.
+intros LPO.
+assert(P: ∀α : seq, ∃i,
+  (i = 0 /\ ∃n, α n <> 0) \/
+  (i > 0 /\ ∀n, α n = 0)).
+{ intros; destruct (LPO α). exists 0; left; auto. exists 1; right; auto. }
+destruct (BCP _ P (0^ω)) as [m [n H]]. destruct (eq_dec n 0) as [n0|n1].
+- assert(Hα : eqn m (0^ω) (0^ω)). apply eqn_refl.
+  apply H in Hα as [[_ [i E]]|[n1 _]]; try lia.
+  apply E; auto.
+- pose(β := pre m (0^ω) (1^ω)).
+  assert(Hβ: eqn m (0^ω) β). apply eqn_pre_n.
+  apply H in Hβ as [[n0 _]|[_ A]]; try lia.
+  assert(Hβ1: β (m + 1) <> 0). unfold β; now rewrite pre_r.
+  auto.
+Qed.
+
+(*
+It is reckless to assume that ω-infinity implies Dedekind-infinity.
+To see this, suppose we have a sequence (R n) of reckless statements. We will
+construct an ω-infinite subset of the Baire space using R such that
+Dedekind-infinity a reckless statement based on R.
+*)
+Theorem ω_infinite_dedekind_reckless (R : nat -> Prop) :
+  (∀V, Nat >-> V -> Dedekind_infinite V) -> (∃n, R n) \/ (∃n m, R n -> R m).
+Proof.
+pose(inV α := del 1 α = 0^ω \/ R (α 0)).
+pose(V := Baire inV). assert(Hω: Nat >-> V).
+{ exists (λ n, pre 1 (n^ω) (0^ω)); split.
+  - intros n _; simpl; left. extensionality i. now rewrite del_access, pre_r.
+  - intros m n _ _ Hmn. exists 0. rewrite <-(add_0_l 1), ?pre_l. easy. }
+intros H; apply H in Hω as [γ [f [Hγ [f_wd [f_inj f_nsurj]]]]]; clear H.
+assert(Hfγ: f γ ∈ V) by (now apply f_wd). revert Hγ Hfγ.
+simpl; unfold inV. remember (γ 0) as i; remember (f γ 0) as j.
+intros [Hγ|Hγ] [Hfγ|Hfγ].
+- (* Both are of the form n0^ω. *)
+  right. exists i, j. intros Ri.
+  assert(Hbcp: ∀α, ∃n, (n = 0 /\ f α 0 = j) \/ (n <> 0) /\ (f α 0 <> j)).
+  { intros. destruct (eq_dec (f α 0) j).
+    exists 0; now left. exists 1; now right. }
+  apply BCP with (α:=γ) in Hbcp as [m [n Hmn]]. destruct n. (* n must be 0 *)
+  + pose(β := pre m γ (pre 1 (i^ω) (1^ω))).
+    assert(Hβ: β ∈ V).
+    { simpl; right; unfold β. destruct m.
+      now rewrite pre0, pre_l0. now rewrite pre_l0, <-Heqi. }
+    assert(Hfβ: f β ∈ V) by (now apply f_wd).
+    assert(Hγβ: f γ # f β).
+    { apply f_inj; auto. now left. exists (m + 1).
+      unfold β. rewrite pre_r, add_comm; intros C.
+      eapply equal_f in Hγ; unfold del in Hγ. now rewrite Hγ in C. }
+    destruct (Hmn β); try easy.
+    apply eqn_pre_n. destruct H as [_ Hj].
+    destruct Hfβ. 2: now rewrite Hj in H.
+    (* Contradiction: f β now coincides with f γ. *)
+    exfalso. eapply apart_spec. 2: apply Hγβ.
+    extensionality k. destruct k. now rewrite Hj.
+    eapply equal_f in Hfγ; eapply equal_f in H. unfold del in *.
+    now rewrite <-add_1_l, Hfγ, H.
+  + exfalso. destruct (Hmn γ). apply eqn_refl.
+    easy. now rewrite Heqj in H.
+- left; now exists j.
+- left; now exists i.
+- left; now exists j.
+Qed.
+
+End ClassicContradictions.
+
 (* BCPf with a sigma type for the prefix length is inconsistent. *)
 (* From: doc/bcp_sig.pdf *)
 Section BCPsig.
 
+(*
+This is much stronger than BCP since it also implies a choice function. We will
+see it is also stronger than AC_10 since the choice function is not continuous.
+*)
 Definition BCPfsig := ∀(f : seq -> nat) α,
   {n | ∀β, eqn n α β -> f α = f β}.
 
-(* Trying to prove BCPfsig from BCPf fails. *)
-Theorem try_BCPfsig : BCPfsig.
-Proof.
-intros f α. assert(H := BCPf f α).
-(* 'Case analysis on sort Set is not allowed for inductive definition ex.' *)
-(* I am not familiar with the reasons for this. *)
-Fail destruct H.
-Abort.
-
-(* And indeed, we do not want to add this as an axiom! *)
 Theorem not_BCPfsig :
   BCPfsig -> 0 = 1.
 Proof.

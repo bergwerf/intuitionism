@@ -119,22 +119,6 @@ exists (applyn f x); split.
   now apply applyn_apart.
 Qed.
 
-(*
-The converse can be proved classically, but is considered reckless by
-intuitionists. To see this, suppose we have a sequence (R n) of reckless
-statements. We will construct an ω-infinite subset of the Baire space using R
-such that Dedekind-infinity a reckless statement based on R.
-*)
-Theorem ω_infinite_dedekind_reckless (R : nat -> Prop) :
-  (∀V, Nat >-> V -> Dedekind_infinite V) -> (∃n, R n) \/ (∃n m, R n -> R m).
-Proof.
-pose(inV α := del 1 α = 0^ω \/ R (α 0)).
-pose(V := Baire inV). assert(Hω: Nat >-> V).
-{ exists (λ n, pre 1 (n^ω) (0^ω)); split.
-  - intros n _; simpl; left. extensionality i. now rewrite del_access, pre_r.
-  - intros m n _ _ Hmn. exists 0. rewrite <-(add_0_l 1), ?pre_l. admit. }
-Admitted.
-
 End DedekindInfinity.
 
 (* Some results related to apartness of sequences. *)
