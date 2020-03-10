@@ -33,6 +33,15 @@ decimal expansion of π contains 99 consecutive nines. Such statements are then
 called reckless ('vermetel' in Dutch). I do not have a good formalization yet.
 *)
 
+(* LEM is equivalent to the principle of double negation. *)
+Theorem lem_pdn :
+  LEM <-> ∀P, ~~P -> P.
+Proof.
+split; intros PO P.
+intros nnP. now destruct (PO P).
+apply PO. apply nnLEM.
+Qed.
+
 (* LEM is as least as strong as LPO. *)
 Theorem lem_lpo :
   LEM -> LPO.
@@ -80,7 +89,7 @@ Qed.
 Section Apartness.
 
 (* Under LPO sequence apartness is equivalent to inequality. *)
-Theorem lpo_neq_seq_apart α β :
+Theorem lpo_seq_apart_if_neq α β :
   LPO -> α <> β -> seq_apart α β.
 Proof.
 (* Define a sequence which is non-zero where α anb β are not equal. *)
@@ -91,6 +100,14 @@ intros LPO H; destruct (LPO γ) as [[n Hn]|Hn].
 - exists n; intros P; revert Hn; unfold γ.
   replace (α n =? β n) with true by bool_lia; auto.
 - exfalso; apply H; extensionality n. apply Hγ; auto.
+Qed.
+
+(* Under LEM apartness is equivalent to inequality. *)
+Theorem lem_apart_if_neq {A} (α : dom A) (β : dom A) :
+  LEM -> α <> β -> α # β.
+Proof.
+intros. apply lem_pdn; auto.
+intros Hna. now apply apart_spec in Hna.
 Qed.
 
 (* If sequence inequality implies apartness, then we have Markov's Principle. *)
@@ -166,25 +183,47 @@ Variable g_ext : strong_extensional B A g.
 Variable f_inj : injective A B f.
 Variable g_inj : injective B A g.
 
-(* y in B is a chain bottom (there is no x in A s.t. f x = y). *)
-Definition Bbot y := y ∈ B /\ ∀x, x ∈ A -> f x # y.
-
 (* Apply (f ∘ g) n times to y. *)
 Definition stepn := applyn (λ y, f (g y)).
 
+(* y in B is a chain bottom (there is no x in A s.t. f x = y). *)
+Definition B_bot y := y ∈ B /\ ∀x, x ∈ A -> f x # y.
+
 (* x is in a chain with a bottom in B. *)
-Definition B_chain x := {y : dom B & Bbot y & {n | g (stepn y n) = x}}.
+Definition B_chain x := {y : dom B & B_bot y & {n | g (stepn y n) = x}}.
 
 (* x is apart from any B-chain (needed for injectivity). *)
-Definition A_chain_apart x := ∀y, Bbot y -> ∀n, x # g (stepn y n).
+Definition A_chain_apart x := ∀y, B_bot y -> ∀n, x # g (stepn y n).
 
 (* If y steps to x it is not a B-chain bottom (needed for surjectivity). *)
-Definition A_chain_no_Bbot x :=
+Definition A_chain_no_B_bot x :=
   ∀y, (y ∈ B /\ ∃n, g (stepn y n) = x) -> ∃z, z ∈ A /\ f z = y.
+
+(* A_chain_apart and A_chain_no_B_bot are classically equivalent. *)
+Theorem A_chain_apart_no_B_bot :
+  LEM -> ∀x, A_chain_apart x <-> A_chain_no_B_bot x.
+Proof.
+intros PO x; split.
+- intros H y [Hy [n Hn]]. apply lem_pdn; auto. intros Hnex.
+  assert(HyB: B_bot y). { split; auto. intros z Hz.
+    apply lem_apart_if_neq; auto; intros Hzy. apply Hnex; now exists z. }
+  apply H in HyB. assert(Hnn := HyB n). now apply apart_spec in Hnn.
+- intros H y [H1y H2y] n. apply lem_apart_if_neq; auto; intros Hx.
+  destruct (H y) as [z [H1z H2z]]. split; auto. now exists n.
+  apply H2y in H1z. now apply apart_spec in H1z.
+Qed.
+
+(* A B-chain cannot be an A-chain. *)
+Theorem B_chain_A_chain :
+  LEM -> ∀x, B_chain x -> ~A_chain_apart x.
+Proof.
+intros PO x [y Hy [n Hn]] xA. apply xA in Hy.
+assert(Hyn := Hy n). now apply apart_spec in Hyn. 
+Qed.
 
 (* We need to decide the chain type for any x. *)
 Inductive chain x :=
-  | AChain (H1 : A_chain_apart x) (H2 : A_chain_no_Bbot x)
+  | AChain (H1 : A_chain_apart x) (H2 : A_chain_no_B_bot x)
   | BChain (H : B_chain x).
 
 (* We need to be able to decide the chain type. This is stronger than LEM. *)
