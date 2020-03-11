@@ -51,12 +51,6 @@ right; intros n; destruct (eq_dec (α n) 0); auto.
 exfalso; apply H; exists n; auto.
 Qed.
 
-Lemma neq_dec (n m : nat) : {n <> m} + {~(n <> m)}.
-Proof. intros; destruct (eq_dec n m). now right. now left. Qed.
-
-Lemma nat_nltgt_eq n m : ~(n < m) -> ~(n > m) -> n = m.
-Proof. lia. Qed.
-
 Lemma even_false_odd n : even n = false -> Odd n.
 Proof. intros; apply odd_spec; unfold odd; rewrite H; auto. Qed.
 
@@ -70,9 +64,9 @@ intros LPO α. destruct (LPO α).
   1: apply even_spec in E; left.
   2: apply even_false_odd in E; right.
   all: intros k [H1 H2]; replace k with l; auto.
-  all: apply nat_nltgt_eq; intros P.
-  all: try apply L2 in P; auto.
-  all: try apply H1 in P; auto.
+  all: assert(L: ~(l < k) -> ~(l > k) -> l = k) by lia; apply L; intros H.
+  all: try apply L2 in H; auto.
+  all: try apply H1 in H; auto.
 - left; intros k [H1 H2]; exfalso; auto.
 Qed.
 

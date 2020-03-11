@@ -63,8 +63,19 @@ apply equal_f with (x:=n) in Hf.
 unfold γ in Hf. lia.
 Qed.
 
-(* All finite sequences are denumerable. *)
+(*
+The following is a formalization of the fact that FSeq is denumerable and that
+Seq and Bin are equivalent. Although both are quite straightforward on paper,
+the formal proofs require quite a number of definitions and lemmas.
+*)
 Require Import Coq.PArith.BinPosDef.
+Import Pnat.
+
+(*
+All finite sequences are denumerable. We use binary sequences to encode finite
+and infinite sequences rather than using prime factorization (which is often
+used in mathematics).
+*)
 Section FSeqDenumerable.
 
 (* Process xI as S and xO/xH as separator. *)
@@ -76,17 +87,18 @@ Fixpoint pos_to_fseq (p : positive) (acc : nat) : fseq :=
   end.
 
 (* Prepend n 1 bits before p. *)
-Fixpoint prepend_ones n p :=
+Fixpoint repeat_xI n p :=
   match n with
   | 0 => p
-  | S m => prepend_ones m (xI p)
+  | S m => xI (repeat_xI m p)
   end.
 
-(* Inverse of pos_to_fseq. *)
+(* Inverse of pos_to_fseq (injective for s <> []). *)
 Fixpoint fseq_to_pos (s : fseq) :=
   match s with
-  | n :: t => prepend_ones n (xO (fseq_to_pos t))
   | [] => xH
+  | [n] => repeat_xI n xH
+  | n :: t => repeat_xI n (xO (fseq_to_pos t))
   end.
 
 Definition nat_to_fseq n :=
@@ -95,25 +107,89 @@ Definition nat_to_fseq n :=
 Definition fseq_to_nat s :=
   if length s =? 0 then 0 else Pos.to_nat (fseq_to_pos s).
 
+Lemma pos_to_fseq_nil p acc :
+  pos_to_fseq p acc <> [].
+Proof.
+revert acc; induction p; simpl; intros.
+apply IHp. easy. easy.
+Qed.
+
+Lemma pos_to_fseq_neq p tl acc n :
+  acc :: tl <> pos_to_fseq p (acc + S n).
+Proof.
+revert n; induction p; simpl; intros.
+1: replace (S (acc + S n)) with (acc + (S (S n))) by lia; apply IHp.
+all: intros H; injection H; lia.
+Qed.
+
+Corollary pos_to_fseq_neq_S p tl acc : acc :: tl <> pos_to_fseq p (S acc).
+Proof. rewrite <-add_1_r; apply pos_to_fseq_neq. Qed.
+
+Lemma pos_to_fseq_weak_inj p q acc :
+  pos_to_fseq p acc = pos_to_fseq q acc -> p = q.
+Proof.
+revert p acc; induction q; simpl; intros; destruct p; simpl in H.
+- replace q with p. easy. eapply IHq; apply H.
+- exfalso; eapply pos_to_fseq_neq_S. apply H.
+- exfalso; eapply pos_to_fseq_neq_S. apply H.
+- exfalso; eapply pos_to_fseq_neq_S. symmetry; apply H.
+- replace q with p. easy. eapply IHq. injection H; intros E; apply E.
+- injection H; intros. exfalso; eapply pos_to_fseq_nil. symmetry; apply H0.
+- exfalso; eapply pos_to_fseq_neq_S. symmetry; apply H.
+- injection H; intros. exfalso; eapply pos_to_fseq_nil. apply H0.
+- easy.
+Qed.
+
 Lemma nat_to_fseq_weak_inj :
   weak_injective Nat FSeq nat_to_fseq.
 Proof.
-Admitted.
+intros m n _ _. unfold nat_to_fseq. destruct m, n; auto.
+- cbn; intros; exfalso; eapply pos_to_fseq_nil. symmetry; apply H.
+- cbn; intros; exfalso; eapply pos_to_fseq_nil. apply H.
+- replace (S m =? 0) with false by easy; replace (S n =? 0) with false by easy.
+  intros; apply pos_to_fseq_weak_inj in H. now apply Nat2Pos.inj.
+Qed.
 
-Lemma fseq_to_nat_inv s :
+Lemma pos_to_fseq_repeat_xI_xH m n :
+  pos_to_fseq (repeat_xI m xH) n = [m + n].
+Proof.
+revert n; induction m; simpl; intros; auto.
+rewrite IHm. now replace (m + S n) with (S (m + n)) by lia.
+Qed.
+
+Lemma pos_to_fseq_repeat_xI_xO m n p :
+  pos_to_fseq (repeat_xI m (xO p)) n = (m + n) :: pos_to_fseq p 0.
+Proof.
+revert n; induction m; simpl; intros; auto.
+rewrite IHm. now replace (m + S n) with (S (m + n)) by lia.
+Qed.
+
+Lemma pos_to_fseq_inv s :
+  s <> [] -> pos_to_fseq (fseq_to_pos s) 0 = s.
+Proof.
+induction s; simpl. easy. destruct s.
+- now rewrite pos_to_fseq_repeat_xI_xH, add_0_r.
+- rewrite pos_to_fseq_repeat_xI_xO, add_0_r. rewrite IHs; easy.
+Qed.
+
+Lemma nat_to_fseq_inv s :
   nat_to_fseq (fseq_to_nat s) = s.
 Proof.
-Admitted.
+destruct s. easy. unfold nat_to_fseq, fseq_to_nat.
+replace (length _ =? 0) with false by easy.
+edestruct Pos2Nat.is_succ; rewrite H at 1.
+replace (S _ =? 0) with false by easy; clear H x.
+rewrite Pos2Nat.id. now apply pos_to_fseq_inv.
+Qed.
 
 Theorem fseq_denumerable :
   denumerable FSeq.
 Proof.
-(* The classic approach is to use prime factorization. *)
 exists nat_to_fseq; split. easy. split.
 - intros n m nN mN Hnm. simpl in *; unfold dec_apart in *.
   intros H; apply Hnm. apply nat_to_fseq_weak_inj; auto.
 - intros s _. exists (fseq_to_nat s); split.
-  apply I. apply fseq_to_nat_inv.
+  apply I. apply nat_to_fseq_inv.
 Qed.
 
 End FSeqDenumerable.
@@ -124,7 +200,6 @@ Bin (Cantor space) and vice versa.
 *)
 Section InjSeqBin.
 
-(* Trivial direction *)
 Theorem bin_preceq_seq :
   Bin ⪯' Seq.
 Proof.
@@ -132,26 +207,70 @@ pose(f (α : seq) := α). exists f; repeat split.
 intros α β Hα Hβ. now unfold f. easy.
 Qed.
 
-(* Hard direction *)
-Fixpoint pos_to_list (p : positive) :=
-  match p with
-  | xI q => 1 :: pos_to_list q
-  | xO q => 0 :: pos_to_list q
-  | xH => [1]
+Fixpoint nth_bit n (p : positive) :=
+  match n with
+  | 0 =>
+    match p with
+    | xI _ => 1
+    | _ => 0
+    end
+  | S m =>
+    match p with
+    | xI q => nth_bit m q
+    | xO q => nth_bit m q
+    | xH => 0
+    end
   end.
 
-Definition seq_to_bin α n := nth n (rev (pos_to_list (fseq_to_pos ⟨α;n⟩))) 0.
+Definition seq_to_bin α n := nth_bit n (fseq_to_pos (rev ⟨α;n⟩)).
+
+Lemma neq_dec (n m : nat) : {n <> m} + {~(n <> m)}.
+Proof. intros; destruct (eq_dec n m). now right. now left. Qed.
+
+Lemma nth_bit_leq_1 n p : nth_bit n p <= 1.
+Proof. revert p; induction n; simpl; destruct p; try lia; apply IHn. Qed.
+
+Lemma seq_to_bin_wd α :
+  seq_to_bin α ∈ Bin.
+Proof.
+intros m; simpl. induction m; simpl; auto. repeat bool_to_Prop; auto.
+unfold seq_to_bin. apply nth_bit_leq_1.
+Qed.
+
+(* If α and β in Seq are first apart at n, then their image is apart at: *)
+Definition to_bin_apart_at (α β : seq) n :=
+  fold_right add 0 ⟨α;n⟩ + n + min (α n) (β n).
+
+(* If α and β in Bin are first apart at n, then their pre-image is apart at: *)
+Definition to_seq_apart_at (α : seq) n :=
+  fold_right (λ bit acc, acc + (1 - bit)) 0 ⟨α;n⟩.
+
+Lemma to_bin_apart_at_works α β n :
+  (∀m, m < n -> α m = β m) -> α n <> β n ->
+  seq_to_bin α (to_bin_apart_at α β n) <> seq_to_bin β (to_bin_apart_at α β n).
+Proof.
+Admitted.
+
+Lemma to_seq_apart_at_works α β n :
+  (∀m, m < n -> seq_to_bin α m = seq_to_bin β m) ->
+  seq_to_bin α n <> seq_to_bin β n ->
+  α (to_seq_apart_at α n) <> β (to_seq_apart_at α n).
+Proof.
+Admitted.
 
 Theorem seq_preceq_bin :
   Seq ⪯' Bin.
 Proof.
 exists seq_to_bin; repeat split.
-- intros α Hα. admit.
-- intros α β _ _ Hαβ.
-  apply epsilon_smallest in Hαβ as [n Hn].
-  (* We then find the first location at which the image is apart. *)
-  admit. admit.
-- admit.
-Admitted.
+- intros α _. apply seq_to_bin_wd.
+- intros α β _ _ H.
+  apply epsilon_smallest in H as [n [H1n H2n]]. 2: intros; apply neq_dec.
+  exists (to_bin_apart_at α β n). apply to_bin_apart_at_works; auto.
+  intros. apply H2n in H; lia.
+- intros α β _ _ H.
+  apply epsilon_smallest in H as [n [H1n H2n]]. 2: intros; apply neq_dec.
+  exists (to_seq_apart_at α n). apply to_seq_apart_at_works; auto.
+  intros. apply H2n in H; lia.
+Qed.
 
 End InjSeqBin.
