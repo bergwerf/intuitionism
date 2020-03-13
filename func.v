@@ -234,15 +234,7 @@ Qed.
 Definition skipn n α := n + fold_right add 0 ⟨α;n⟩.
 
 (* Count zeros in the first n elements of α. *)
-Fixpoint count n α :=
-  match n with
-  | 0 => 0
-  | S m =>
-    match α m with
-    | 0 => S (count m α)
-    | S _ => count m α
-    end
-  end.
+Fixpoint count n α := fold_right (λ b j, if b =? 0 then S j else j) 0 ⟨α;n⟩.
 
 (* If α and β are first apart at n, their image is apart at: *)
 Definition apart_at (α β : seq) n := skipn n α + (1 + min (α n) (β n)).
@@ -279,27 +271,52 @@ rewrite skipn_f, R, skipn_f. destruct (min_dec (α n) (β n)); rewrite e.
 - apply neq_sym. apply different_at with (k:=α n - β n - 1). lia.
 Qed.
 
+Lemma count_shift α n :
+  pred (count n (f 0 0 α)) = count (n - (1 + α 0)) (f 0 0 (del 1 α)).
+Proof.
+Admitted.
+
+Lemma f_del1_sub α n :
+  f 0 0 (del 1 α) (n - (1 + α 0)) = f 0 0 α n.
+Proof.
+Admitted.
+
+Lemma f_del1_add α n :
+  f 0 0 (del 1 α) n = f 0 0 α (n + (1 + α 0)).
+Proof.
+Admitted.
+
+Lemma f_eq0 α β n N :
+  eqn n (f 0 0 α) (f 0 0 β) ->
+  N = pred (count n (f 0 0 α)) ->
+  α N = β N -> α 0 = β 0.
+Proof.
+Admitted.
+
+Lemma f_ext_base α β n :
+  pred (count n (f 0 0 α)) = 0 -> α 0 = β 0 -> f 0 0 α n = f 0 0 β n.
+Proof.
+Admitted.
+
 Lemma f_ext (α β : dom Seq) n :
   eqn n (f 0 0 α) (f 0 0 β) -> f 0 0 α n <> f 0 0 β n -> α # β.
 Proof.
 intros Heq Hneq. exists(pred (count n (f 0 0 α))).
+intros H; apply Hneq; clear Hneq.
 remember (pred (count n (f 0 0 α))) as N eqn:C.
-revert C Hneq Heq; revert α β n. induction N; intros.
-- (* n < skip 1 α, hence α 0 <> β 0 *)
-  admit.
-- (* Ckeck if we are 'in front of' the inequality. *)
-  destruct (le_lt_dec (skipn 1 α) n).
-  + (* Nope: shift α and β and use IHN. *)
-    replace (α (S N)) with (del 1 α N). replace (β (S N)) with (del 1 β N).
-    apply IHN with (n:=n - (skipn 1 α)).
-    * admit.
-    * admit.
-    * admit.
-    * unfold del; now rewrite add_1_l.
-    * unfold del; now rewrite add_1_l.
-  + (* Yes: this covered in the base case. C yields a contradiction. *) 
-    admit.
-Admitted.
+revert C H Heq; revert α β n. induction N; intros.
+- now apply f_ext_base.
+- (* Induction by shifting α and β. *)
+  assert(R: α 0 = β 0). { eapply f_eq0. apply Heq. apply C. easy. }
+  replace (f 0 0 α n) with (f 0 0 (del 1 α) (n - (1 + α 0))).
+  replace (f 0 0 β n) with (f 0 0 (del 1 β) (n - (1 + α 0))).
+  apply IHN.
+  + now rewrite <-count_shift, <-C. 
+  + unfold del; now rewrite add_1_l.
+  + intros m Hm. rewrite ?f_del1_add, ?add_assoc, <-R. apply Heq. lia.
+  + now rewrite R, f_del1_sub.
+  + apply f_del1_sub.
+Qed.
 
 End SeqToBin.
 
