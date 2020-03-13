@@ -196,8 +196,8 @@ End FSeqDenumerable.
 
 (*
 It is possible to construct an injection from Seq (Baire space) to
-Bin (Cantor space). We use the same scheme as in the previous part but without
-the positive type.
+Bin (Cantor space). We use the same scheme as in the previous part, but without
+the positive type (which we needed to encode and decode nat).
 *)
 Module SeqToBin.
 
@@ -234,34 +234,71 @@ Qed.
 Definition skipn n α := n + fold_right add 0 ⟨α;n⟩.
 
 (* Count zeros in the first n elements of α. *)
-Definition count n α := fold_right (λ b i, if b =? 0 then S i else i) 0 ⟨α;n⟩.
+Fixpoint count n α :=
+  match n with
+  | 0 => 0
+  | S m =>
+    match α m with
+    | 0 => S (count m α)
+    | S _ => count m α
+    end
+  end.
 
 (* If α and β are first apart at n, their image is apart at: *)
-Definition apart_at (α β : seq) n := skipn n α + min (α n) (β n).
+Definition apart_at (α β : seq) n := skipn n α + (1 + min (α n) (β n)).
 
-Lemma f_skipn α m n :
+Lemma f_count_down α i n k : f i (α n) α (α n + k) = f i 0 α k.
+Proof. induction (α n); simpl; auto. Qed.
+
+Lemma skipn_S α n : skipn (S n) α = skipn n α + 1 + α n.
+Proof. unfold skipn; simpl. lia. Qed.
+
+Lemma skipn_f α m n :
   f 0 0 α (skipn m α + n) = f m 0 α n.
 Proof.
-Admitted.
+revert n; induction m; intros. easy. rewrite skipn_S; simpl.
+replace (skipn m α + 1 + α m + n) with (skipn m α + (1 + (α m + n))) by lia.
+rewrite IHm; simpl. now rewrite f_count_down.
+Qed.
 
-Lemma eqn_skipn α β n :
-  eqn n α β -> skipn n α = skipn n β.
+Lemma different_at α β n k :
+  β n = α n + S k -> f n 0 α (1 + α n) <> f n 0 β (1 + α n).
 Proof.
-Admitted.
+simpl. intros R; rewrite R; clear R.
+induction (α n); simpl; auto.
+Qed.
 
-Lemma apart_at_valid α β n :
-  eqn n α β -> α n <> β n ->
-  f 0 0 α (apart_at α β n) <> f 0 0 β (apart_at α β n).
+Lemma f_inj α β n :
+  eqn n α β -> α n <> β n -> exists m, f 0 0 α m <> f 0 0 β m.
 Proof.
-intros H1 H2; unfold apart_at.
-rewrite f_skipn, eqn_skipn with (β:=β), f_skipn; auto.
-Admitted.
+intros H1 H2; exists(apart_at α β n); unfold apart_at.
+assert(R: skipn n α = skipn n β).
+{ unfold skipn. now replace ⟨β;n⟩ with ⟨α;n⟩ by (now apply eqn_eq_get). }
+rewrite skipn_f, R, skipn_f. destruct (min_dec (α n) (β n)); rewrite e.
+- apply different_at with (k:=β n - α n - 1). lia.
+- apply neq_sym. apply different_at with (k:=α n - β n - 1). lia.
+Qed.
 
-Lemma apart_after_count α β n :
-  eqn n (f 0 0 α) (f 0 0 β) -> f 0 0 α n <> f 0 0 β n ->
-  α (count n (f 0 0 α)) <> β (count n (f 0 0 α)).
+Lemma f_ext (α β : dom Seq) n :
+  eqn n (f 0 0 α) (f 0 0 β) -> f 0 0 α n <> f 0 0 β n -> α # β.
 Proof.
-intros H1 H2 H. apply H2; clear H2.
+intros Heq Hneq. exists(pred (count n (f 0 0 α))).
+remember (pred (count n (f 0 0 α))) as N eqn:C.
+revert C Hneq Heq; revert α β n. induction N; intros.
+- (* n < skip 1 α, hence α 0 <> β 0 *)
+  admit.
+- (* Ckeck if we are 'in front of' the inequality. *)
+  destruct (le_lt_dec (skipn 1 α) n).
+  + (* Nope: shift α and β and use IHN. *)
+    replace (α (S N)) with (del 1 α N). replace (β (S N)) with (del 1 β N).
+    apply IHN with (n:=n - (skipn 1 α)).
+    * admit.
+    * admit.
+    * admit.
+    * unfold del; now rewrite add_1_l.
+    * unfold del; now rewrite add_1_l.
+  + (* Yes: this covered in the base case. C yields a contradiction. *) 
+    admit.
 Admitted.
 
 End SeqToBin.
@@ -280,11 +317,10 @@ exists (SeqToBin.f 0 0); repeat split.
 - intros α _. apply SeqToBin.f_wd.
 - intros α β _ _ H.
   apply epsilon_smallest in H as [n [H1n H2n]]. 2: intros; apply neq_dec.
-  exists (SeqToBin.apart_at α β n). apply SeqToBin.apart_at_valid; auto.
+  apply SeqToBin.f_inj with (n:=n); auto.
   intros m Hm. apply H2n in Hm; lia.
 - intros α β _ _ H.
   apply epsilon_smallest in H as [n [H1n H2n]]. 2: intros; apply neq_dec.
-  exists (SeqToBin.count n (SeqToBin.f 0 0 α)).
-  apply SeqToBin.apart_after_count; auto.
+  apply SeqToBin.f_ext with (n:=n); auto.
   intros m Hm. apply H2n in Hm; lia.
 Qed.
