@@ -72,9 +72,9 @@ Require Import Coq.PArith.BinPosDef.
 Import Pnat.
 
 (*
-All finite sequences are denumerable. We use binary sequences to encode finite
-and infinite sequences rather than using prime factorization (which is often
-used in mathematics).
+All finite sequences are denumerable. We translate finite sequences to a binary
+sequence (of type positive) and encode this as a number rather than using prime
+factorization (which is often used in mathematics).
 *)
 Section FSeqDenumerable.
 
@@ -172,7 +172,7 @@ induction s; simpl. easy. destruct s.
 - rewrite pos_to_fseq_repeat_xI_xO, add_0_r. rewrite IHs; easy.
 Qed.
 
-Lemma nat_to_fseq_inv s :
+Lemma nat_to_fseq_involutive s :
   nat_to_fseq (fseq_to_nat s) = s.
 Proof.
 destruct s. easy. unfold nat_to_fseq, fseq_to_nat.
@@ -189,16 +189,82 @@ exists nat_to_fseq; split. easy. split.
 - intros n m nN mN Hnm. simpl in *; unfold dec_apart in *.
   intros H; apply Hnm. apply nat_to_fseq_weak_inj; auto.
 - intros s _. exists (fseq_to_nat s); split.
-  apply I. apply nat_to_fseq_inv.
+  apply I. apply nat_to_fseq_involutive.
 Qed.
 
 End FSeqDenumerable.
 
 (*
 It is possible to construct an injection from Seq (Baire space) to
-Bin (Cantor space) and vice versa.
+Bin (Cantor space). We use the same scheme as in the previous part but without
+the positive type.
 *)
-Section InjSeqBin.
+Module SeqToBin.
+
+(*
+We determine the n-th value by counting down starting with i = 0 where i
+tracks the next index of α to check. The difference with fseq_to_pos is that we
+always start with 0 (this makes the algorithm simpler). To avoid a custom
+termination proof we count down one by one in c.
+*)
+Fixpoint f i c α n :=
+  match c with
+  | 0 =>
+    (* separator *)
+    match n with
+    | 0 => 0
+    | S n' =>  f (S i) (α i) α n'
+    end
+  | S c' =>
+    (* counting down *)
+    match n with
+    | 0 => 1
+    | S n' => f i c' α n'
+    end
+  end.
+
+Lemma f_wd i c α :
+  f i c α ∈ Bin.
+Proof.
+intros m; simpl. induction m; simpl; auto. repeat bool_to_Prop; auto. clear IHm.
+revert i c; induction m; simpl; intros; destruct c; try lia; apply IHm.
+Qed.
+
+(* Skip n numbers in the image of α. *)
+Definition skipn n α := n + fold_right add 0 ⟨α;n⟩.
+
+(* Count zeros in the first n elements of α. *)
+Definition count n α := fold_right (λ b i, if b =? 0 then S i else i) 0 ⟨α;n⟩.
+
+(* If α and β are first apart at n, their image is apart at: *)
+Definition apart_at (α β : seq) n := skipn n α + min (α n) (β n).
+
+Lemma f_skipn α m n :
+  f 0 0 α (skipn m α + n) = f m 0 α n.
+Proof.
+Admitted.
+
+Lemma eqn_skipn α β n :
+  eqn n α β -> skipn n α = skipn n β.
+Proof.
+Admitted.
+
+Lemma apart_at_valid α β n :
+  eqn n α β -> α n <> β n ->
+  f 0 0 α (apart_at α β n) <> f 0 0 β (apart_at α β n).
+Proof.
+intros H1 H2; unfold apart_at.
+rewrite f_skipn, eqn_skipn with (β:=β), f_skipn; auto.
+Admitted.
+
+Lemma apart_after_count α β n :
+  eqn n (f 0 0 α) (f 0 0 β) -> f 0 0 α n <> f 0 0 β n ->
+  α (count n (f 0 0 α)) <> β (count n (f 0 0 α)).
+Proof.
+intros H1 H2 H. apply H2; clear H2.
+Admitted.
+
+End SeqToBin.
 
 Theorem bin_preceq_seq :
   Bin ⪯' Seq.
@@ -207,70 +273,18 @@ pose(f (α : seq) := α). exists f; repeat split.
 intros α β Hα Hβ. now unfold f. easy.
 Qed.
 
-Fixpoint nth_bit n (p : positive) :=
-  match n with
-  | 0 =>
-    match p with
-    | xI _ => 1
-    | _ => 0
-    end
-  | S m =>
-    match p with
-    | xI q => nth_bit m q
-    | xO q => nth_bit m q
-    | xH => 0
-    end
-  end.
-
-Definition seq_to_bin α n := nth_bit n (fseq_to_pos (rev ⟨α;n⟩)).
-
-Lemma neq_dec (n m : nat) : {n <> m} + {~(n <> m)}.
-Proof. intros; destruct (eq_dec n m). now right. now left. Qed.
-
-Lemma nth_bit_leq_1 n p : nth_bit n p <= 1.
-Proof. revert p; induction n; simpl; destruct p; try lia; apply IHn. Qed.
-
-Lemma seq_to_bin_wd α :
-  seq_to_bin α ∈ Bin.
-Proof.
-intros m; simpl. induction m; simpl; auto. repeat bool_to_Prop; auto.
-unfold seq_to_bin. apply nth_bit_leq_1.
-Qed.
-
-(* If α and β in Seq are first apart at n, then their image is apart at: *)
-Definition to_bin_apart_at (α β : seq) n :=
-  fold_right add 0 ⟨α;n⟩ + n + min (α n) (β n).
-
-(* If α and β in Bin are first apart at n, then their pre-image is apart at: *)
-Definition to_seq_apart_at (α : seq) n :=
-  fold_right (λ bit acc, acc + (1 - bit)) 0 ⟨α;n⟩.
-
-Lemma to_bin_apart_at_works α β n :
-  (∀m, m < n -> α m = β m) -> α n <> β n ->
-  seq_to_bin α (to_bin_apart_at α β n) <> seq_to_bin β (to_bin_apart_at α β n).
-Proof.
-Admitted.
-
-Lemma to_seq_apart_at_works α β n :
-  (∀m, m < n -> seq_to_bin α m = seq_to_bin β m) ->
-  seq_to_bin α n <> seq_to_bin β n ->
-  α (to_seq_apart_at α n) <> β (to_seq_apart_at α n).
-Proof.
-Admitted.
-
 Theorem seq_preceq_bin :
   Seq ⪯' Bin.
 Proof.
-exists seq_to_bin; repeat split.
-- intros α _. apply seq_to_bin_wd.
+exists (SeqToBin.f 0 0); repeat split.
+- intros α _. apply SeqToBin.f_wd.
 - intros α β _ _ H.
   apply epsilon_smallest in H as [n [H1n H2n]]. 2: intros; apply neq_dec.
-  exists (to_bin_apart_at α β n). apply to_bin_apart_at_works; auto.
-  intros. apply H2n in H; lia.
+  exists (SeqToBin.apart_at α β n). apply SeqToBin.apart_at_valid; auto.
+  intros m Hm. apply H2n in Hm; lia.
 - intros α β _ _ H.
   apply epsilon_smallest in H as [n [H1n H2n]]. 2: intros; apply neq_dec.
-  exists (to_seq_apart_at α n). apply to_seq_apart_at_works; auto.
-  intros. apply H2n in H; lia.
+  exists (SeqToBin.count n (SeqToBin.f 0 0 α)).
+  apply SeqToBin.apart_after_count; auto.
+  intros m Hm. apply H2n in Hm; lia.
 Qed.
-
-End InjSeqBin.

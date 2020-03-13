@@ -97,18 +97,6 @@ Definition Seq := Baire fullset.
 
 End BaireSpace.
 
-(* Splitting lemmas *)
-Section SplitLemmas.
-
-Lemma app_split (a b x y : fseq) : a = b -> x = y -> a ++ x = b ++ y.
-Proof. intros; subst; auto. Qed.
-
-Lemma cons_split h1 h2 (t1 t2 : fseq) :
-  h1 = h2 -> t1 = t2 -> h1 :: t1 = h2 :: t2.
-Proof. intros; subst; auto. Qed.
-
-End SplitLemmas.
-
 (* Facts about the coincedence relation *)
 Section Coincedence.
 

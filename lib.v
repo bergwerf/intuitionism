@@ -16,6 +16,20 @@ Arguments exist {_ _}.
 (* Generate boolean equality for lists. *)
 Scheme Equality for list.
 
+(* Some additional helper lemmas. *)
+Section Lemmas.
+
+Lemma neq_dec (n m : nat) : {n <> m} + {~(n <> m)}.
+Proof. intros; destruct (eq_dec n m). now right. now left. Qed.
+
+Lemma app_split {T} (a b x y : list T) : a = b -> x = y -> a ++ x = b ++ y.
+Proof. intros; subst; auto. Qed.
+
+Lemma cons_split {T} v w (t s : list T) :  v = w -> t = s -> v :: t = w :: s.
+Proof. intros; subst; auto. Qed.
+
+End Lemmas.
+
 (* Some first results in propositional logic. *)
 Section PropositionalLogic.
 
