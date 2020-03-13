@@ -272,12 +272,12 @@ rewrite skipn_f, R, skipn_f. destruct (min_dec (α n) (β n)); rewrite e.
 Qed.
 
 Lemma count_shift α n :
-  pred (count n (f 0 0 α)) = count (n - (1 + α 0)) (f 0 0 (del 1 α)).
+  count n (f 0 0 α) = S (count (n - (1 + α 0)) (f 0 0 (del 1 α))).
 Proof.
 Admitted.
 
 Lemma f_del1_sub α n :
-  f 0 0 (del 1 α) (n - (1 + α 0)) = f 0 0 α n.
+  1 + α 0 <= n -> f 0 0 α n = f 0 0 (del 1 α) (n - (1 + α 0)).
 Proof.
 Admitted.
 
@@ -286,7 +286,7 @@ Lemma f_del1_add α n :
 Proof.
 Admitted.
 
-Lemma f_eq0 α β n N :
+Lemma f_ext_eq0 α β n N :
   eqn n (f 0 0 α) (f 0 0 β) ->
   N = pred (count n (f 0 0 α)) ->
   α N = β N -> α 0 = β 0.
@@ -295,6 +295,11 @@ Admitted.
 
 Lemma f_ext_base α β n :
   pred (count n (f 0 0 α)) = 0 -> α 0 = β 0 -> f 0 0 α n = f 0 0 β n.
+Proof.
+Admitted.
+
+Lemma f_ext_contra α n :
+  pred (count n (f 0 0 α)) > 0 -> n > α 0.
 Proof.
 Admitted.
 
@@ -307,15 +312,18 @@ remember (pred (count n (f 0 0 α))) as N eqn:C.
 revert C H Heq; revert α β n. induction N; intros.
 - now apply f_ext_base.
 - (* Induction by shifting α and β. *)
-  assert(R: α 0 = β 0). { eapply f_eq0. apply Heq. apply C. easy. }
-  replace (f 0 0 α n) with (f 0 0 (del 1 α) (n - (1 + α 0))).
-  replace (f 0 0 β n) with (f 0 0 (del 1 β) (n - (1 + α 0))).
-  apply IHN.
-  + now rewrite <-count_shift, <-C. 
-  + unfold del; now rewrite add_1_l.
-  + intros m Hm. rewrite ?f_del1_add, ?add_assoc, <-R. apply Heq. lia.
-  + now rewrite R, f_del1_sub.
-  + apply f_del1_sub.
+  assert(R: α 0 = β 0). { eapply f_ext_eq0. apply Heq. apply C. easy. }
+  destruct (le_dec (1 + α 0) n).
+  + replace (f 0 0 α n) with (f 0 0 (del 1 α) (n - (1 + α 0))).
+    replace (f 0 0 β n) with (f 0 0 (del 1 β) (n - (1 + α 0))).
+    apply IHN.
+    * rewrite count_shift in C; simpl in C. simpl; rewrite  <-C. easy. 
+    * unfold del; now rewrite add_1_l.
+    * intros m Hm. rewrite ?f_del1_add, ?add_assoc, <-R. apply Heq. lia.
+    * rewrite R; symmetry; apply f_del1_sub. now rewrite <-R.
+    * symmetry; now apply f_del1_sub.
+  + (* Yields a contradiction with C. *)
+    exfalso; apply n0. apply f_ext_contra. rewrite <-C; lia.
 Qed.
 
 End SeqToBin.
