@@ -34,8 +34,8 @@ intros LE. exists (λ α, α); split.
 Qed.
 
 (* Injection to a smaller bound is impossible. *)
-Theorem τ_noq_preceq m n :
-  n < m -> τ 0 m ≺ τ 0 n.
+Theorem τ_not_preceq m n :
+  m < n -> τ 0 m ≺ τ 0 n.
 Proof.
 intros LT [f [f_wd f_inj]].
 Admitted.
