@@ -28,7 +28,7 @@ Definition bijective A B f := injective A B f /\ surjective A B f.
 (* Notation for 'there exists an injective mapping from A to B'. *)
 Definition preceq A B f := well_defined A B f /\ injective A B f.
 Notation "A ≼ B" := (∃f, preceq A B f) (at level 50).
-Notation "A ⋠ B" := (~(A ≼ B)) (at level 50).
+Notation "A ≺ B" := (~(B ≼ A)) (at level 50).
 
 (* Notation for 'there exists an extensional injective mapping from A to B'. *)
 Definition preceqext A B f := preceq A B f /\ strong_extensional A B f.
