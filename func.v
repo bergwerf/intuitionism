@@ -27,11 +27,12 @@ Definition bijective A B f := injective A B f /\ surjective A B f.
 
 (* Notation for 'there exists an injective mapping from A to B'. *)
 Definition preceq A B f := well_defined A B f /\ injective A B f.
-Notation "A ⪯ B" := (∃f, preceq A B f) (at level 50).
+Notation "A ≼ B" := (∃f, preceq A B f) (at level 50).
+Notation "A ⋠ B" := (~(A ≼ B)) (at level 50).
 
 (* Notation for 'there exists an extensional injective mapping from A to B'. *)
 Definition preceqext A B f := preceq A B f /\ strong_extensional A B f.
-Notation "A ⪯' B" := (∃f, preceqext A B f) (at level 50).
+Notation "A ≼' B" := (∃f, preceqext A B f) (at level 50).
 
 (* Notation for 'there exists a one-to-one mapping between A and B'. *)
 Definition equivalent A B := ∃f, well_defined A B f /\ bijective A B f.
@@ -263,7 +264,7 @@ Qed.
 Lemma f_inj α β n :
   eqn n α β -> α n <> β n -> exists m, f 0 0 α m <> f 0 0 β m.
 Proof.
-intros H1 H2; exists(apart_at α β n); unfold apart_at.
+intros H1 H2; exists (apart_at α β n); unfold apart_at.
 assert(R: skipn n α = skipn n β).
 { unfold skipn. now replace ⟨β;n⟩ with ⟨α;n⟩ by (now apply eqn_eq_get). }
 rewrite skipn_f, R, skipn_f. destruct (min_dec (α n) (β n)); rewrite e.
@@ -306,7 +307,7 @@ Admitted.
 Lemma f_ext (α β : dom Seq) n :
   eqn n (f 0 0 α) (f 0 0 β) -> f 0 0 α n <> f 0 0 β n -> α # β.
 Proof.
-intros Heq Hneq. exists(pred (count n (f 0 0 α))).
+intros Heq Hneq. exists (pred (count n (f 0 0 α))).
 intros H; apply Hneq; clear Hneq.
 remember (pred (count n (f 0 0 α))) as N eqn:C.
 revert C H Heq; revert α β n. induction N; intros.
@@ -329,14 +330,14 @@ Qed.
 End SeqToBin.
 
 Theorem bin_preceq_seq :
-  Bin ⪯' Seq.
+  Bin ≼' Seq.
 Proof.
 pose(f (α : seq) := α). exists f; repeat split.
 intros α β Hα Hβ. now unfold f. easy.
 Qed.
 
 Theorem seq_preceq_bin :
-  Seq ⪯' Bin.
+  Seq ≼' Bin.
 Proof.
 exists (SeqToBin.f 0 0); repeat split.
 - intros α _. apply SeqToBin.f_wd.

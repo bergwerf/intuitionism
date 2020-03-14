@@ -21,7 +21,7 @@ The Equivalence theorem (often called the Cantor–Schröder–Bernstein theorem
 the sets A and B with strong requirements. A proof that relies on decidability
 of the chain type for any x in A is included in this file.
 *)
-Definition EquivalenceTheorem A B := A ⪯ B /\ B ⪯' A -> A === B.
+Definition EquivalenceTheorem A B := A ≼ B /\ B ≼' A -> A === B.
 
 (*
 Some statements are weaker than the previous principles, yet intuitionists still
@@ -101,7 +101,7 @@ Qed.
 
 (* If V is Dedekind infinite, then V is as least as big as Nat. *)
 Theorem dedekind_ω_inifinite V :
-  Dedekind_infinite V -> Nat ⪯ V.
+  Dedekind_infinite V -> Nat ≼ V.
 Proof.
 intros [x [f [Vx [f_wd [f_inj f_y]]]]].
 (* We define an injection by repeated application of f. *)
