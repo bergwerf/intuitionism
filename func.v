@@ -235,7 +235,7 @@ Qed.
 Definition skipn n α := n + fold_right add 0 ⟨α;n⟩.
 
 (* Count zeros in the first n elements of α. *)
-Fixpoint count n α := fold_right (λ b j, if b =? 0 then S j else j) 0 ⟨α;n⟩.
+Definition count n α := fold_right (λ b j, if b =? 0 then S j else j) 0 ⟨α;n⟩.
 
 (* If α and β are first apart at n, their image is apart at: *)
 Definition apart_at (α β : seq) n := skipn n α + (1 + min (α n) (β n)).
