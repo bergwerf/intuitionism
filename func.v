@@ -237,7 +237,18 @@ Definition skipn n α := n + fold_right add 0 ⟨α;n⟩.
 (* Count zeros in the first n elements of α. *)
 Definition count n α := fold_right (λ b j, if b =? 0 then S j else j) 0 ⟨α;n⟩.
 
-(* If α and β are first apart at n, their image is apart at: *)
+(* Probe for proving extensionality. Perhaps this is easier than count. *)
+Fixpoint probe α β i c n :=
+  match n with
+  | 0 => (false, i)
+  | S m =>
+    match (α c), (β c) with
+    | 0, 0 => probe α β (S c) (S i) m
+    | S _, S _ => probe α β (S c) i m
+    | _, _ => (true, i)
+    end
+  end.
+
 Definition apart_at (α β : seq) n := skipn n α + (1 + min (α n) (β n)).
 
 Lemma f_count_down α i n k : f i (α n) α (α n + k) = f i 0 α k.
