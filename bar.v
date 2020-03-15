@@ -206,11 +206,10 @@ Variable F : fan.
 Theorem fan_to_nat_image (f : dom F -> nat) :
   ∃image, ∀α, α ∈ F -> In (f α) image.
 Proof.
-assert(H := BCPext _ _ (fully_defined_aset_dom f)).
 pose(B s := ∃n, ∀β, β ∈ F -> ⟨β;length s⟩ = s -> f β = n).
-assert(HB: barred F B).
-{ intros α Hα. apply H in Hα as [m [n Hmn]]. exists m, n; intros.
-  apply Hmn; auto. apply eqn_eq_get. now apply get_eq_r in H1. }
+assert(H := BCPfext f). assert(HB: barred F B).
+{ intros α Hα. apply H in Hα as [m Hm]. exists m, (f α); intros.
+  symmetry; apply Hm; auto. apply eqn_eq_get. now apply get_eq_r in H1. }
 apply fan_theorem in HB as [b [bB Hb]].
 assert(choiceH: ∀s, In s b -> ∃n, ∀β, β ∈ F -> ⟨β;length s⟩ = s -> f β = n).
 { intros s Hs. eapply Forall_forall in bB. 2: apply Hs. apply bB. }
@@ -242,20 +241,6 @@ exists (map c b); split.
   now apply in_map. now rewrite get_length.
 Qed.
 
-(* To use these results it is useful to have a max function over lists. *)
-Section Maximum.
-
-Definition upb s := fold_right max 0 s.
-
-Lemma upb_leq s n :
-  In n s -> n <= upb s.
-Proof.
-induction s; simpl. easy. intros [H|H].
-subst; lia. apply IHs in H. lia.
-Qed.
-
-End Maximum.
-
 (* No fan is denumerable. *)
 Theorem fan_not_denumerable :
   ~denumerable F.
@@ -265,7 +250,7 @@ apply nat_to_fan_preimage in f_surj as [preI [_ Hpre]].
 (* Take a number outside of the given pre-image and contradict f_inj. *)
 pose(N := upb preI + 1). destruct (Hpre (f N)) as [n [H1n H2n]].
 now apply f_wd. apply f_inj in H2n; try easy; subst.
-unfold N in H1n. apply upb_leq in H1n. lia.
+unfold N in H1n. apply in_upb_le in H1n. lia.
 Qed.
 
 End FanFunctions.

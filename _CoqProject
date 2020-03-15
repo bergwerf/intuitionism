@@ -7,10 +7,11 @@ spr.v
 fan.v
 func.v
 classic.v
+choice.v
 
 bcp.v
 tau.v
-choice.v
 bks.v
 bar.v
 kleene.v
+faninj.v

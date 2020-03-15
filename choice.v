@@ -1,12 +1,12 @@
 (* Choice functions *)
 
-From intuitionism Require Import lib set seq spr fan func bcp.
+From intuitionism Require Import lib set seq spr fan func.
 
 (* Choice on finite domains. *)
 Section FiniteChoice.
 
 (* Choice with an upper-bound in nat *)
-Theorem nat_lt_choice {W} N (P : nat -> W -> Prop) (inhabitant : W) :
+Theorem bounded_choice {W} N (P : nat -> W -> Prop) (inhabitant : W) :
   (∀n, n < N -> ∃m, P n m) -> ∃f, ∀n, n < N -> P n (f n).
 Proof.
 intros H; induction N. now exists (λ _, inhabitant).
@@ -16,6 +16,11 @@ exists (λ n, if n =? N then m else f n); intros n Hn.
 inversion_clear Hn. now rewrite eqb_refl.
 replace (n =? N) with false by bool_lia. apply Hf; auto.
 Qed.
+
+(* bounded_choice with nat as witness *)
+Corollary bounded_choice_nat N (P : nat -> nat -> Prop) :
+  (∀n, n < N -> ∃m, P n m) -> ∃f, ∀n, n < N -> P n (f n). 
+Proof. apply bounded_choice. apply 0. Qed.
 
 (* Choice for lists *)
 Section ListChoice.
@@ -114,7 +119,7 @@ apply eqn_eq_get in H. replace Nβ with Nα. now rewrite H.
 apply eq_dne; intros E. apply not_eq in E as [E|E].
 - apply H4 in E; apply E. now rewrite <-H.
 - apply eqn_eq_get in H. replace Nα with (Nβ + (Nα - Nβ)) in H by lia.
-  apply eqn_leq, eqn_eq_get in H. apply H2 in E; apply E. now rewrite H.
+  apply eqn_le, eqn_eq_get in H. apply H2 in E; apply E. now rewrite H.
 Qed.
 
 (* Choice on continuous sets. *)

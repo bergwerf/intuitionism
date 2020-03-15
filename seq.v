@@ -54,8 +54,11 @@ Fixpoint iota (n k : nat) : fseq :=
   | S l => n :: (iota (S n) l)
   end.
 
-(* Alternative notation *)
+(* Alternative notation for iota *)
 Definition range n m := iota n (1 + m - n).
+
+(* Get upperbound for a finite sequence. *)
+Definition upb s := fold_right max 0 s.
 
 Notation "c '^ω'" := (cseq c) (at level 10, format "c '^ω'").
 Notation "n '..' m" := (range n m) (at level 10, format "n '..' m").
@@ -110,7 +113,7 @@ Lemma eqn_trans n α β γ : eqn n α β -> eqn n β γ -> eqn n α γ.
 Proof. intros Hαβ Hβγ i Hi. rewrite Hαβ. apply Hβγ. all: lia. Qed.
 
 (* A smaller prefix of a coincedence also coincides. *)
-Lemma eqn_leq n m α β : eqn (n + m) α β -> eqn n α β.
+Lemma eqn_le n m α β : eqn (n + m) α β -> eqn n α β.
 Proof. intros H i Hi; apply H; lia. Qed.
 
 (* Delete part of a coincedence. *)
@@ -118,7 +121,7 @@ Lemma eqn_del n m α β :
   eqn (n + m) α β <-> eqn n α β /\ eqn m (del n α) (del n β).
 Proof.
 split; unfold del; simpl.
-- intros H; split. eapply eqn_leq; apply H.
+- intros H; split. eapply eqn_le; apply H.
   intros i Hi; apply H; lia.
 - intros [H1 H2] i Hi. assert(C: i < n \/ i >= n). lia.
   destruct C. apply H1; auto. replace i with (n + (i - n)) by lia.
@@ -137,6 +140,10 @@ revert α β; induction n; simpl; intros; split; auto.
   + subst; injection H; auto.
   + apply IHn; try lia. injection H; auto.
 Qed.
+
+(* Apartness must occur after any coincedence. *)
+Lemma eqn_le_apart α β m n : eqn m α β -> α n <> β n -> m <= n.
+Proof. intros Heq Hneq. apply not_gt; intros H. apply Hneq. apply Heq, H. Qed.
 
 End Coincedence.
 
@@ -205,7 +212,7 @@ rewrite eqb_sym. destruct (β 0 =? α 0); auto.
 Qed.
 
 (* Comparison returns at most its input. *)
-Lemma compare_leq n α β :
+Lemma compare_le n α β :
   compare n α β <= n.
 Proof.
 revert α β; induction n; simpl; intros; auto.
@@ -280,7 +287,7 @@ Lemma get_cseq_eq_cfseq c n α :
 Proof.
 induction n;simpl; split; auto.
 - intros _ i Hi; lia.
-- rewrite <-add_1_r; intros H1; apply eqn_leq in H1 as H2.
+- rewrite <-add_1_r; intros H1; apply eqn_le in H1 as H2.
   apply cons_split. apply H1; lia. apply IHn; auto.
 - intros H i Hi; inversion H; subst. destruct (eq_dec i n).
   subst; auto. apply IHn in H2; apply H2; lia.
@@ -398,3 +405,23 @@ Corollary in_range n m x : In x (range n m) <-> n <= x <= m.
 Proof. split; intros. apply in_iota in H; lia. apply in_iota; lia. Qed.
 
 End IotaRange.
+
+(* Facts about upb *)
+Section Upb.
+
+Lemma in_upb_le s n :
+  In n s -> n <= upb s.
+Proof.
+induction s; simpl. easy. intros [H|H].
+subst; lia. apply IHs in H. lia.
+Qed.
+
+Lemma upb_le_map_iota f k l i n :
+  k <= i < k + l -> n <= f i -> n <= upb (map f (iota k l)).
+Proof.
+revert k; induction l; intros; simpl. lia.
+apply max_le_iff. destruct (eq_dec k i); subst.
+now left. right. apply IHl; auto. lia.
+Qed.
+
+End Upb.

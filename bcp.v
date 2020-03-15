@@ -1,27 +1,11 @@
 (* Brouwer's Continuity Principle (BCP) and related notions. *)
 
-From intuitionism Require Import lib set seq spr func classic.
+From intuitionism Require Import lib set seq spr func classic choice.
 
 (* Brouwers Continuity Principle *)
 Axiom BCP : ∀(R : seq -> nat -> Prop),
   (∀α, ∃n, R α n) ->
   (∀α, ∃m n, ∀β, eqn m α β -> R β n).
-
-Lemma fully_defined {A B} (f : A -> B) :
-  ∀a, ∃b, f a = b.
-Proof. intros; now exists (f a). Qed.
-
-Lemma fully_defined_aset_dom {A B} (f : dom A -> B) :
-  ∀α, α ∈ A -> ∃b, f α = b.
-Proof. intros; now exists (f α). Qed.
-
-(* Continuity of functions. *)
-Theorem BCPf (f : seq -> nat) α :
-  ∃n, ∀β, eqn n α β -> f α = f β.
-Proof.
-destruct (BCP _ (fully_defined f) α) as [m [n H]]. exists m; intros.
-rewrite H. symmetry; rewrite H; auto. apply eqn_refl.
-Qed.
 
 (* BCP generalizes to spreads *)
 Theorem BCPext (X : spread) (R : seq -> nat -> Prop) :
@@ -36,6 +20,45 @@ assert(HT: ∀α, ∃n, T α n).
   destruct Hα as [n Hn]; exists n; auto.
 - intros; destruct (BCP T HT α) as [m [n P]]. exists m, n; intros.
   apply P in H1; unfold T, rσ in H1; rewrite Retract.r_id in H1; auto.
+Qed.
+
+(* Continuity of functions from sequences to numbers. *)
+Theorem BCPf (f : seq -> nat) α :
+  ∃n, ∀β, eqn n α β -> f α = f β.
+Proof.
+assert(Hf: ∀γ, ∃n, f γ = n) by (intros; now exists (f γ)).
+destruct (BCP _ Hf α) as [m [n H]]. exists m; intros.
+rewrite H. symmetry; now rewrite H. apply eqn_refl.
+Qed.
+
+(* Continuity of functions from spreads to numbers. *)
+Theorem BCPfext {X : spread} (f : dom X -> nat) α :
+  α ∈ X -> ∃n, ∀β, β ∈ X -> eqn n α β -> f α = f β.
+Proof.
+assert(Hf: ∀γ, γ ∈ X -> ∃n, f γ = n) by (intros; now exists (f γ)).
+intros Hα. destruct (BCPext X _ Hf α) as [m [n H]]; auto. exists m; intros.
+rewrite H; auto. symmetry; now rewrite H. apply eqn_refl.
+Qed.
+
+(* Pointwise continuity of functions from sequences to sequences. *)
+Theorem BCPf2_point (f : seq -> seq) α i :
+  ∃n, ∀β, eqn n α β -> f α i = f β i.
+Proof.
+assert(Hf: ∀γ, ∃n, f γ i = n) by (intros; now exists (f γ i)).
+destruct (BCP _ Hf α) as [m [n H]]. exists m; intros.
+rewrite H. symmetry; now rewrite H. apply eqn_refl.
+Qed.
+
+(* Continuity of functions from sequences to sequences. *)
+Theorem BCPf2 (f : seq -> seq) α k :
+  ∃n, ∀β, eqn n α β -> eqn k (f α) (f β).
+Proof.
+assert(H: ∀i, i < k -> ∃n, ∀β, eqn n α β -> f α i = f β i).
+{ intros. destruct (BCPf2_point f α i) as [n Hn].
+  exists n; intros. now apply Hn. }
+apply bounded_choice_nat in H as [N HN]. exists (upb (map N (iota 0 k))).
+intros β Hβ i Hi. apply HN; auto. intros j Hj; apply Hβ.
+apply upb_le_map_iota with (i:=i); auto. lia.
 Qed.
 
 (* Some initial contradictions with classical logic. *)
