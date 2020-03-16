@@ -109,7 +109,81 @@ Qed.
 
 End Tau.
 
-(* Next we consider arbitrary fans with the help of a branching factor. *)
-Section BranchingFactor.
+(*
+Next we consider arbitrary fans. Note that it is possible to construct fans with
+an undeterminable finite number of branching points (i.e. split at k99).
+*)
+Section Generalization.
 
-End BranchingFactor.
+Inductive degree := Degree (n : nat) | ωDegree.
+
+Definition dle a b :=
+  match a, b with
+  | Degree n, Degree m => n <= m
+  | ωDegree, Degree _ => False
+  | _, ωDegree => True
+  end.
+
+Notation "a <=° b" := (dle a b) (at level 50).
+Notation "a >° b" := (~dle a b) (at level 50).
+
+(*
+We define a function Δ from prefixes of the fan to ℕ ∪ {ω}.
+If there is a finite number of members that start with s, then Δ s |-> 0.
+If there is an infinite number of branching points along some path starting at s
+such that at each point there is at least one sub-branch (not on the path) with
+Δ = n, then Δ s |-> n + 1. If branching can continue infinitely, then Δ = ω.
+*)
+Section DegreeMapping.
+
+Variable F : fan.
+Variable Δ : fseq -> degree.
+
+(* m and n are two distinct continuations of s. *)
+Definition F_node m n s := m <> n /\ σ F (m :: s) = true /\ σ F (n :: s) = true.
+
+(* N is a branching bound in F under s. *)
+Definition F_bound s N := ∀t m n, length s >= N ->
+  σ F (m :: t ++ s) = true /\ σ F (n :: t ++ s) = true -> n = m.
+
+(* Δ is a good branching degree function. *)
+Definition Δ_good := ∀s,
+  match Δ s with
+  (* Finite branching *)
+  | Degree 0 =>
+    (* There exists an upper bound after which no branching occurs. *)
+    ∃N, F_bound s N
+  (* Infinite branching along some path *)
+  | Degree (S _) =>
+    (* We can find a next node. *)
+    (∃t m n, F_node m n (t ++ s)) /\
+    (* All continuations have a similar or lower degree. *)
+    (∀n, σ F (n :: s) = true -> Δ (n :: s) <=° Δ s) /\
+    (* At least one continuation has the same degree. *)
+    (∃n, σ F (n :: s) = true /\ Δ (n :: s) = Δ s)
+  (* Infinite branching into infinite branching *)
+  | ωDegree =>
+    (* We can find a next node with two ωDegree continuations. *)
+    ∃t m n, F_node m n (t ++ s) /\
+      Δ (m :: t ++ s) = ωDegree /\
+      Δ (n :: t ++ s) = ωDegree
+  end. 
+
+End DegreeMapping.
+
+(* Δ is an optimal branching degree function. *)
+Definition Δ_optimal F Δ := Δ_good F Δ /\ ∀δ, Δ_good F δ -> ∀s, Δ s <=° δ s.
+
+(* If an optimal branching degree can be computed, it indicates ≼. *)
+Theorem dle_preceq F E ΔF ΔE :
+  Δ_optimal F ΔF -> Δ_optimal E ΔE -> ΔF [] <=° ΔE [] -> F ≼ E.
+Proof.
+(*
+This proof appears like it may be very difficult. The idea is to define an
+injective function that given an α ∈ F traces out a path in G with a matching
+degree for all prefixes. When dealing with a bottom degree (Degree 0) this
+function has to explore all existing nodes to define an injective ordering.
+*)
+Abort.
+
+End Generalization.
