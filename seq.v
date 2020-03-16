@@ -12,9 +12,6 @@ Notation "'fseq'" := (list nat).
 (* Infinite constant sequence *)
 Definition cseq (c i : nat) := c.
 
-(* Finite constant sequence *)
-Definition cfseq (c n : nat) := repeat c n.
-
 (* The first n elements of α and β coincide. *)
 Definition eqn n (α β : seq) := ∀i, i < n -> α i = β i.
 
@@ -32,6 +29,9 @@ Definition replace n (α β : seq) i := if i <? n then β i else α i.
 
 (* Add n elements from α as prefix to β. *)
 Definition pre n α β := replace n (fill n β) α.
+
+(* Get upperbound of a finite sequence. *)
+Definition upb s := fold_right max 0 s.
 
 (* Get first n elements of α. *)
 Fixpoint get n (α : seq) : fseq :=
@@ -56,13 +56,6 @@ Fixpoint iota (n k : nat) : fseq :=
 
 (* Alternative notation for iota *)
 Definition range n m := iota n (1 + m - n).
-
-(* Get upperbound for a finite sequence. *)
-Definition upb s := fold_right max 0 s.
-
-Notation "c '^ω'" := (cseq c) (at level 10, format "c '^ω'").
-Notation "n '..' m" := (range n m) (at level 10, format "n '..' m").
-Notation "'⟨' α ';' n '⟩'" := (get n α) (at level 0, format "'⟨' α ';' n '⟩'").
 
 (* Apartness set for finite sequences. *)
 Definition FSeq := ASet fseq fullset (dec_apart fseq)
@@ -98,7 +91,21 @@ Definition baire_aset (X : baire) :=
 Coercion baire_aset : baire >-> aset.
 Definition Seq := Baire fullset.
 
+(* Prefix intersection in the baire space. *)
+Definition isect_member (X : baire) s α := α ∈ X /\ get (length s) α = s.
+Definition isect X s := Baire (isect_member X s).
+
+(* Prefix subtraction in the baire space. *)
+Definition subtract_member (X : baire) s α := α ∈ X /\ get (length s) α <> s.
+Definition subtract X s := Baire (subtract_member X s).
+
 End BaireSpace.
+
+Notation "c '^ω'" := (cseq c) (at level 10, format "c '^ω'").
+Notation "n '..' m" := (range n m) (at level 10, format "n '..' m").
+Notation "'⟨' α ';' n '⟩'" := (get n α) (at level 0, format "'⟨' α ';' n '⟩'").
+Notation "X '∩' s" := (isect X s) (at level 40).
+Notation "X '\' s" := (subtract X s) (at level 40).
 
 (* Facts about the coincedence relation *)
 Section Coincedence.
@@ -113,18 +120,25 @@ Lemma eqn_trans n α β γ : eqn n α β -> eqn n β γ -> eqn n α γ.
 Proof. intros Hαβ Hβγ i Hi. rewrite Hαβ. apply Hβγ. all: lia. Qed.
 
 (* A smaller prefix of a coincedence also coincides. *)
-Lemma eqn_le n m α β : eqn (n + m) α β -> eqn n α β.
+Lemma eqn_add_l m n α β : eqn (m + n) α β -> eqn m α β.
 Proof. intros H i Hi; apply H; lia. Qed.
 
+Corollary eqn_le m n α β :
+  eqn n α β -> m <= n -> eqn m α β.
+Proof.
+intros. replace n with (m + (n - m)) in H by lia.
+now apply eqn_add_l in H.
+Qed.
+
 (* Delete part of a coincedence. *)
-Lemma eqn_del n m α β :
-  eqn (n + m) α β <-> eqn n α β /\ eqn m (del n α) (del n β).
+Lemma eqn_del m n α β :
+  eqn (m + n) α β <-> eqn m α β /\ eqn n (del m α) (del m β).
 Proof.
 split; unfold del; simpl.
-- intros H; split. eapply eqn_le; apply H.
+- intros H; split. eapply eqn_add_l; apply H.
   intros i Hi; apply H; lia.
-- intros [H1 H2] i Hi. assert(C: i < n \/ i >= n). lia.
-  destruct C. apply H1; auto. replace i with (n + (i - n)) by lia.
+- intros [H1 H2] i Hi. assert(C: i < m \/ i >= m). lia.
+  destruct C. apply H1; auto. replace i with (m + (i - m)) by lia.
   apply H2; lia.
 Qed.
 
@@ -174,29 +188,6 @@ Lemma del_add_distr n m α :
 Proof.
 unfold del; apply functional_extensionality.
 intros. rewrite add_assoc; auto.
-Qed.
-
-(* Append element back to deletion. *)
-Lemma del_app_S n m α :
-  ⟨del (S n) α;m⟩ ++ [α n] = ⟨del n α;S m⟩.
-Proof.
-induction m; simpl. unfold del; rewrite add_0_r; auto.
-rewrite IHm; simpl; unfold del.
-replace (S n + m) with (n + S m) by lia; auto.
-Qed.
-
-(* Deletion and append *)
-Lemma del_app_distr n m α :
-  ⟨α;n + m⟩ = ⟨del n α;m⟩ ++ ⟨α;n⟩.
-Proof.
-revert α. induction n, m; simpl; intros; auto.
-- rewrite del0, app_nil_r; auto.
-- rewrite add_0_r; auto.
-- apply cons_split.
-  + unfold del. replace (n + S m) with (S n + m) by lia. auto.
-  + assert(R: ∀x (v w : fseq), v ++ x :: w = (v ++ [x]) ++ w).
-    { intros; induction v; simpl; auto. rewrite IHv; auto. }
-    rewrite R, del_app_S, <-IHn; auto.
 Qed.
 
 End DeleteFill.
@@ -262,6 +253,29 @@ End SeqProp.
 (* Facts about get *)
 Section GetPrefix.
 
+(* Append single element back to deletion. *)
+Lemma get_app_S n m α :
+  ⟨del (S n) α;m⟩ ++ [α n] = ⟨del n α;S m⟩.
+Proof.
+induction m; simpl. unfold del; rewrite add_0_r; auto.
+rewrite IHm; simpl; unfold del.
+replace (S n + m) with (n + S m) by lia; auto.
+Qed.
+
+(* Delete and append *)
+Lemma get_app_del n m α :
+  ⟨α;n + m⟩ = ⟨del n α;m⟩ ++ ⟨α;n⟩.
+Proof.
+revert α. induction n, m; simpl; intros; auto.
+- rewrite del0, app_nil_r; auto.
+- rewrite add_0_r; auto.
+- apply cons_split.
+  + unfold del. replace (n + S m) with (S n + m) by lia. auto.
+  + assert(R: ∀x (v w : fseq), v ++ x :: w = (v ++ [x]) ++ w).
+    { intros; induction v; simpl; auto. rewrite IHv; auto. }
+    rewrite R, get_app_S, <-IHn; auto.
+Qed.
+
 (* Equality implies the same length prefix. *)
 Lemma get_n_eq n m α β :
   ⟨α;n⟩ = ⟨β;m⟩ -> n = m.
@@ -280,21 +294,6 @@ Proof. intros; apply get_n_eq in H as R; now subst. Qed.
 
 Corollary get_n_neq n m α β : n <> m -> ⟨α;n⟩ <> ⟨β;m⟩.
 Proof. intros H P. apply H. eapply get_n_eq. apply P. Qed.
-
-(* Get finite part of a partially constant sequence. *)
-Lemma get_cseq_eq_cfseq c n α :
-  (eqn n α (c^ω)) <-> ⟨α;n⟩ = cfseq c n.
-Proof.
-induction n;simpl; split; auto.
-- intros _ i Hi; lia.
-- rewrite <-add_1_r; intros H1; apply eqn_le in H1 as H2.
-  apply cons_split. apply H1; lia. apply IHn; auto.
-- intros H i Hi; inversion H; subst. destruct (eq_dec i n).
-  subst; auto. apply IHn in H2; apply H2; lia.
-Qed.
-
-Corollary get_cseq c n : ⟨c^ω;n⟩ = cfseq c n.
-Proof. apply get_cseq_eq_cfseq, eqn_refl. Qed.
 
 Lemma get_length α n : length ⟨α;n⟩ = n.
 Proof. induction n; simpl; auto. Qed.
@@ -425,3 +424,23 @@ now left. right. apply IHl; auto. lia.
 Qed.
 
 End Upb.
+
+(* Facts about intersection *)
+Section Intersection.
+
+Variable X : baire.
+Variable s : fseq.
+
+Lemma isect_nil α : α ∈ X -> α ∈ X ∩ [].
+Proof. easy. Qed.
+
+Lemma isect_cons n α : α ∈ X ∩ (n :: s) -> α ∈ X ∩ s.
+Proof. intros [H1 H2]. split; auto. now injection H2. Qed.
+
+Lemma isect_inv α : α ∈ X ∩ s -> α ∈ X.
+Proof. now intros [H _]. Qed.
+
+Lemma isect_cons_length α : α ∈ X ∩ s -> α ∈ X ∩ (α (length s) :: s).
+Proof. intros [H1 H2]. split; auto. simpl. now rewrite H2. Qed.
+
+End Intersection.

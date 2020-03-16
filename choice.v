@@ -118,8 +118,8 @@ exists Nα; intros. destruct (cfun_time φ β) as [Nβ [H3 H4]]; simpl.
 apply eqn_eq_get in H. replace Nβ with Nα. now rewrite H.
 apply eq_dne; intros E. apply not_eq in E as [E|E].
 - apply H4 in E; apply E. now rewrite <-H.
-- apply eqn_eq_get in H. replace Nα with (Nβ + (Nα - Nβ)) in H by lia.
-  apply eqn_le, eqn_eq_get in H. apply H2 in E; apply E. now rewrite H.
+- apply eqn_eq_get in H. apply eqn_le with (m:=Nβ) in H.
+  apply eqn_eq_get in H. apply H2 in E; apply E. now rewrite H. lia.
 Qed.
 
 (* Choice on continuous sets. *)

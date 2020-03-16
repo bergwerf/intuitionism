@@ -37,35 +37,6 @@ Proof. destruct (spread_inhabited X). exists x; split; auto. Qed.
 (* Proof of the Fan Theorem. *)
 Section FanTheorem.
 
-(* Define prefix intersection. *)
-Definition isect_member (X : baire) s α := α ∈ X /\ ⟨α;length s⟩ = s.
-Definition isect X s := Baire (isect_member X s).
-Notation "X '∩' s" := (isect X s) (at level 50).
-
-(* Some results about intersections. *)
-Section Intersection.
-
-Variable X : baire.
-Variable Xσ : spread.
-Variable s : fseq.
-
-Lemma isect_nil α : α ∈ X -> α ∈ (X ∩ []).
-Proof. easy. Qed.
-
-Lemma isect_cons n α : α ∈ (X ∩ (n :: s)) -> α ∈ (X ∩ s).
-Proof. intros [H1 H2]. split; auto. now injection H2. Qed.
-
-Lemma isect_inv α : α ∈ (X ∩ s) -> α ∈ X.
-Proof. now intros [H _]. Qed.
-
-Lemma isect_σ_false α : α ∈ (Xσ ∩ s) -> ~(σ Xσ s = false).
-Proof. intros [H1 H2]. now rewrite <-H2, H1. Qed.
-
-Lemma isect_cons_length α : α ∈ (X ∩ s) -> α ∈ (X ∩ (α (length s) :: s)).
-Proof. intros [H1 H2]. split; auto. simpl. now rewrite H2. Qed.
-
-End Intersection.
-
 (* s is in F safe with respect to B. *)
 Definition safe (F : fan) B s := barred (F ∩ s) B.
 
@@ -88,12 +59,15 @@ Inductive safe_can (F : fan) (B : bar) s :=
 (* α (length s) is below the given extension upper bound. *)
 Lemma fan_s_extension F s N α :
   (∀n : nat, σ F (n :: s) = true -> n <= N) ->
-  α ∈ (F ∩ s) -> α (length s) <= N.
+  α ∈ F ∩ s -> α (length s) <= N.
 Proof.
 intros H [H1α H2α]. apply H.
 replace (α (length s) :: s) with ⟨α;S (length s)⟩.
 apply H1α. simpl. now rewrite H2α.
 Qed.
+
+Lemma isect_σ_false (X : spread) s α : α ∈ X ∩ s -> ~(σ X s = false).
+Proof. intros [H1 H2]. now rewrite <-H2, H1. Qed.
 
 (* safe_can is as strong as safe. *)
 Theorem safe_can_safe F B s :

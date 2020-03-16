@@ -1,6 +1,7 @@
 (* The Tau fan *)
 
-From intuitionism Require Import lib set seq spr fan func classic bcp.
+From intuitionism Require Import lib set seq spr fan func.
+From intuitionism Require Import classic choice bcp bar.
 
 Section TauFan.
 
@@ -140,10 +141,7 @@ apply in_map_iff. exists k; split.
   apply Hlt. apply (τ_mono _ _ α) in E; auto. unfold cseq; lia.
 Qed.
 
-(*
-Classical surjection is different from intuitionistic surjection.
-See classic.v for a proof that f is surjective under LPO.
-*)
+(* Classical surjection is different from intuitionistic surjection. *)
 Definition f n :=
   match n with
   | 0 => 0^ω
@@ -208,3 +206,138 @@ intros LPO; intros β Hβ; destruct (LPO β).
 Qed.
 
 End Tau2.
+
+(* The Fan Theorem holds constructively for τ. *)
+Section TauFanTheorem.
+
+(* Additional facts about Forall. *)
+Section Forall.
+
+Variable T : Type.
+Variable S : Type.
+Variable P : T -> Prop.
+Variable Q : S -> Prop.
+
+Lemma Forall_map f s :
+  Forall Q s -> (forall n, Q n -> P (f n)) -> Forall P (map f s).
+Proof.
+intros Hs HQP. apply Forall_forall. intros y Hy.
+apply in_map_iff in Hy as [x [Hf Hxl]]; subst.
+apply HQP. revert Hxl; now apply Forall_forall.
+Qed.
+
+Lemma Forall_app s t :
+  Forall P s -> Forall P t -> Forall P (s ++ t).
+Proof.
+intros Hs Ht. apply Forall_forall; intros n Hn.
+apply in_app_or in Hn as [H|H]; eapply Forall_forall.
+apply Hs. easy. apply Ht. easy. 
+Qed.
+
+Lemma Forall_concat b :
+  Forall (Forall P) b -> Forall P (concat b).
+Proof.
+induction b; simpl. easy. intros. inversion_clear H.
+apply Forall_app; auto.
+Qed.
+
+End Forall.
+
+Theorem tau_fan_theorem k l B :
+  barred (τ k l) B -> ∃b : fbar, Forall B b /\ barred (τ k l) b.
+Proof.
+revert B k; induction l; intros.
+- (* Base case: there are no branches. *)
+  destruct (H (k^ω)) as [m Hm]. apply τ_cseq; lia.
+  exists [⟨k^ω;m⟩]; split. apply Forall_cons; auto.
+  intros α Hα; exists m. replace α with (k^ω). now left.
+  extensionality n. unfold cseq; tau_member Hα n. lia.
+- (* Step: IH gives a bar for branches. *)
+  (*
+  We cannot use epsilon_smallest because B is in general undecidable. Instead
+  we anticipate the discovery of a smaller M (and no bar in a sub-branch) with
+  exLtM1 and exLtM2.
+  *)
+  destruct (H (k^ω)) as [M HM]. apply τ_cseq; lia.
+  pose(exLtM1 m b := ∃N, N <= m /\ b = [⟨k^ω;N⟩]).
+  pose(exLtM2 m := ∃N, N <= m /\ B ⟨k^ω;N⟩).
+  assert(Hchoice: ∀m, m < M -> ∃b : fbar, Forall B b /\
+    (exLtM1 m b \/ barred (τ k (S l) ∩ ⟨k^ω;m⟩ \ ⟨k^ω;S m⟩) b)).
+  + (* Create a new bar for the branch under k^m. *)
+    intros m Hm.
+    pose(B1 s := B (s ++ ⟨k^ω;m⟩)).
+    pose(B2 s := B1 s \/ (s = [] /\ exLtM2 m)).
+    assert(HB2: barred (τ (S k) l) B2).
+    { intros α Hα. destruct (H (pre m (k^ω) α)) as [m' Hm'].
+      apply τ_pre_cseq. tau_member Hα 0; lia.
+      apply member_τP; intros n. tau_member Hα n; lia.
+      destruct (le_gt_dec m' m).
+      - exists 0; right. split; auto. exists m'; split; auto.
+        replace m with (m' + (m - m')) in Hm' by lia.
+        now rewrite pre_get_l in Hm'.
+      - exists (m' - m); left; unfold B2, B1. rewrite <-pre_get.
+        now replace (m + (m' - m)) with m' by lia. }
+    (* Create a finite bar using IHl. Check if it contains []. *)
+    apply IHl in HB2 as [b [Bb Hb]].
+    destruct (In_dec (List.list_eq_dec eq_dec) [] b) as [Hnil|Hnil].
+    (* We found a case of exLtM1. *)
+    { eapply Forall_forall in Bb. 2: apply Hnil.
+      unfold B2, B1 in Bb. destruct Bb as [Bb|[_ [N [H1N H2N]]]].
+      - rewrite app_nil_l in Bb. exists [⟨k^ω;m⟩]; split.
+        now apply Forall_cons. left; exists m; auto.
+      - exists [⟨k^ω;N⟩]; split. now apply Forall_cons. left; now exists N. }
+    (* Otherwise continue as usual. *)
+    exists (map (λ s, s ++ ⟨k^ω;m⟩) b); split.
+    * apply Forall_map with (Q:=B1). apply Forall_forall; intros.
+      eapply Forall_forall in Bb. 2: apply H0.
+      destruct Bb as [|[R Bb]]; auto. now subst.
+      easy.
+    * right. intros α [[H1α H2α] H3α]. rewrite get_length in *.
+      destruct (Hb (del m α)) as [m' Hm'].
+      (* Prove del m α ∈ τ (S k) l. *)
+      apply member_τP; intros n; unfold del.
+      assert(H4α := H1α); tau_member H4α (m + n).
+      rewrite add_succ_r. repeat split. 2,3: lia.
+      destruct (le_gt_dec (S k) (α (m + n))); auto. exfalso.
+      apply H3α. simpl. rewrite <-H2α. replace k with (α m). easy.
+      assert(α m < S k). eapply le_trans. 2: apply g.
+      apply le_n_S. eapply τ_mono. apply H1α. lia.
+      assert(H2 := H4α m); lia.
+      (* Prove ⟨α;m + m'⟩ is in the bar. *)
+      exists (m + m'). apply in_map_iff.
+      exists ⟨del m α;m'⟩; split; auto.
+      now rewrite <-H2α, <-get_app_del.
+  + apply bounded_choice in Hchoice as [c Hc]. 2: apply [].
+    exists (⟨k^ω;M⟩ :: concat (map c (iota 0 M))); split.
+    * apply Forall_cons; auto. apply Forall_concat, Forall_forall.
+      intros b Hb. apply in_map_iff in Hb as [n [Hcn HnM]]; subst.
+      apply in_iota in HnM as [_ HnM]. simpl in HnM.
+      now apply Hc in HnM as [HBcn _].
+    * (* Find the first position >k in α up to M. *)
+      intros α Hα. clear HM; induction M. exists 0; now left.
+      destruct IHM as [n Hn]. intros n Hn. apply Hc; auto.
+      { destruct Hn as [Hn|Hn]. apply get_n_eq in Hn as HMn; subst n.
+      destruct (eq_dec (α M) k) as [αM|αM].
+      - (* α is barred by ⟨k^ω;S M⟩ *)
+        exists (S M). replace ⟨α;S M⟩ with ⟨k^ω;S M⟩. apply in_eq.
+        simpl; now rewrite Hn, αM.
+      - (* α is barred by (c M). *)
+        rewrite <-add_1_r, iota_add_app_r, map_app, concat_app; simpl.
+        rewrite app_nil_r. destruct (Hc M) as [_ [[N [H1N H2N]]|HcM]]. lia.
+        + (* By exLtM1 *)
+          exists N; apply in_cons. apply in_or_app; right.
+          rewrite H2N. replace ⟨k^ω;N⟩ with ⟨α;N⟩. apply in_eq.
+          apply eqn_eq_get; apply eqn_eq_get in Hn.
+          eapply eqn_le. apply eqn_sym, Hn. easy.
+        + (* By a bar in the corresponding sub-branch *)
+          destruct (HcM α) as [m Hm].
+          repeat split; auto; rewrite get_length. easy.
+          simpl. intros C; apply αM. now injection C.
+          exists m; apply in_cons. apply in_or_app; now right.
+      - (* α is barred by the IH bar. *)
+        exists n. apply in_cons. rewrite <-add_1_r, iota_add_app_r.
+        rewrite map_app, concat_app. apply in_or_app. now left.
+      }
+Qed.
+
+End TauFanTheorem.
