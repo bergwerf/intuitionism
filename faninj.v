@@ -41,7 +41,7 @@ Lemma τ_prec_step k f z i :
 Proof.
 intros f_wd f_inj z_le_1 fz_ge_1.
 (* Find prefix length of z^ω such that the image is the same up to i. *)
-destruct (BCPf2 f (z^ω) (S i)) as [j Hj].
+destruct (BCPf_11 f (z^ω) (S i)) as [j Hj].
 (* Prepend this prefix to α to create a new injective function. *)
 pose(add1 (α : seq) n := S (α n)).
 pose(sub1 (α : seq) n := pred (α n)).

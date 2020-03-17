@@ -23,7 +23,7 @@ assert(HT: ∀α, ∃n, T α n).
 Qed.
 
 (* Continuity of functions from sequences to numbers. *)
-Theorem BCPf (f : seq -> nat) α :
+Theorem BCPf_10 (f : seq -> nat) α :
   ∃n, ∀β, eqn n α β -> f α = f β.
 Proof.
 assert(Hf: ∀γ, ∃n, f γ = n) by (intros; now exists (f γ)).
@@ -32,7 +32,7 @@ rewrite H. symmetry; now rewrite H. apply eqn_refl.
 Qed.
 
 (* Continuity of functions from spreads to numbers. *)
-Theorem BCPfext {X : spread} (f : dom X -> nat) α :
+Theorem BCPextf_10 {X : spread} (f : dom X -> nat) α :
   α ∈ X -> ∃n, ∀β, β ∈ X -> eqn n α β -> f α = f β.
 Proof.
 assert(Hf: ∀γ, γ ∈ X -> ∃n, f γ = n) by (intros; now exists (f γ)).
@@ -41,7 +41,7 @@ rewrite H; auto. symmetry; now rewrite H. apply eqn_refl.
 Qed.
 
 (* Pointwise continuity of functions from sequences to sequences. *)
-Theorem BCPf2_point (f : seq -> seq) α i :
+Theorem BCPf_11_point (f : seq -> seq) α i :
   ∃n, ∀β, eqn n α β -> f α i = f β i.
 Proof.
 assert(Hf: ∀γ, ∃n, f γ i = n) by (intros; now exists (f γ i)).
@@ -49,12 +49,12 @@ destruct (BCP _ Hf α) as [m [n H]]. exists m; intros.
 rewrite H. symmetry; now rewrite H. apply eqn_refl.
 Qed.
 
-(* Continuity of functions from sequences to sequences. *)
-Theorem BCPf2 (f : seq -> seq) α k :
+(* Uniform continuity of functions from sequences to sequences. *)
+Theorem BCPf_11 (f : seq -> seq) α k :
   ∃n, ∀β, eqn n α β -> eqn k (f α) (f β).
 Proof.
 assert(H: ∀i, i < k -> ∃n, ∀β, eqn n α β -> f α i = f β i).
-{ intros. destruct (BCPf2_point f α i) as [n Hn].
+{ intros. destruct (BCPf_11_point f α i) as [n Hn].
   exists n; intros. now apply Hn. }
 apply bounded_choice_nat in H as [N HN]. exists (upb (map N (iota 0 k))).
 intros β Hβ i Hi. apply HN; auto. intros j Hj; apply Hβ.
@@ -136,23 +136,23 @@ End ClassicContradictions.
 
 (* BCPf with a sigma type for the prefix length is inconsistent. *)
 (* From: doc/bcp_sig.pdf *)
-Section BCPsig.
+Section BCPSigmaType.
 
 (*
 This is much stronger than BCP since it also implies a choice function. We will
 see it is also stronger than AC_10 since the choice function is not continuous.
 *)
-Definition BCPfsig := ∀(f : seq -> nat) α,
+Definition BCPf_10_sig := ∀(f : seq -> nat) α,
   {n | ∀β, eqn n α β -> f α = f β}.
 
-Theorem not_BCPfsig :
-  BCPfsig -> 0 = 1.
+Theorem not_BCPf_10_sig :
+  BCPf_10_sig -> 0 = 1.
 Proof.
-intros BCPfsig.
+intros BCPf_10_sig.
 (* M : seq -> nat, gives us the prefix length of any f to compute its image. *)
-pose(M f := proj1_sig (BCPfsig f (0^ω))).
+pose(M f := proj1_sig (BCPf_10_sig f (0^ω))).
 assert(L1: ∀f β, eqn (M f) (0^ω) β -> f (0^ω) = f β).
-{ intros. apply (proj2_sig (BCPfsig f (0^ω))). auto. }
+{ intros. apply (proj2_sig (BCPf_10_sig f (0^ω))). auto. }
 (* We now construct a function f that is not continuous. *)
 pose(m := M (λ _, 0)).
 pose(f β := M (λ α, β (α m))).
@@ -174,4 +174,4 @@ unfold β. replace (M f + 1) with ((M f + 1) + 0) at 2 by lia.
 rewrite pre_r; auto.
 Qed.
 
-End BCPsig.
+End BCPSigmaType.

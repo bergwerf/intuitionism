@@ -37,6 +37,7 @@ Notation "A ≼' B" := (∃f, preceqext A B f) (at level 50).
 (* Notation for 'there exists a one-to-one mapping between A and B'. *)
 Definition equivalent A B := ∃f, well_defined A B f /\ bijective A B f.
 Notation "A === B" := (equivalent A B) (at level 50).
+Notation "A !== B" := (~equivalent A B) (at level 50).
 
 (* Definition of denumerable and uncountable sets. *)
 Definition denumerable A := Nat === A.
@@ -46,12 +47,20 @@ Definition uncountable A := ∀f, well_defined Nat A f -> ~surjective Nat A f.
 Definition Dedekind_infinite A :=
   ∃x f, x ∈ A /\ well_defined A A f /\ injective A A f /\ ∀y, f y # x.
 
+(* Some general facts *)
+Section GeneralFacts.
+
 Theorem injective_weaken A B f :
   injective A B f -> weak_injective A B f.
 Proof.
 intros H a α Ha Hα Hf. apply apart_spec; intros P.
 apply H in P; auto. apply apart_spec in P; auto.
 Qed.
+
+Theorem preceqext_weaken A B : A ≼' B -> A ≼ B.
+Proof. intros [f [f_preceq _]]. now exists f. Qed.
+
+End GeneralFacts.
 
 Theorem seq_uncountable :
   uncountable Seq.

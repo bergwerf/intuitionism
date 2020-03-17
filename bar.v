@@ -1,6 +1,6 @@
 (* Bar induction and the Fan Theorem *)
 
-From intuitionism Require Import lib set seq spr fan func bcp choice.
+From intuitionism Require Import lib set seq spr fan func classic choice bcp.
 
 (* A bar is a proposition on finite sequences. *)
 Definition bar := fseq -> Prop.
@@ -181,7 +181,7 @@ Theorem fan_to_nat_image (f : dom F -> nat) :
   ∃image, ∀α, α ∈ F -> In (f α) image.
 Proof.
 pose(B s := ∃n, ∀β, β ∈ F -> ⟨β;length s⟩ = s -> f β = n).
-assert(H := BCPfext f). assert(HB: barred F B).
+assert(H := BCPextf_10 f). assert(HB: barred F B).
 { intros α Hα. apply H in Hα as [m Hm]. exists m, (f α); intros.
   symmetry; apply Hm; auto. apply eqn_eq_get. now apply get_eq_r in H1. }
 apply fan_theorem in HB as [b [bB Hb]].
@@ -228,3 +228,26 @@ unfold N in H1n. apply in_upb_le in H1n. lia.
 Qed.
 
 End FanFunctions.
+
+Section EquivalenceTheorem.
+
+(* Although Bin ≼ Seq ≼ Bin, we do not have Bin === Seq. *)
+Theorem seq_nequiv_bin :
+  Bin !== Seq.
+Proof.
+intros [f [f_wd [f_inj f_surj]]].
+pose(g α := f α 0). destruct fan_to_nat_image with (f:=g) as [image Himage].
+destruct (f_surj ((upb image + 1)^ω)) as [α [Hα Hfα]]. easy.
+apply Himage in Hα; revert Hα; unfold g; rewrite Hfα; unfold cseq; intros.
+apply in_upb_le in Hα; lia.
+Qed.
+
+(* This implies the Equivalence Theorem between Bin and Seq is false. *)
+Theorem not_EquivalenceTheorem_Bin_Seq :
+  ~EquivalenceTheorem Bin Seq.
+Proof.
+intros ET. apply seq_nequiv_bin, ET; split.
+apply preceqext_weaken, bin_preceq_seq. apply seq_preceq_bin.
+Qed.
+
+End EquivalenceTheorem.
