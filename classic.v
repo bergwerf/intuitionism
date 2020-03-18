@@ -165,7 +165,7 @@ apply WIS in weak_inj as inj.
 apply inj in apartness; auto; apply I.
 Qed.
 
-(* We can prove strong extensionality with LPO. *)
+(* We can prove strong extensionality in baire -> baire with LPO. *)
 Theorem lpo_strong_extensional (A B : baire) f :
   LPO -> strong_extensional A B f.
 Proof.

@@ -159,6 +159,18 @@ Qed.
 Lemma eqn_le_apart α β m n : eqn m α β -> α n <> β n -> m <= n.
 Proof. intros Heq Hneq. apply not_gt; intros H. apply Hneq. apply Heq, H. Qed.
 
+(* If there is no coincedence there is apartness. *)
+Lemma not_eqn_apart α β n :
+  ~eqn n α β -> seq_apart α β.
+Proof.
+induction n; intros.
+- exfalso; now apply H.
+- destruct (eq_dec (α n) (β n)).
+  + apply IHn; intros Hn; apply H. intros i Hi.
+    destruct (eq_dec i n); subst; auto. apply Hn; lia.
+  + now exists n.
+Qed.
+
 End Coincedence.
 
 (* Facts about delete and fill *)

@@ -61,6 +61,14 @@ intros β Hβ i Hi. apply HN; auto. intros j Hj; apply Hβ.
 apply upb_le_map_iota with (i:=i); auto. lia.
 Qed.
 
+(* We can prove strong extensionality in baire -> baire with BCP. *)
+Theorem bcp_strong_extensional (A B : baire) f :
+  strong_extensional A B f.
+Proof.
+intros α β Hα Hβ [k Hk]. destruct (BCPf_11 f α (S k)) as [n Hn].
+apply not_eqn_apart with (n:=n); intros H. apply Hk, Hn; auto.
+Qed.
+
 (* Some initial contradictions with classical logic. *)
 Section ClassicContradictions.
 
