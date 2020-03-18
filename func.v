@@ -30,10 +30,6 @@ Definition preceq A B f := well_defined A B f /\ injective A B f.
 Notation "A ≼ B" := (∃f, preceq A B f) (at level 50).
 Notation "A ≺ B" := (~(B ≼ A)) (at level 50).
 
-(* Notation for 'there exists an extensional injective mapping from A to B'. *)
-Definition preceqext A B f := preceq A B f /\ strong_extensional A B f.
-Notation "A ≼' B" := (∃f, preceqext A B f) (at level 50).
-
 (* Notation for 'there exists a one-to-one mapping between A and B'. *)
 Definition equivalent A B := ∃f, well_defined A B f /\ bijective A B f.
 Notation "A === B" := (equivalent A B) (at level 50).
@@ -47,20 +43,12 @@ Definition uncountable A := ∀f, well_defined Nat A f -> ~surjective Nat A f.
 Definition Dedekind_infinite A :=
   ∃x f, x ∈ A /\ well_defined A A f /\ injective A A f /\ ∀y, f y # x.
 
-(* Some general facts *)
-Section GeneralFacts.
-
 Theorem injective_weaken A B f :
   injective A B f -> weak_injective A B f.
 Proof.
 intros H a α Ha Hα Hf. apply apart_spec; intros P.
 apply H in P; auto. apply apart_spec in P; auto.
 Qed.
-
-Theorem preceqext_weaken A B : A ≼' B -> A ≼ B.
-Proof. intros [f [f_preceq _]]. now exists f. Qed.
-
-End GeneralFacts.
 
 Theorem seq_uncountable :
   uncountable Seq.
@@ -213,9 +201,9 @@ Module SeqToBin.
 
 (*
 We determine the n-th value by counting down starting with i = 0 where i
-tracks the next index of α to check. The difference with fseq_to_pos is that we
-always start with 0 (this makes the algorithm simpler). To avoid a custom
-termination proof we count down one by one in c.
+tracks the next index of α to check. Although it can be proved directly that
+this function is strongly extensional, several attempts at a proof failed and I
+decided this was not really important.
 *)
 Fixpoint f i c α n :=
   match c with
@@ -233,31 +221,8 @@ Fixpoint f i c α n :=
     end
   end.
 
-Lemma f_wd i c α :
-  f i c α ∈ Bin.
-Proof.
-intros m; simpl. induction m; simpl; auto. repeat bool_to_Prop; auto. clear IHm.
-revert i c; induction m; simpl; intros; destruct c; try lia; apply IHm.
-Qed.
-
 (* Skip n numbers in the image of α. *)
 Definition skipn n α := n + fold_right add 0 ⟨α;n⟩.
-
-(* Count zeros in the first n elements of α. *)
-Definition count n α := fold_right (λ b j, if b =? 0 then S j else j) 0 ⟨α;n⟩.
-
-(* Probe for proving extensionality. Perhaps this is easier than count. *)
-Fixpoint probe α β i c n :=
-  match n with
-  | 0 => (false, i)
-  | S m =>
-    match (α c), (β c) with
-    | 0, 0 => probe α β (S c) (S i) m
-    | S _, S _ => probe α β (S c) i m
-    | _, _ => (true, i)
-    end
-  end.
-
 Definition apart_at (α β : seq) n := skipn n α + (1 + min (α n) (β n)).
 
 Lemma f_count_down α i n k : f i (α n) α (α n + k) = f i 0 α k.
@@ -281,6 +246,13 @@ simpl. intros R; rewrite R; clear R.
 induction (α n); simpl; auto.
 Qed.
 
+Lemma f_wd i c α :
+  f i c α ∈ Bin.
+Proof.
+intros m; simpl. induction m; simpl; auto. repeat bool_to_Prop; auto. clear IHm.
+revert i c; induction m; simpl; intros; destruct c; try lia; apply IHm.
+Qed.
+
 Lemma f_inj α β n :
   eqn n α β -> α n <> β n -> exists m, f 0 0 α m <> f 0 0 β m.
 Proof.
@@ -292,81 +264,22 @@ rewrite skipn_f, R, skipn_f. destruct (min_dec (α n) (β n)); rewrite e.
 - apply neq_sym. apply different_at with (k:=α n - β n - 1). lia.
 Qed.
 
-Lemma count_shift α n :
-  count n (f 0 0 α) = S (count (n - (1 + α 0)) (f 0 0 (del 1 α))).
-Proof.
-Admitted.
-
-Lemma f_del1_sub α n :
-  1 + α 0 <= n -> f 0 0 α n = f 0 0 (del 1 α) (n - (1 + α 0)).
-Proof.
-Admitted.
-
-Lemma f_del1_add α n :
-  f 0 0 (del 1 α) n = f 0 0 α (n + (1 + α 0)).
-Proof.
-Admitted.
-
-Lemma f_ext_eq0 α β n N :
-  eqn n (f 0 0 α) (f 0 0 β) ->
-  N = pred (count n (f 0 0 α)) ->
-  α N = β N -> α 0 = β 0.
-Proof.
-Admitted.
-
-Lemma f_ext_base α β n :
-  pred (count n (f 0 0 α)) = 0 -> α 0 = β 0 -> f 0 0 α n = f 0 0 β n.
-Proof.
-Admitted.
-
-Lemma f_ext_contra α n :
-  pred (count n (f 0 0 α)) > 0 -> n > α 0.
-Proof.
-Admitted.
-
-Lemma f_ext (α β : dom Seq) n :
-  eqn n (f 0 0 α) (f 0 0 β) -> f 0 0 α n <> f 0 0 β n -> α # β.
-Proof.
-intros Heq Hneq. exists (pred (count n (f 0 0 α))).
-intros H; apply Hneq; clear Hneq.
-remember (pred (count n (f 0 0 α))) as N eqn:C.
-revert C H Heq; revert α β n. induction N; intros.
-- now apply f_ext_base.
-- (* Induction by shifting α and β. *)
-  assert(R: α 0 = β 0). { eapply f_ext_eq0. apply Heq. apply C. easy. }
-  destruct (le_dec (1 + α 0) n).
-  + replace (f 0 0 α n) with (f 0 0 (del 1 α) (n - (1 + α 0))).
-    replace (f 0 0 β n) with (f 0 0 (del 1 β) (n - (1 + α 0))).
-    apply IHN.
-    * rewrite count_shift in C; simpl in C. simpl; rewrite  <-C. easy. 
-    * unfold del; now rewrite add_1_l.
-    * intros m Hm. rewrite ?f_del1_add, ?add_assoc, <-R. apply Heq. lia.
-    * rewrite R; symmetry; apply f_del1_sub. now rewrite <-R.
-    * symmetry; now apply f_del1_sub.
-  + (* Yields a contradiction with C. *)
-    exfalso; apply n0. apply f_ext_contra. rewrite <-C; lia.
-Qed.
-
 End SeqToBin.
 
 Theorem bin_preceq_seq :
-  Bin ≼' Seq.
+  Bin ≼ Seq.
 Proof.
-pose(f (α : seq) := α). exists f; repeat split.
-intros α β Hα Hβ. now unfold f. easy.
+pose(f (α : seq) := α). exists f; split.
+now intros α Hα. intros α β Hα Hβ; now unfold f.
 Qed.
 
 Theorem seq_preceq_bin :
-  Seq ≼' Bin.
+  Seq ≼ Bin.
 Proof.
-exists (SeqToBin.f 0 0); repeat split.
+exists (SeqToBin.f 0 0); split.
 - intros α _. apply SeqToBin.f_wd.
 - intros α β _ _ H.
   apply epsilon_smallest in H as [n [H1n H2n]]. 2: intros; apply neq_dec.
   apply SeqToBin.f_inj with (n:=n); auto.
-  intros m Hm. apply H2n in Hm; lia.
-- intros α β _ _ H.
-  apply epsilon_smallest in H as [n [H1n H2n]]. 2: intros; apply neq_dec.
-  apply SeqToBin.f_ext with (n:=n); auto.
   intros m Hm. apply H2n in Hm; lia.
 Qed.

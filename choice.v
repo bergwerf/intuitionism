@@ -66,7 +66,6 @@ End ListChoice.
 End FiniteChoice.
 
 (* Unprovable choice statements. *)
-Section AxiomsOfChoice.
 
 (* Choice on countable sets. *)
 Section CountableChoice.
@@ -145,4 +144,3 @@ rewrite pre_r0 in H. discriminate.
 Qed.
 
 End ContinuousChoice.
-End AxiomsOfChoice.

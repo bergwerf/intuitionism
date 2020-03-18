@@ -175,3 +175,13 @@ rewrite pre_r; auto.
 Qed.
 
 End BCPSigmaType.
+
+(* The previous proof against BCPf_10_sig does not work for AC_10. *)
+Theorem not_AC_10 :
+  AC_10 -> 0 = 1.
+Proof.
+intros AC_10.
+assert(ACf_10: ∀f : seq -> nat, ∃φ, ∀α β, eqn (φ∣α) α β -> f α = f β).
+{ intros. apply (AC_10 _ (BCPf_10 f)). }
+(* We can get a specific φ for any f, but we cannot get a general M. *)
+Abort.

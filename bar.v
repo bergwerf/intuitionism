@@ -247,7 +247,7 @@ Theorem not_EquivalenceTheorem_Bin_Seq :
   ~EquivalenceTheorem Bin Seq.
 Proof.
 intros ET. apply seq_nequiv_bin, ET; split.
-apply preceqext_weaken, bin_preceq_seq. apply seq_preceq_bin.
+apply bin_preceq_seq. apply seq_preceq_bin.
 Qed.
 
 End EquivalenceTheorem.

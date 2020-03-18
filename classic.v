@@ -21,7 +21,7 @@ The Equivalence theorem (often called the Cantor–Schröder–Bernstein theorem
 the sets A and B with strong requirements. A proof that relies on decidability
 of the chain type for any x in A is included in this file.
 *)
-Definition EquivalenceTheorem A B := A ≼ B /\ B ≼' A -> A === B.
+Definition EquivalenceTheorem A B := A ≼ B /\ B ≼ A -> A === B.
 
 (*
 Some statements are weaker than the previous principles, yet intuitionists still
@@ -165,6 +165,14 @@ apply WIS in weak_inj as inj.
 apply inj in apartness; auto; apply I.
 Qed.
 
+(* We can prove strong extensionality with LPO. *)
+Theorem lpo_strong_extensional (A B : baire) f :
+  LPO -> strong_extensional A B f.
+Proof.
+intros LPO α β Hα Hβ Hαβ. apply lpo_seq_apart_if_neq; auto.
+intros H; subst. now apply apart_neq in Hαβ.
+Qed.
+
 End Apartness.
 
 (* A classic proof for the Equivalence theorem. *)
@@ -301,8 +309,9 @@ End EquivThm.
 (* Final Equivalence theorem *)
 Theorem equivalence_theorem A B :
   (∀f g, ∀x, EquivThm.chain A B f g x) ->
+  (∀g, strong_extensional B A g) ->
   EquivalenceTheorem A B.
 Proof.
-intros C [[f [f_wd f_inj]] [g [[g_wd g_inj] g_ext]]].
+intros C E [[f [f_wd f_inj]] [g [g_wd g_inj]]].
 now apply EquivThm.equivalent with (f:=f)(g:=g).
 Qed.

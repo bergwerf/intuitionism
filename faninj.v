@@ -5,7 +5,7 @@ From intuitionism Require Import lib set seq spr fan func bcp bar tau.
 (*
 In this file we explore when an injective function between two fans is
 intuitionistically possible. This relation is denoted with ≼ and is introduced
-in func.v. (the ≼' relation adds a strong extensionality requirement).
+in func.v.
 *)
 
 (* First we consider τ fans. *)
