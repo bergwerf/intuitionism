@@ -65,8 +65,8 @@ Qed.
 Theorem bcp_strong_extensional (A B : baire) f :
   strong_extensional A B f.
 Proof.
-intros α β Hα Hβ [k Hk]. destruct (BCPf_11 f α (S k)) as [n Hn].
-apply not_eqn_apart with (n:=n); intros H. apply Hk, Hn; auto.
+intros α β Hα Hβ [k Hk]. destruct (BCPf_11_point f α k) as [n Hn].
+apply not_eqn_apart with (n:=n); intros H. auto.
 Qed.
 
 (* Some initial contradictions with classical logic. *)
