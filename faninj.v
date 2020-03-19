@@ -148,19 +148,20 @@ Definition F_bound s N := ∀t m n, length s >= N ->
 
 (* Δ is a good branching degree function. *)
 Definition Δ_good := ∀s,
-  match Δ s with
+  let deg := Δ s in
+  match deg with
   (* Finite branching *)
   | Degree 0 =>
     (* There exists an upper bound after which no branching occurs. *)
     ∃N, F_bound s N
   (* Infinite branching along some path *)
-  | Degree (S _) =>
-    (* We can find a next node. *)
-    (∃t m n, F_node m n (t ++ s)) /\
-    (* All continuations have a similar or lower degree. *)
-    (∀n, σ F (n :: s) = true -> Δ (n :: s) <=° Δ s) /\
+  | Degree (S deg') =>
+    (* We can find a next node where one branch has a degree one step lower. *)
+    (∃t m n, F_node m n (t ++ s) /\ Δ (m :: t ++ s) = Degree deg') /\
+    (* This degree forms an upper bound. *)
+    (∀n, σ F (n :: s) = true -> Δ (n :: s) <=° deg) /\
     (* At least one continuation has the same degree. *)
-    (∃n, σ F (n :: s) = true /\ Δ (n :: s) = Δ s)
+    (∃n, σ F (n :: s) = true /\ Δ (n :: s) = deg)
   (* Infinite branching into infinite branching *)
   | ωDegree =>
     (* We can find a next node with two ωDegree continuations. *)
@@ -171,18 +172,16 @@ Definition Δ_good := ∀s,
 
 End DegreeMapping.
 
-(* Δ is an optimal branching degree function. *)
-Definition Δ_optimal F Δ := Δ_good F Δ /\ ∀δ, Δ_good F δ -> ∀s, Δ s <=° δ s.
-
-(* If an optimal branching degree can be computed, it indicates ≼. *)
+(* If the branching degree can be computed we can determine ≼. *)
 Theorem dle_preceq F E ΔF ΔE :
-  Δ_optimal F ΔF -> Δ_optimal E ΔE -> ΔF [] <=° ΔE [] -> F ≼ E.
+  Δ_good F ΔF -> Δ_good E ΔE -> ΔF [] <=° ΔE [] -> F ≼ E.
 Proof.
 (*
-This proof appears like it may be very difficult. The idea is to define an
-injective function that given an α ∈ F traces out a path in G with a matching
-degree for all prefixes. When dealing with a bottom degree (Degree 0) this
-function has to explore all existing nodes to define an injective ordering.
+It seems this may be hard to prove formally in Coq (it is easier on paper of
+course). The idea is to define an injective function that given an α ∈ F traces
+out a path in G with a matching degree for all prefixes. When dealing with a
+bottom degree (Degree 0) this function has to explore all existing nodes to
+define an ordering.
 *)
 Abort.
 

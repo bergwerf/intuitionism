@@ -5,7 +5,7 @@ From intuitionism Require Import lib set seq spr fan func.
 (* Choice on finite domains. *)
 Section FiniteChoice.
 
-(* Choice with an upper-bound in nat *)
+(* Choice with an upper bound in nat *)
 Theorem bounded_choice {W} N (P : nat -> W -> Prop) (inhabitant : W) :
   (∀n, n < N -> ∃m, P n m) -> ∃f, ∀n, n < N -> P n (f n).
 Proof.

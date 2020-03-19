@@ -30,7 +30,7 @@ Definition replace n (α β : seq) i := if i <? n then β i else α i.
 (* Add n elements from α as prefix to β. *)
 Definition pre n α β := replace n (fill n β) α.
 
-(* Get upperbound of a finite sequence. *)
+(* Get upper bound of a finite sequence. *)
 Definition upb s := fold_right max 0 s.
 
 (* Get first n elements of α. *)

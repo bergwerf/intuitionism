@@ -219,7 +219,7 @@ Variable P : T -> Prop.
 Variable Q : S -> Prop.
 
 Lemma Forall_map f s :
-  Forall Q s -> (forall n, Q n -> P (f n)) -> Forall P (map f s).
+  Forall Q s -> (∀n, Q n -> P (f n)) -> Forall P (map f s).
 Proof.
 intros Hs HQP. apply Forall_forall. intros y Hy.
 apply in_map_iff in Hy as [x [Hf Hxl]]; subst.

@@ -40,8 +40,8 @@ intros Hα. destruct (BCPext X _ Hf α) as [m [n H]]; auto. exists m; intros.
 rewrite H; auto. symmetry; now rewrite H. apply eqn_refl.
 Qed.
 
-(* Pointwise continuity of functions from sequences to sequences. *)
-Theorem BCPf_11_point (f : seq -> seq) α i :
+(* Continuity at a given index of functions from sequences to sequences. *)
+Theorem BCPf_11_at (f : seq -> seq) α i :
   ∃n, ∀β, eqn n α β -> f α i = f β i.
 Proof.
 assert(Hf: ∀γ, ∃n, f γ i = n) by (intros; now exists (f γ i)).
@@ -54,7 +54,7 @@ Theorem BCPf_11 (f : seq -> seq) α k :
   ∃n, ∀β, eqn n α β -> eqn k (f α) (f β).
 Proof.
 assert(H: ∀i, i < k -> ∃n, ∀β, eqn n α β -> f α i = f β i).
-{ intros. destruct (BCPf_11_point f α i) as [n Hn].
+{ intros. destruct (BCPf_11_at f α i) as [n Hn].
   exists n; intros. now apply Hn. }
 apply bounded_choice_nat in H as [N HN]. exists (upb (map N (iota 0 k))).
 intros β Hβ i Hi. apply HN; auto. intros j Hj; apply Hβ.
@@ -65,7 +65,7 @@ Qed.
 Theorem bcp_strong_extensional (A B : baire) f :
   strong_extensional A B f.
 Proof.
-intros α β Hα Hβ [k Hk]. destruct (BCPf_11_point f α k) as [n Hn].
+intros α β Hα Hβ [k Hk]. destruct (BCPf_11_at f α k) as [n Hn].
 apply not_eqn_apart with (n:=n); intros H. auto.
 Qed.
 
