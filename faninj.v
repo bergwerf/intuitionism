@@ -157,7 +157,7 @@ Definition Δ_good := ∀s,
   (* Infinite branching along some path *)
   | Degree (S deg') =>
     (* We can find a next node where one branch has a degree one step lower. *)
-    (∃t m n, F_node m n (t ++ s) /\ Δ (m :: t ++ s) = Degree deg') /\
+    (∃t m n, F_node m n (t ++ s) /\ Δ (n :: t ++ s) = Degree deg') /\
     (* This degree forms an upper bound. *)
     (∀n, σ F (n :: s) = true -> Δ (n :: s) <=° deg) /\
     (* At least one continuation has the same degree. *)

@@ -28,3 +28,11 @@ Definition distance m n := (m - n) + (m - n).
 (* α and β are within distance 1/(2^δ) of each other. *)
 Definition within (α β : dom Bin) (δ : nat) :=
   ∃n, 2^δ * distance (lbound α n) (lbound β n) < 3^n.
+
+(* Pointwise continuity of f : [0,1] -> [0,1] at x0. *)
+Definition point_continuous f x₀ ε :=
+  ∃δ, ∀x, within x₀ x δ -> within (f x₀) (f x) ε.
+
+(* Uniform continuity of f : [0,1] -> [0,1]. *)
+Definition uniform_continuous f ε :=
+  ∃δ, ∀x₀ x₁, within x₀ x₁ δ -> within (f x₀) (f x₁) ε.
