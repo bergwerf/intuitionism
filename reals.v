@@ -4,16 +4,14 @@ From intuitionism Require Import lib set seq spr fan func classic choice.
 From intuitionism Require Import bcp bar.
 
 (*
-To formalize some interesting results about real numbers this document defines
-a distance judgement between binary sequences that is based on regarding real
-numbers as sequences of nested rational intervals. A full formalization would
-require a significant number of intermediary lemmas.
-
-We describe the real numbers in [0, 1] as binary sequences. At each step the
-interval [a, b] is split into [a, (a+2b)/3] and [(2a+b)/3, b]. A sequence
-α ∈ Bin selects in which intervals a point is located. Note that splitting in
-half would require exact knowledge about the upper/lower bound of some numbers,
-which is a problem for some of the constructions.
+Describing intervals of real numbers as binary sequences
+--------------------------------------------------------
+We can describe the real numbers in [a_0, b_0] as binary sequences. At each step
+the interval [a_n, b_n] is split into [a_n, (a_n+2b_h)/3], [(2a_n+b_n)/3, b_n].
+A sequence α ∈ Bin selects in which intervals a point is located. Note that
+splitting in half would require exact knowledge about the upper/lower bound of
+some numbers, which is a problem for some constructions.
+The next definitions use [a_0, b_0] = [0, 1].
 *)
 
 (* Compute left endpoint of the n-th interval of α with denominator 3^(n+1). *)
