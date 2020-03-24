@@ -23,7 +23,7 @@ exists (λ α, λ i,  α i - k + l); split.
 Qed.
 
 (* Injection to a larger bound. *)
-Theorem τ_preceq_id k l :
+Theorem τ_preceq k l :
   k <= l -> τ 0 k ≼ τ 0 l.
 Proof.
 intros LE. exists (λ α, α); split.
@@ -107,6 +107,15 @@ induction d; intros [f [f_wd f_inj]].
     rewrite R; now apply τ_member_weaken.
 Qed.
 
+(* Summary; the relation ≼ is decidable for τ. *)
+Corollary τ_preceq_dec k l :
+  τ 0 k ≼ τ 0 l \/ τ 0 l ≺ τ 0 k.
+Proof.
+destruct (le_gt_dec k l).
+left; now apply τ_preceq.
+right; now apply τ_prec.
+Qed.
+
 End Tau.
 
 (*
@@ -186,3 +195,100 @@ define an ordering.
 Abort.
 
 End Generalization.
+
+(*
+With a degree function we tried to generalize the notion of how long we can
+continue branching before getting stuck, as we saw with τ. However writing down
+formal proofs about this notion is not so easy. A simpler and perhaps more
+elegant approach is to consider all fans whose σ function is a DFA.
+*)
+Section Automatons.
+
+(*
+A Discrete Finite Automaton. If dfa_next maps to a state >= dfa_size, then the
+input is rejected. This means intermediary reject states are not allowed. This
+is not a problem since a fan decider must accept the empty input, and cannot
+accept a string of which a substring is not accepted.
+*)
+Record dfa := DFA {
+  dfa_size : nat;
+  dfa_init : nat;
+  dfa_next : nat -> nat -> nat;
+}.
+
+(* Process input s with DFA a. *)
+Fixpoint dfa_run (a : dfa) (state : nat) s :=
+  match s with
+  | [] => state
+  | n :: t => dfa_run a (dfa_next a state n) t
+  end.
+
+(* All state within the size bound are accept states. *)
+Definition dfa_accept a n := n <? dfa_size a.
+
+(* The fan F is described by DFA a. *)
+Definition dfa_fan (F : fan) a :=
+  ∀s, σ F s = dfa_accept a (dfa_run a (dfa_init a) (rev s)).
+
+Lemma dfa_run_app a init s1 s2 :
+  dfa_run a init (s1 ++ s2) = dfa_run a (dfa_run a init s1) s2.
+Proof. revert init; induction s1; simpl; auto. Qed.
+
+(* DFA's for Bin and τ. *)
+Section ExampleDFAFans.
+
+Definition PointSpace_dfa k := DFA 1 0 (λ s n, n - k + s).
+
+Theorem PointSpace_dfa_fan k :
+  dfa_fan (PointSpace k) (PointSpace_dfa k).
+Proof.
+intros s; simpl. induction s; auto.
+simpl; rewrite IHs. rewrite dfa_run_app; simpl. destruct (a <=? k) eqn:E.
+- rewrite andb_true_r. now replace (a - k) with 0 by bool_lia.
+- rewrite andb_false_r. destruct (a - k) eqn:F; auto. bool_lia.
+Qed.
+
+Corollary Bin_dfa_fan : ∃a, dfa_fan Bin a.
+Proof. exists (PointSpace_dfa 1). apply PointSpace_dfa_fan. Qed.
+
+Definition τ_dfa_next k l state n :=
+  if l <? state then state
+  else if (k <=? n) && (n <=? k + l) && (state <=? n - k)
+  then n - k else S l.
+
+Definition τ_dfa k l := DFA (S l) 0 (τ_dfa_next k l).
+
+Theorem τ_dfa_fan k l :
+  dfa_fan (τ k l) (τ_dfa k l).
+Proof.
+intros s; simpl. induction s as [|n]; auto.
+simpl; rewrite IHs, dfa_run_app, <-andb_assoc.
+unfold dfa_accept; simpl; unfold τ_dfa_next; simpl.
+remember (dfa_run (τ_dfa k l) 0 (rev s)) as state eqn:Hstate.
+destruct ((k <=? n) && (n <=? k + l)) eqn:E; simpl.
+- rewrite andb_true_r. destruct s as [|m].
+  + simpl in Hstate; subst; simpl. bool_lia.
+  + destruct (l <? state) eqn:F.
+    replace (state <? S l) with false by bool_lia. now rewrite andb_false_r.
+    replace (state <? S l) with true by bool_lia. rewrite andb_true_r.
+    revert Hstate. simpl; rewrite dfa_run_app; simpl. unfold τ_dfa_next.
+    remember (dfa_run (τ_dfa k l) 0 (rev s)) as state' eqn:Hstate'.
+    destruct (l <? state') eqn:G; intros. subst; now rewrite F in G.
+    destruct ((k <=? m) && (m <=? k + l) && (state' <=? m - k)) eqn:H;
+    subst state. destruct (m <=? n) eqn:K.
+    * replace (m - k <=? n - k) with true by bool_lia. bool_lia.
+    * replace (m - k <=? n - k) with false by bool_lia. bool_lia.
+    * exfalso; bool_lia.
+- rewrite andb_false_r. destruct (l <? state) eqn:F; bool_lia.
+Qed.
+
+End ExampleDFAFans.
+
+(* For DFA fans the relation ≼ is decidable. *)
+Theorem dfa_fan_preceq_dec F1 F2 :
+  (∃a1, dfa_fan F1 a1) -> (∃a2, dfa_fan F2 a2) -> F1 ≼ F2 \/ F2 ≺ F1.
+Proof.
+intros [a1 H1] [a2 H2].
+Admitted.
+
+End Automatons.
