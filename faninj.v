@@ -204,12 +204,7 @@ elegant approach is to consider all fans whose σ function is a DFA.
 *)
 Section Automatons.
 
-(*
-A Discrete Finite Automaton. If dfa_next maps to a state >= dfa_size, then the
-input is rejected. This means intermediary reject states are not allowed. This
-is not a problem since a fan decider must accept the empty input, and cannot
-accept a string of which a substring is not accepted.
-*)
+(* A Discrete Finite Automaton *)
 Record dfa := DFA {
   dfa_size : nat;
   dfa_init : nat;
@@ -283,6 +278,11 @@ destruct ((k <=? n) && (n <=? k + l)) eqn:E; simpl.
 Qed.
 
 End ExampleDFAFans.
+
+(*
+We compare two DFAs by checking how many phases they go through.
+For simplicity we recycle the degree type for to denote this.
+*)
 
 (* For DFA fans the relation ≼ is decidable. *)
 Theorem dfa_fan_preceq_dec F1 F2 :

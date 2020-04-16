@@ -69,6 +69,23 @@ intros α β Hα Hβ [k Hk]. destruct (BCPf_11_at f α k) as [n Hn].
 apply not_eqn_apart with (n:=n); intros H. auto.
 Qed.
 
+(* Result to define apartness in models with equality (Model Theory). *)
+Theorem apart_iff_dec_neq (X : baire) (α β : dom X) :
+  α # β <-> ∀γ, γ <> α \/ γ <> β.
+Proof.
+split; intros.
+- eapply seq_apart_cotrans in H as [H|H]; apply apart_neq in H.
+  left; apply H. right; apply H.
+- pose(R φ n := (n = 0 /\ φ <> α) \/ (n <> 0 /\ φ <> β)).
+  assert(HR: ∀φ, ∃n, R φ n). { intros; destruct (H φ).
+    now exists 0; left. now exists 1; right. }
+  apply BCP with (α:=α) in HR as [m [n Hα]].
+  assert(Hn: n <> 0). { assert(C := eqn_refl m α).
+    apply Hα in C. now destruct C. }
+  apply not_eqn_apart with (n:=m). intros P.
+  apply Hα in P; now destruct P.
+Qed.
+
 (* Some initial contradictions with classical logic. *)
 Section ClassicContradictions.
 

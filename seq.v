@@ -91,6 +91,16 @@ Definition baire_aset (X : baire) :=
 Coercion baire_aset : baire >-> aset.
 Definition Seq := Baire fullset.
 
+(* Apartness on the Baire spread is co-transitive. *)
+Theorem seq_apart_cotrans (X : baire) (α β : dom X) :
+  α # β <-> ∀γ, γ # α \/ γ # β.
+Proof.
+split.
+- intros [n Hn]; intros. destruct (eq_dec (α n) (γ n)).
+  right; exists n; lia. left; exists n; lia.
+- intros H; destruct (H α). now apply apart_neq in H0. easy.
+Qed.
+
 (* Prefix intersection in the baire space. *)
 Definition isect_member (X : baire) s α := α ∈ X /\ get (length s) α = s.
 Definition isect X s := Baire (isect_member X s).
