@@ -116,9 +116,9 @@ unfold cfun_compute. destruct (cfun_time φ α) as [Nα [H1 H2]]; simpl.
 exists Nα; intros. destruct (cfun_time φ β) as [Nβ [H3 H4]]; simpl.
 apply eqn_eq_get in H. replace Nβ with Nα. now rewrite H.
 apply eq_dne; intros E. apply not_eq in E as [E|E].
-- apply H4 in E; apply E. now rewrite <-H.
-- apply eqn_eq_get in H. apply eqn_le with (m:=Nβ) in H.
-  apply eqn_eq_get in H. apply H2 in E; apply E. now rewrite H. lia.
+- assert(Hα := H4 Nα); rewrite <-H in Hα. apply Hα in H1. lia.
+- apply eqn_eq_get in H. apply eqn_le with (m:=Nβ) in H. apply eqn_eq_get in H.
+  assert(Hβ := H2 Nβ); rewrite H in Hβ. apply Hβ in H3. lia. lia.
 Qed.
 
 (* Choice on continuous sets. *)

@@ -281,5 +281,5 @@ exists (SeqToBin.f 0 0); split.
 - intros α β _ _ H.
   apply epsilon_smallest in H as [n [H1n H2n]]. 2: intros; apply neq_dec.
   apply SeqToBin.f_inj with (n:=n); auto.
-  intros m Hm. apply H2n in Hm; lia.
+  intros m Hm; assert(H := H2n m); lia.
 Qed.

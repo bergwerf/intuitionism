@@ -65,8 +65,7 @@ intros LPO α. destruct (LPO α).
   2: apply even_false_odd in E; right.
   all: intros k [H1 H2]; replace k with l; auto.
   all: assert(L: ~(l < k) -> ~(l > k) -> l = k) by lia; apply L; intros H.
-  all: try apply L2 in H; auto.
-  all: try apply H1 in H; auto.
+  all: auto. all: assert(Hk := L2 k); lia.
 - left; intros k [H1 H2]; exfalso; auto.
 Qed.
 
